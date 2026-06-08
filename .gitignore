@@ -15,3 +15,6 @@ Thumbs.db
 
 # Large generated files
 *.mp4
+
+# Backups
+*.bak*

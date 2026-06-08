@@ -22,7 +22,7 @@ Control a spotlight with your webcam flashlight or hand gestures to reveal a liv
 | | |
 |---|---|
 | 🔦 **Flashlight** | Point a phone flashlight at the webcam; brightest spot becomes the spotlight |
-| ✋ **Hand Gesture** | MediaPipe hand tracking; an open palm drives the spotlight |
+| ✋ **Hand Gesture** | The display's own webcam: move your hand to move the spotlight + gestures (open/index/fist/✌️), with a large on-screen legend that highlights your current gesture. Press `H` |
 | 👓 **Gaze · Glasses** | Wear glasses with an ArUco marker stuck on them — drive the spotlight by turning your head/gaze. Sub-pixel precision, no model download, requires printing one paper marker (see below) |
 | 🖱 **Mouse** | Trackpad / cursor follows naturally, no camera needed |
 | 🏔 **5 Scenes** | Mountains, bamboo, snow, blossoms, starry sky — AI-generated |
@@ -68,6 +68,7 @@ tailscale serve --bg 8888
 | Key | Action |
 |---|---|
 | M | Switch mode |
+| H | Hand-gesture mode (local webcam) |
 | ← → | Switch scene |
 | 1 / 2 / 3 | Style: edges / sketch / dark |
 | `[` `]` | Sensitivity − / + |
@@ -107,6 +108,26 @@ web/
 See [DESIGN.md](DESIGN.md).
 
 Brand colors: parchment `#f5f4ed` · terracotta `#c96442` · ink black `#141413`
+
+## ✋ About Hand Gestures · Webcam Mode
+
+Turn your hand into a wand using the display computer's **own webcam** — no phone needed. Press `H` to enter.
+
+- **Move your hand → move the spotlight**: hand position drives the light directly.
+- **Gestures** (a **large legend on the right** highlights the gesture you're making):
+
+| Gesture | Action |
+|---|---|
+| 🖐️ Open | Normal spotlight |
+| ☝️ Index | Tight beam |
+| ✊ Fist | Light off (spotlight disappears; idle attract only resumes once your hand leaves frame) |
+| ✌️ Victory | Change scene |
+
+### Accuracy
+- Keep your hand in frame, decently lit, palm toward the camera.
+- "Extended" is judged by **tip-to-wrist distance**, not tip-above-knuckle, so it stays accurate when your hand is tilted (rotation-invariant).
+- The camera frame is **cropped to its true aspect and fit to the reveal area**, so hand and spotlight line up at any resolution (`[` `]` sensitivity, `X` mirror).
+- The legacy `@mediapipe/hands` runs on the lite model + an overlap guard to avoid jank; migrate to MediaPipe Tasks for smoother tracking (see Roadmap).
 
 ## 👓 About Gaze · Glasses Mode
 

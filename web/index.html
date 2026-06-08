@@ -251,6 +251,8 @@ html[lang^="zh"] .tagline{font-style:normal;letter-spacing:.18em;text-indent:.18
 .mode-card:nth-child(2){animation:fade-up .7s .65s var(--easing-out) forwards}
 .mode-card:nth-child(3){animation:fade-up .7s .75s var(--easing-out) forwards}
 .mode-card:nth-child(4){animation:fade-up .7s .85s var(--easing-out) forwards}
+.mode-card:nth-child(5){animation:fade-up .7s .95s var(--easing-out) forwards}
+.mode-card:nth-child(6){animation:fade-up .7s 1.05s var(--easing-out) forwards}
 .mode-card:hover{
   border-color:var(--stone-soft);
   transform:translateY(-2px);
@@ -272,6 +274,32 @@ html[lang^="zh"] .mode-card .name{letter-spacing:.12em;}
   font-size:.625rem;color:var(--stone-soft);
   margin-top:2px;letter-spacing:.06em;
 }
+
+/* ──────── Phone-controller pairing overlay ──────── */
+#phone-pair{
+  position:fixed;inset:0;z-index:6;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(20,20,19,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+#phone-pair.show{display:flex}
+#phone-pair .card{
+  background:var(--paper,#f5f4ed);color:var(--ink,#141413);
+  border-radius:18px;padding:26px 28px;max-width:340px;width:86%;
+  text-align:center;box-shadow:0 24px 60px -20px rgba(0,0,0,.5);
+  font-family:var(--serif,serif);
+}
+#phone-pair .pp-title{font-size:1.05rem;font-weight:600;letter-spacing:.12em;margin-bottom:4px}
+#phone-pair .pp-sub{font-size:.8rem;color:var(--stone-soft,#6b6a63);margin-bottom:16px;line-height:1.55}
+#phone-pair .pp-qr{background:#fff;border-radius:12px;padding:12px;display:inline-block;line-height:0;min-height:60px}
+#phone-pair .pp-qr svg,#phone-pair .pp-qr img{width:200px;height:200px;display:block}
+#phone-pair .pp-url{margin-top:14px;font:500 .72rem/1.4 ui-monospace,monospace;
+  color:var(--clay,#c96442);word-break:break-all;background:#fbf2ec;border-radius:8px;padding:8px 10px}
+#phone-pair .pp-count{margin-top:14px;font-size:.82rem}
+#phone-pair .pp-count b{color:var(--clay,#c96442)}
+#phone-pair .pp-err{margin-top:12px;font-size:.78rem;color:#b4532f;display:none}
+#phone-pair .pp-close{margin-top:18px;border:1px solid var(--cream-border,#e3e0d6);background:transparent;
+  color:var(--ink,#141413);font:inherit;font-size:.82rem;padding:9px 26px;border-radius:999px;cursor:pointer}
+#phone-pair .pp-close:hover{border-color:var(--clay,#c96442)}
 
 /* CTA button */
 #btn-start{
@@ -386,6 +414,9 @@ html[lang^="zh"] .err-body{letter-spacing:.1em;line-height:1.85}
 /* ──────────────────────────────────────────────────────────
    HUD — Museum placard, top-left
    ────────────────────────────────────────────────────────── */
+#roster{position:fixed;top:14px;right:14px;z-index:20;display:none;flex-direction:column;gap:6px}
+#roster .seal{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font:600 13px/1 var(--serif);box-shadow:0 2px 8px -2px rgba(0,0,0,.4);opacity:.92}
+#roster .seal.frozen{outline:2px solid #fff;outline-offset:-3px}
 #ui{
   position:fixed;top:14px;left:14px;z-index:20;
   background:rgba(20,20,19,.55);
@@ -479,6 +510,24 @@ html[lang^="zh-TW"] .ui-row .lbl{font-family:var(--serif-tc)}
   z-index:30;opacity:0;transition:opacity .3s;
   font-weight:500;
 }
+
+/* Right-side gesture legend (hand mode) — big, with the current gesture highlighted */
+#glegend{
+  position:fixed;right:22px;top:50%;transform:translateY(-50%);
+  z-index:31;display:none;flex-direction:column;gap:8px;
+  font-family:var(--serif);color:var(--ink);
+  background:rgba(245,244,237,.86);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  padding:18px 20px;border-radius:18px;border:1px solid var(--cream-line);
+  letter-spacing:.06em;box-shadow:0 10px 34px -12px rgba(0,0,0,.45);
+}
+#glegend.show{display:flex;}
+#glegend .gl-title{font-size:1rem;color:var(--clay);letter-spacing:.34em;margin-bottom:2px;}
+#glegend .gl-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;opacity:.5;transition:opacity .15s,background .15s;}
+#glegend .gl-row.on{opacity:1;background:rgba(201,100,66,.18);box-shadow:0 0 0 1.5px var(--clay) inset;}
+#glegend .gl-ico{font-size:1.8rem;width:2rem;text-align:center;}
+#glegend .gl-name{font-size:1.32rem;font-weight:600;min-width:2.4em;}
+#glegend .gl-act{font-size:1.02rem;color:#6b6358;}
+#glegend .gl-foot{font-size:.96rem;color:var(--clay);margin-top:5px;letter-spacing:.1em;text-align:center;}
 
 /* First-time hint overlay */
 #first-hint{
@@ -651,6 +700,19 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
   <div id="calib-dots"></div>
 </div>
 
+<!-- ──────── Phone controller pairing overlay ──────── -->
+<div id="phone-pair">
+  <div class="card">
+    <div class="pp-title" data-i18n="phonePairTitle">手机当魔杖</div>
+    <div class="pp-sub" data-i18n="phonePairSub">用手机扫码，倾斜手机即可挥动光圈；多部手机可同时加入。</div>
+    <div class="pp-qr" id="pp-qr"></div>
+    <div class="pp-url" id="pp-url">—</div>
+    <div class="pp-err" id="pp-err" data-i18n="phoneNeedServer">未连上中继：请用 python3 server.py 启动</div>
+    <div class="pp-count"><span data-i18n="phoneConnPre">已连接</span> <b id="pp-count">0</b> <span data-i18n="phoneConnPost">部手机</span></div>
+    <button class="pp-close" id="pp-close" type="button" data-i18n="phonePairClose">开始</button>
+  </div>
+</div>
+
 <!-- ──────── Canvas ──────── -->
 <canvas id="display"></canvas>
 <canvas id="pip"></canvas>
@@ -660,6 +722,16 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
 
 <!-- ──────── Gesture HUD ──────── -->
 <div id="gh"></div>
+
+<!-- ──────── Gesture legend (hand mode, right side) ──────── -->
+<div id="glegend">
+  <div class="gl-title">手势</div>
+  <div class="gl-row" data-g="open"><span class="gl-ico">🖐️</span><span class="gl-name">张开</span><span class="gl-act">正常光圈</span></div>
+  <div class="gl-row" data-g="point"><span class="gl-ico">☝️</span><span class="gl-name">食指</span><span class="gl-act">聚成细光</span></div>
+  <div class="gl-row" data-g="fist"><span class="gl-ico">✊</span><span class="gl-name">握拳</span><span class="gl-act">收光（灭）</span></div>
+  <div class="gl-row" data-g="victory"><span class="gl-ico">✌️</span><span class="gl-name">耶</span><span class="gl-act">换场景</span></div>
+  <div class="gl-foot">移动手 → 光圈跟随</div>
+</div>
 
 <!-- ──────── Scene nav ──────── -->
 <div class="scene-nav" id="scene-nav"></div>
@@ -673,6 +745,7 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
   <div class="ui-row" id="he-row" style="display:none"><span class="lbl" data-i18n="hudGesture">手势</span><span class="val" id="he">—</span></div>
   <div class="fps"><span id="hf">—</span> fps</div>
 </div>
+<div id="roster"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
@@ -721,6 +794,17 @@ const I18N = {
     firstHintFlash:'用手电对准摄像头 · 揭示画卷',
     firstHintHand:'张开手掌移动 · 揭示画卷',
     firstHintGaze:'用眼睛看向画卷 · 揭示',
+    firstHintPhone:'倾斜手机 · 挥动光圈',
+    modePhone:'手机魔杖',
+    modeIR:'IR 追踪器',
+    irWaiting:'连接 OpenMV / IR 追踪器(WebSerial)',
+    phoneWaiting:'等待手机扫码',
+    phonePairTitle:'手机当魔杖',
+    phonePairSub:'用手机扫描二维码，倾斜手机即可挥动光圈；多部手机可同时加入。',
+    phonePairClose:'开始',
+    phoneConnPre:'已连接',
+    phoneConnPost:'部手机',
+    phoneNeedServer:'未连上中继：请用 python3 server.py 启动（而非 http.server）',
     calibTitle:'校准眼动',
     calibSub:'戴上贴有 ArUco 标记的眼镜。依次自然地把头/视线转向每个圆点并点击，每点 2 下。',
     calibDone:'校准完成',
@@ -767,6 +851,17 @@ const I18N = {
     firstHintFlash:'用手電對準攝像頭 · 揭示畫卷',
     firstHintHand:'張開手掌移動 · 揭示畫卷',
     firstHintGaze:'用眼睛看向畫卷 · 揭示',
+    firstHintPhone:'傾斜手機 · 揮動光圈',
+    modePhone:'手機魔杖',
+    modeIR:'IR 追蹤器',
+    irWaiting:'連接 OpenMV / IR 追蹤器(WebSerial)',
+    phoneWaiting:'等待手機掃碼',
+    phonePairTitle:'手機當魔杖',
+    phonePairSub:'用手機掃描 QR Code，傾斜手機即可揮動光圈；多部手機可同時加入。',
+    phonePairClose:'開始',
+    phoneConnPre:'已連接',
+    phoneConnPost:'部手機',
+    phoneNeedServer:'未連上中繼：請用 python3 server.py 啟動（而非 http.server）',
     calibTitle:'校準眼動',
     calibSub:'戴上貼有 ArUco 標記的眼鏡。依次自然地把頭/視線轉向每個圓點並點擊，每點 2 下。',
     calibDone:'校準完成',
@@ -813,6 +908,17 @@ const I18N = {
     firstHintFlash:'Aim a flashlight at the camera to reveal',
     firstHintHand:'Open your palm and move to reveal',
     firstHintGaze:'Look around the scroll to reveal',
+    firstHintPhone:'Tilt your phone to wave the light',
+    modePhone:'Phone wand',
+    modeIR:'IR tracker',
+    irWaiting:'Connect an OpenMV / IR tracker (WebSerial)',
+    phoneWaiting:'Waiting for a phone',
+    phonePairTitle:'Phone as a wand',
+    phonePairSub:'Scan the QR with your phone and tilt to move the light. Several phones can join at once.',
+    phonePairClose:'Start',
+    phoneConnPre:'Connected',
+    phoneConnPost:'phone(s)',
+    phoneNeedServer:'No relay: launch with python3 server.py (not http.server)',
     calibTitle:'Calibrate your gaze',
     calibSub:'Wear glasses with the ArUco marker attached. Naturally turn your head/gaze toward each dot and click — 2 clicks per dot.',
     calibDone:'Calibrated',
@@ -876,18 +982,19 @@ function setLang(l){
    State
    ─────────────────────────────────────────────────────────── */
 const S={
-  mode:'mouse',scene:0,style:'edges',radius:140,threshold:50,camSens:1.0,
+  mode:'phone',scene:0,style:'edges',radius:140,threshold:50,camSens:1.0,paint:false,paintFade:0,breath:0,glow:false,timeTint:false,room:false,mirror:false,creature:false,geo:[],orbs:[],rps:{},beat:{on:false,period:620,t0:0},
   smooth:{x:-1,y:-1},alpha:.3,mirrorX:true,running:false,fps:0,
   mouseX:window.innerWidth/2,mouseY:window.innerHeight/2,
   hlm:null,gesture:'none',hpos:null,lastHx:0,lastHy:0,
   transition:{active:false,from:null,start:0,duration:500},
   firstHintShown:false,firstMoveDistance:0,debug:false,
   gazePos:null,gazeSmooth:null,gazeReady:false,
+  phone:{targets:{},primaryId:null,calib:{},es:null,room:null,alpha:.45,staleMs:900,splats:[],seq:0,overlap:{},ink:false,strokeLast:{}},
 };
 const D=document.getElementById('display'),ctx=D.getContext('2d'),
   pip=document.getElementById('pip'),pipCtx=pip.getContext('2d'),
   gh=document.getElementById('gh'),sceneNav=document.getElementById('scene-nav');
-let hiCvs,hiCtx,mkCvs,mkCtx,wkCvs,wkCtx,scCvs,scCtx,target,
+let hiCvs,hiCtx,mkCvs,mkCtx,wkCvs,wkCtx,scCvs,scCtx,target,paintCvs,paintCtx,paintScratch,paintSctx,paintBrush,glowCvs,glowCtx,
   vid=null,str=null,DW,DH,VW=640,VH=480,pipW=160,pipH=90,fc=0,ft=performance.now();
 let hands=null,hr=false;
 
@@ -934,7 +1041,7 @@ function initScene(){
 }
 function drawScene(t){
   const g=scCtx,W=DW,H=DH;
-  scCvs.width=W;scCvs.height=H;
+  if(scCvs.width!==W||scCvs.height!==H){scCvs.width=W;scCvs.height=H;}else{g.clearRect(0,0,W,H);}   // don't reallocate the backing store every frame
   const img=sceneImages[S.scene];
   if(img){
     const iw=img.naturalWidth,ih=img.naturalHeight;
@@ -989,11 +1096,10 @@ function animateOverlay(g,W,H,ix,iy,iw,ih,t){
       const fx=ix+((i*.114+t*.01)%1.1-.05)*iw;
       const fy=iy+((i*.083+t*.018)%1.05-.025)*ih;
       const pulse=.3+.7*Math.sin(t*6+i*1.9);
-      g.fillStyle=`rgba(200,255,140,${.28*pulse})`;
-      g.shadowColor='rgba(160,255,100,.35)';g.shadowBlur=8;
-      g.beginPath();g.arc(fx,fy,2+Math.sin(i)*.8,0,PI*2);g.fill();
-      g.shadowBlur=0;
+      const fr=2+Math.sin(i)*.8; g.globalAlpha=.5*pulse;
+      g.drawImage(fireflySprite(), fx-fr*3, fy-fr*3, fr*6, fr*6);   // pre-baked glow sprite — no per-fill shadowBlur in the loop
     }
+    g.globalAlpha=1;
     for(let i=0;i<8;i++){
       const bx=ix+iw*(.10+i*.10);const by=iy+ih*(.04+i%3*.04);
       g.strokeStyle='rgba(50,60,35,.22)';g.lineWidth=1.2;
@@ -1151,26 +1257,42 @@ function smap(cx,cy){
 function iH(){
   if(hr)return;
   hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`});
-  hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.7,minTrackingConfidence:.5});
+  hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});
   hands.onResults(r=>{
     if(r.multiHandLandmarks?.length){
       S.hlm=r.multiHandLandmarks[0];S.gesture=rg(S.hlm);
+      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%5);flashHint('✌ 换场景');}
       const cx=(S.hlm[0].x+S.hlm[9].x)/2,cy=(S.hlm[0].y+S.hlm[9].y)/2;
-      const sens=S.camSens||1;
-      let nx=((cx-0.5)*sens+0.5),ny=((cy-0.5)*sens+0.5);
-      nx=Math.max(0,Math.min(1,nx));ny=Math.max(0,Math.min(1,ny));
-      let hx=nx*DW,hy=ny*DH;
-      if(S.imgBounds){const ib=S.imgBounds;hx=ib.x+nx*ib.w;hy=ib.y+ny*ib.h;}
-      S.hpos={x:hx,y:hy};
+      const c=camCover(),ib=c.ib,sn=S.camSens||1;
+      let vx=(cx*VW-c.sx)/c.sw, vy=(cy*VH-c.sy)/c.sh;   // position within the aspect-correct, cover-cropped camera view (matches the overlay exactly)
+      vx=(vx-0.5)*sn+0.5; vy=(vy-0.5)*sn+0.5;
+      vx=Math.max(0,Math.min(1,vx)); vy=Math.max(0,Math.min(1,vy));
+      S.hpos={x:ib.x+vx*ib.w, y:ib.y+vy*ib.h};
     }else{S.hlm=null;S.gesture='none';S.hpos=null;}
+    S._lastHG=S.gesture;   // remember for victory edge-trigger
   });hr=true;
 }
 function rg(lm){
+  // rotation-invariant: a finger is extended when its tip is farther from the wrist(0) than its PIP joint
+  const W=lm[0], dW=a=>Math.hypot(lm[a].x-W.x,lm[a].y-W.y), ext=(t,p)=>dW(t)>dW(p)*1.15;
   const fs=[{t:8,p:6},{t:12,p:10},{t:16,p:14},{t:20,p:18}];let e=0;
-  for(const f of fs)if(lm[f.t].y<lm[f.p].y)e++;
-  if(e>=3)return'open';if(e===0)return'fist';if(e===1&&lm[8].y<lm[6].y)return'point';return'open';
+  for(const f of fs)if(ext(f.t,f.p))e++;
+  if(e===0)return'fist';
+  if(e===1&&ext(8,6))return'point';
+  if(e===2&&ext(8,6)&&ext(12,10))return'victory';   // ✌️ 耶 = 食指+中指
+  return'open';
 }
-async function pH(){if(!hr||!wkCvs)return;try{await hands.send({image:wkCvs});}catch(e){console.warn('MediaPipe Hands send failed:',e.message);}}
+// Aspect-correct camera→painting map: a centered crop of the camera (preserving its real aspect, whatever the
+// resolution) that COVERS the reveal area. Used by BOTH the faint overlay and the hand mapping so they line up
+// and H/V hand movement scales the same (no stretch). Returns the source-rect to crop from the raw video.
+function camCover(){
+  const ib=S.imgBounds||{x:0,y:0,w:DW,h:DH};
+  const cov=Math.max(ib.w/VW, ib.h/VH);
+  const sw=ib.w/cov, sh=ib.h/cov;
+  return {ib, sx:(VW-sw)/2, sy:(VH-sh)/2, sw, sh};
+}
+let _hbusy=false;
+async function pH(){if(!hr||!wkCvs||_hbusy)return;_hbusy=true;try{await hands.send({image:wkCvs});}catch(e){console.warn('MediaPipe Hands send failed:',e.message);}finally{_hbusy=false;}}
 
 /* ───────────────────────────────────────────────────────────
    Modes
@@ -1179,7 +1301,7 @@ const M={
   flashlight:{
     icon:'🔦',nameKey:'modeFlashlight',
     init(){},spot(id){return spF(id);},cln(){},
-    ex:()=>'', needCam:true,
+    ex:()=>'', needCam:true, needsPixels:true,
   },
   hand:{
     icon:'✋',nameKey:'modeHand',
@@ -1187,6 +1309,7 @@ const M={
     spot(id){if(S.hpos&&S.gesture!=='fist')return{x:S.hpos.x,y:S.hpos.y,radius:S.gesture==='point'?25:S.radius};return null;},
     cln(){if(hands){try{hands.close();}catch(e){console.warn('hands.close failed:',e.message);}hands=null;hr=false;}S.hlm=null;S.hpos=null;S.gesture='none';},
     ex:()=>{
+      if(S.gesture==='victory') return '✌ 换场景';
       const map={open:'gestureOpen',fist:'gestureFist',point:'gesturePoint'};
       return map[S.gesture] ? `🖐 ${t(map[S.gesture])}` : '';
     },
@@ -1216,14 +1339,344 @@ const M={
     },
     cln(){ exitGaze(); },
     ex(){ return S.gazeReady ? '' : `👓 ${t('gazeCalibrating')}`; },
-    needCam:true, // app provides the camera; we run ArUco on the camera ImageData
+    needCam:true, needsPixels:true, // app provides the camera; we run ArUco on the camera ImageData
   },
   mouse:{
     icon:'🖱',nameKey:'modeMouse',
     init(){},spot(id){return{x:S.mouseX,y:S.mouseY,radius:S.radius};},
     cln(){},ex:()=>'',needCam:false,
   },
+  phone:{
+    icon:'📱',nameKey:'modePhone',
+    init(){ phoneStart(); },
+    spot(){ const tg=S.phone.targets[S.phone.primaryId]; return (tg && (tg.frozen||performance.now()-tg.t<=S.phone.staleMs))?{x:tg.smX,y:tg.smY,radius:tg.smR}:null; },
+    spots(){ const now=performance.now(); const br=1+(S.breath||0)*0.22; return Object.values(S.phone.targets).filter(tg=>tg.frozen||now-tg.t<=S.phone.staleMs).map(tg=>({x:tg.smX,y:tg.smY,radius:tg.smR*br*(1+(tg.expr||0)*0.8),id:tg.id,hue:tg.hue,frozen:tg.frozen,brush:tg.brush||0,ang:tg.ang||0})); },
+    cln(){ phoneStop(); },
+    ex(){ const n=phoneActiveCount(); return n?`📱 ${n}`:t('phoneWaiting'); },
+    needCam:false,
+  },
+  ir:{
+    icon:'🔴',nameKey:'modeIR',
+    init(){ irStart(); },
+    spot(){ return (S.ir&&performance.now()-S.ir.t<400)?{x:S.ir.x,y:S.ir.y,radius:S.ir.r||S.radius}:null; },   // IR wand = just another spot
+    cln(){ irStop(); },
+    ex(){ return (S.ir&&S.ir.port)?'':'🔴 '+t('irWaiting'); },
+    needCam:false,
+  },
 };
+
+/* ───────────────────────────────────────────────────────────
+   Phone controller — phone sensors streamed over the SSE relay
+   (needs server.py, which provides /events + /send). Each phone
+   opens /phone.html#room=<token>, reads its own DeviceOrientation
+   and POSTs it; the display subscribes via EventSource and turns
+   each phone into a spotlight. Multiple phones -> multiple lights.
+   ─────────────────────────────────────────────────────────── */
+function clampN(v,a,b){return v<a?a:(v>b?b:v);}
+// 色身 — deterministic per-phone identity colour (from session id) + small colour helpers
+const JEWEL=['#c96442','#6b8e6e','#7b8fa8','#b8583a','#d97757','#5e7d8e'];
+function hueFromId(id){let h=0;for(let i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))>>>0;return JEWEL[h%JEWEL.length];}
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+function phoneActiveCount(){const now=performance.now();return Object.values(S.phone.targets).filter(tg=>(tg.frozen||now-tg.t<=S.phone.staleMs)&&String(tg.id||'').indexOf('#')<0).length;}
+function phoneNewToken(){
+  const a=new Uint8Array(6);
+  if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a); else for(let i=0;i<a.length;i++)a[i]=Math.floor(Math.random()*256);
+  return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join('').slice(0,8);
+}
+function phoneStart(){
+  const P=S.phone;
+  P.targets={};P.primaryId=null;P.calib={};P.splats=[];P.seq=0;P.overlap={};P.ink=false;P.strokeLast={};
+  P.room=phoneNewToken();
+  const url=`${location.origin}/phone.html?v=${P.room}#room=${P.room}`;   // ?v= busts any stale phone.html cache
+  showPhonePair(url);
+  try{
+    P.es=new EventSource(`/events?room=${encodeURIComponent(P.room)}`);
+    P.es.onmessage=e=>phoneIngest(e.data);
+    P.es.onopen=()=>{const er=document.getElementById('pp-err');if(er)er.style.display='none';};
+    P.es.onerror=()=>{ if(!P.es||P.es.readyState===2){const er=document.getElementById('pp-err');if(er)er.style.display='block';} };
+  }catch(err){ const er=document.getElementById('pp-err');if(er)er.style.display='block'; }
+}
+function phoneStop(){
+  const P=S.phone;
+  if(P.es){try{P.es.close();}catch(e){}P.es=null;}
+  P.targets={};P.primaryId=null;P.splats=[];P.overlap={};P.ink=false;P.strokeLast={};
+  hidePhonePair();
+  refreshRoster();
+}
+// 🔴 WebSerial IR tracker — an OpenMV/Pixy2 streams "x,y[,area]" (0..1) per line; realizes the IR-flashlight vision via the SAME spot contract, no render-engine change
+let irReader=null;
+async function irStart(){ S.ir={x:DW/2,y:DH/2,r:0,t:0,port:null};
+  if(!('serial' in navigator)){ flashHint(t('irWaiting')); return; }
+  try{ const port=await navigator.serial.requestPort(); await port.open({baudRate:115200}); S.ir.port=port;
+    const dec=new TextDecoderStream(); port.readable.pipeTo(dec.writable).catch(()=>{}); irReader=dec.readable.getReader(); let buf='';
+    (async()=>{ try{ for(;;){ const {value,done}=await irReader.read(); if(done)break; buf+=value;
+      let nl; while((nl=buf.indexOf('\n'))>=0){ const ln=buf.slice(0,nl); buf=buf.slice(nl+1);
+        const p=ln.trim().split(/[,\s]+/).map(Number);
+        if(p.length>=2 && isFinite(p[0]) && isFinite(p[1])){ S.ir.x=clampN(p[0],0,1)*DW; S.ir.y=clampN(p[1],0,1)*DH; if(isFinite(p[2]))S.ir.r=clampN(p[2],0.02,0.5)*Math.min(DW,DH); S.ir.t=performance.now(); } } } }catch(e){} })();
+  }catch(e){ flashHint('IR 设备未连接'); }
+}
+function irStop(){ try{ irReader&&irReader.cancel(); }catch(e){} irReader=null; try{ S.ir&&S.ir.port&&S.ir.port.close(); }catch(e){} S.ir=null; }
+function phoneIngest(raw){
+  let msg; try{msg=JSON.parse(raw);}catch(e){return;}
+  if(msg.type==='haptic') return;                 // ignore our own echoed reverse-channel message
+  const P=S.phone, id=msg.id; if(!id)return;
+  if(msg.type==='paint'){ S.paint=!S.paint; flashHint(S.paint?'🖌 留痕 开':'留痕 关'); return; }   // phone long-press 💦 toggles 留痕
+  const now=performance.now();
+  // prune phones gone silent (missed 'bye') — but never a deliberately FROZEN one
+  for(const k in P.targets){ if(!P.targets[k].frozen && now-P.targets[k].t>4000){ delete P.targets[k]; if(P.primaryId===k)P.primaryId=null; } }
+  if(msg.type==='bye'){ delete P.targets[id]; if(P.primaryId===id)P.primaryId=null; if(!P.primaryId)P.primaryId=Object.keys(P.targets)[0]||null; refreshPhoneCount(); refreshRoster(); return; }
+  if(!P.primaryId) P.primaryId=Object.keys(P.targets)[0]||null;
+  if(msg.type==='calib'){ P.calib[id]={beta:+msg.beta||0,gamma:+msg.gamma||0}; const t0=P.targets[id]; if(t0){ t0.twist=0; t0.twistBase=0; } return; }   // 居中: zero BOTH ends' twist reference
+  // content-only / position-less messages: handle BEFORE creating a wand target (no phantom roster seal/count)
+  if(msg.type==='music'){ if(msg.onset){ const t2=P.targets[id]; pushSplat(t2?t2.smX:DW/2, t2?t2.smY:DH/2, 22+(+msg.level||0)*44, 90); } return; }   // 墨随声动
+  if(msg.type==='text'){ inkText(id, msg.text||''); return; }   // 题字成境
+  if(msg.type==='geo'){ S.geo.push({x:clampN(+msg.x||0,0,1),y:clampN(+msg.y||0,0,1),hue:hueFromId(id)}); if(S.geo.length>200)S.geo.shift(); flashHint('🌏 远客生辉 +1'); return; }
+  if(msg.type==='rps'){ rpsMove(id, msg.move); return; }   // 石头剪刀布
+  if(msg.type==='beat'){ beatTap(id); return; }   // 击节点墨
+  let tg=P.targets[id];
+  if(!tg){ tg=P.targets[id]={smX:DW/2,smY:DH/2,smR:S.radius,t:now,id:id,hue:hueFromId(id),frozen:false,brush:0,twist:0,twistBase:0,ang:0,trailT:0,seq:(++P.seq)}; if(!P.primaryId)P.primaryId=id; refreshPhoneCount(); refreshRoster(); }
+  if(msg.type==='freeze'){ tg.frozen=!!msg.on; tg.t=now; refreshRoster(); return; }
+  if(msg.type==='brush'){ tg.brush=((+msg.i)||0)%3; return; }
+  if(msg.type==='splash'){ pushSplat(tg.smX, tg.smY, +msg.power||26, +msg.spin||0); tg.t=now; return; }   // FIX: was missing return -> dragged wand to centre every shake/泼墨/张嘴
+  if(msg.type==='pose'){ tg.t=now; if(msg.k)tg.skel=msg.k; const h=hueFromId(id); upsertPoseTarget(id,msg.r,h,true); upsertPoseTarget(id+'#l',msg.l,h,false); return; }   // 体感 两腕成两灯 (+骨架 for 通灵生兽)
+  if(msg.type==='throw'){ const t2=P.targets[id]; S.orbs.push({x:t2?t2.smX:DW/2,y:t2?t2.smY:DH/2,vx:clampN(+msg.vx||0,-1,1)*DW*0.018,vy:clampN(+msg.vy||0,-1,1)*DH*0.018-6,hue:hueFromId(id),t0:now,owner:id}); if(S.orbs.length>12)S.orbs.shift(); return; }   // 投光接光
+  if(msg.type==='expr'){ tg.expr=clampN(+msg.smile||0,0,1); return; }   // 表情: 微笑 -> 光圈绽放
+  if(msg.type==='gesture'){ const g=msg.g;   // 手诀: 离散手型命令
+    if(g==='fist'){ tg.frozen=!tg.frozen; refreshRoster(); }
+    else if(g==='open'){ pushSplat(tg.smX,tg.smY,42,120); }
+    else if(g==='point'){ tg.brush=((tg.brush||0)+1)%3; }
+    else if(g==='victory'){ changeScene((S.scene+1)%5); }
+    return; }
+  if(msg.type==='crowd'){ const ppl=msg.people||[]; for(let i=0;i<ppl.length&&i<8;i++) upsertPoseTarget(id+'#p'+i, ppl[i], hueFromId(id+'#p'+i), false); delete P.targets[id]; if(P.primaryId===id)P.primaryId=Object.keys(P.targets)[0]||null; return; }   // 众生执灯 多人各一灯 (no centre phantom: only per-person sub-lights)
+  if(msg.type==='breath'){ S.breath=0.15*clampN(+msg.level||0,0,1)+0.85*(S.breath||0); return; }   // 吐纳
+  if(msg.type==='stroke'){ paintStroke(id, msg); return; }   // 运笔 书法
+  if(msg.type==='pose6d'){ tg.t=now; const a=P.alpha;                                                          // WebXR 6DoF 空间魔杖
+    const tx=DW/2+clampN(+msg.x||0,-1,1)*DW/2, ty=DH/2+clampN(+msg.y||0,-1,1)*DH/2;
+    tg.smX=a*tx+(1-a)*tg.smX; tg.smY=a*ty+(1-a)*tg.smY;
+    tg.smR=a*clampN(S.radius*(0.4+(1-clampN(+msg.z||0,0,1))*1.6), S.radius*0.4, S.radius*2.6)+(1-a)*tg.smR; return; }
+  if(msg.type==='hello'){ tg.t=now; tg.role=(id===P.primaryId)?'conductor':'brush'; phoneSend(id,{type:'role',role:tg.role}); return; }   // 合奏角色
+  tg.t=now;
+  if(tg.frozen) return;                            // frozen: hold last smoothed position
+  // gyro wrist-twist -> scene flick (primary phone only, so multi-phone doesn't fight)
+  if(typeof msg.twist==='number' && id===P.primaryId){
+    if(P._twistPrimary!==id){ P._twistPrimary=id; tg.twistBase=msg.twist; }   // re-seed on (re)promotion so a handoff doesn't flick scene
+    tg.twist=msg.twist;
+    const d=tg.twist-(tg.twistBase||0);
+    if(Math.abs(d)>90){ changeScene((S.scene+(d>0?1:-1)+5)%5); tg.twistBase=tg.twist; }
+  }
+  const m=phoneMap(id,msg), a=P.alpha;
+  const dx=m.x-tg.smX, dy=m.y-tg.smY, mv=Math.hypot(dx,dy);
+  if(mv>2) tg.ang=Math.atan2(dy,dx);               // motion direction -> streak-brush angle
+  if(mv>30 && now-tg.trailT>40){                   // 流光拖尾 — comet trail on fast tilt
+    tg.trailT=now;
+    S.phone.splats.push({x:m.x,y:m.y,t0:now,life:420,size:tg.smR*0.45,blobs:[{dx:0,dy:0,r:1}]});
+    if(S.phone.splats.length>40) S.phone.splats.splice(0,S.phone.splats.length-40);
+  }
+  tg.smX=a*m.x+(1-a)*tg.smX;
+  tg.smY=a*m.y+(1-a)*tg.smY;
+  let rt=m.radius;
+  const blow=+msg.blow||0;
+  if(blow>0.05) rt=clampN(rt*(1+blow*1.6), S.radius*0.4, S.radius*3.4);   // 吹气 -> 光圈绽放
+  tg.smR=a*rt+(1-a)*tg.smR;
+}
+// 摇出泼墨 — a transient splatter of revealed colour that blooms then fades
+function pushSplat(x,y,power,spin){
+  const size=clampN(70 + power*1.7 + spin*0.05, 80, 240);   // must spray BEYOND the ~140px spotlight or the bloom is invisible inside it
+  const blobs=[{dx:0,dy:0,r:1.1}];
+  const n=8+Math.floor(Math.random()*6);
+  for(let i=0;i<n;i++){ const a=Math.random()*6.283, d=0.5+Math.random()*1.8;
+    blobs.push({dx:Math.cos(a)*d, dy:Math.sin(a)*d, r:0.16+Math.random()*0.55}); }
+  S.phone.splats.push({x,y,t0:performance.now(),life:1600,size,blobs,pop:1});   // pop:1 -> draws the bright burst ring
+  if(S.phone.splats.length>40) S.phone.splats.splice(0, S.phone.splats.length-40);
+}
+// 笔锋 — build the reveal path for a spot: 0=disc, 1=streak (along motion), 2=scatter
+function buildSpotPath(s){
+  const r=s.radius||S.radius, b=s.brush||0;
+  if(b===1){ ctx.ellipse(s.x,s.y,r*1.5,r*0.62,s.ang||0,0,Math.PI*2); }
+  else if(b===2){ ctx.moveTo(s.x+r*0.55,s.y);ctx.arc(s.x,s.y,r*0.55,0,Math.PI*2);
+    const seed=s.id?s.id.charCodeAt(0):0;
+    for(let i=0;i<7;i++){ const a=i*2.39996+seed, d=r*(0.45+0.55*((i%3)/2)), rr=r*(0.16+0.13*(i%2));
+      const x=s.x+Math.cos(a)*d, y=s.y+Math.sin(a)*d; ctx.moveTo(x+rr,y);ctx.arc(x,y,rr,0,Math.PI*2); } }
+  else { ctx.moveTo(s.x+r,s.y);ctx.arc(s.x,s.y,r,0,Math.PI*2); }
+}
+// reverse-channel: ask the relay to buzz one phone (phone filters to its own id)
+function phoneSend(id,obj){ if(!S.phone.room)return; obj.to=id;
+  try{ fetch(`/send?room=${encodeURIComponent(S.phone.room)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}); }catch(e){} }
+function phoneHaptic(id,pattern){ phoneSend(id,{type:'haptic',pattern}); }
+// 体感 — front-cam pose: each wrist becomes a light (id + id#l) so your two hands can self-overlap-bloom
+function upsertPoseTarget(tid, pt, hue, isMain){
+  if(!pt) return; const P=S.phone, now=performance.now(); let tg=P.targets[tid];
+  if(!tg){ tg=P.targets[tid]={smX:DW/2,smY:DH/2,smR:S.radius,t:now,id:tid,hue:hue||hueFromId(tid),frozen:false,brush:0,ang:0,seq:(++P.seq)};
+    if(isMain){ if(!P.primaryId)P.primaryId=tid; refreshPhoneCount(); refreshRoster(); } }
+  const a=P.alpha;
+  tg.smX=a*(clampN(+pt.x||0,0,1)*DW)+(1-a)*tg.smX; tg.smY=a*(clampN(+pt.y||0,0,1)*DH)+(1-a)*tg.smY; tg.t=now;
+}
+// 运笔 — rasterise an incoming calligraphy stroke chunk into the persistent paint mask (path = content)
+function paintStroke(id, msg){
+  ensurePaint(); S.phone.ink=true;
+  if(!S.phone.strokeLast) S.phone.strokeLast={};
+  const sid=id+'|'+(msg.s||0); let last=S.phone.strokeLast[sid]||null; const pts=msg.pts||[];
+  paintCtx.globalCompositeOperation='source-over';
+  for(const p of pts){ const x=clampN(+p.x||0,0,1)*DW, y=clampN(+p.y||0,0,1)*DH, w=clampN(+p.w||1,0.2,1.6)*46;
+    if(last){ const dx=x-last.x, dy=y-last.y, dd=Math.hypot(dx,dy), steps=Math.max(1,Math.round(dd/Math.max(6,w*0.45)));
+      for(let i=1;i<=steps;i++){ const t=i/steps, iw=last.w+(w-last.w)*t;
+        if(iw<22 && Math.random()<0.35) continue;                  // 飞白 — dry-brush gaps on fast/thin strokes
+        paintCtx.globalAlpha = iw<22 ? 0.5+0.45*Math.random() : 1;  // fast = sparse & light, slow = solid 浓墨
+        paintCtx.drawImage(paintBrush, last.x+dx*t-iw, last.y+dy*t-iw, iw*2, iw*2); }
+      paintCtx.globalAlpha=1; }
+    else paintCtx.drawImage(paintBrush, x-w, y-w, w*2, w*2);
+    last={x,y,w};
+  }
+  S.phone.strokeLast[sid]=last;
+}
+// 留痕 — persistent paint-on reveal: a soft brush sprite + a DWxDH alpha mask + a scratch compositor
+function makePaintBrush(){ const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
+  const g=x.createRadialGradient(64,64,0,64,64,64); g.addColorStop(0,'rgba(255,255,255,0.55)'); g.addColorStop(0.6,'rgba(255,255,255,0.30)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=g; x.fillRect(0,0,128,128); return c; }
+function ensurePaint(){
+  if(!paintCvs || paintCvs.width!==DW || paintCvs.height!==DH){
+    paintCvs=document.createElement('canvas'); paintCvs.width=DW; paintCvs.height=DH; paintCtx=paintCvs.getContext('2d');
+    paintScratch=document.createElement('canvas'); paintScratch.width=DW; paintScratch.height=DH; paintSctx=paintScratch.getContext('2d');
+  }
+  if(!paintBrush) paintBrush=makePaintBrush();
+}
+// 长曝留痕 — light-painting glow buffer + PNG export
+function ensureGlow(){ if(!glowCvs||glowCvs.width!==DW||glowCvs.height!==DH){ glowCvs=document.createElement('canvas'); glowCvs.width=DW; glowCvs.height=DH; glowCtx=glowCvs.getContext('2d'); } }
+// 分享卡 — compose the frame + a caption strip + a 印 seal into a takeaway PNG (the export IS the marketing)
+function savePNG(){ try{
+  const strip=Math.round(DH*0.11), sc=document.createElement('canvas'); sc.width=DW; sc.height=DH+strip;
+  const x=sc.getContext('2d'); x.fillStyle='#141413'; x.fillRect(0,0,sc.width,sc.height); x.drawImage(D,0,0);
+  x.fillStyle='#f5f4ed'; x.textBaseline='middle'; x.textAlign='left';
+  x.font=`600 ${Math.round(strip*0.34)}px "Noto Serif SC","Songti SC",serif`;
+  x.fillText('墨卷 · 一起点亮一幅画', Math.round(DW*0.045), DH+strip*0.5);
+  const ss=Math.round(strip*0.62), sx=DW-ss-Math.round(DW*0.045), sy=DH+(strip-ss)/2;
+  x.fillStyle='#c96442'; x.fillRect(sx,sy,ss,ss);
+  x.fillStyle='#fff'; x.textAlign='center'; x.font=`${Math.round(ss*0.62)}px "Songti SC",serif`; x.fillText('印', sx+ss/2, sy+ss*0.54);
+  const a=document.createElement('a'); a.download='inkscroll-'+Math.floor(performance.now())+'.png'; a.href=sc.toDataURL('image/png'); a.click(); flashHint('已保存分享卡');
+}catch(e){ flashHint('保存失败(摄像头模式画布受限)'); } }
+// quality helpers: clip-to-imgBounds wrapper (kills ~9 copies of the save/clip/restore preamble) + cached glow sprite (no per-frame gradients)
+function withBounds(fn){ ctx.save(); if(S.imgBounds){const ib=S.imgBounds;ctx.beginPath();ctx.rect(ib.x,ib.y,ib.w,ib.h);ctx.clip();} fn(); ctx.restore(); }
+const _glowSprites={};
+function glowSprite(hue){ if(!_glowSprites[hue]){ const c=document.createElement('canvas'); c.width=c.height=96; const x=c.getContext('2d');
+  const g=x.createRadialGradient(48,48,0,48,48,48); g.addColorStop(0,hexA(hue,1)); g.addColorStop(1,hexA(hue,0)); x.fillStyle=g; x.fillRect(0,0,96,96); _glowSprites[hue]=c; } return _glowSprites[hue]; }
+let _ffSprite=null;
+function fireflySprite(){ if(!_ffSprite){ const c=document.createElement('canvas'); c.width=c.height=32; const x=c.getContext('2d');
+  const g=x.createRadialGradient(16,16,0,16,16,16); g.addColorStop(0,'rgba(220,255,170,0.95)'); g.addColorStop(0.4,'rgba(160,255,100,0.4)'); g.addColorStop(1,'rgba(160,255,100,0)'); x.fillStyle=g; x.fillRect(0,0,32,32); _ffSprite=c; } return _ffSprite; }
+// 通灵生兽 — render a body-shaped ink reveal (bones as thick brush + a flowing tail) from a 体感 skeleton
+function renderCreature(tg){
+  const sk=tg.skel; if(!sk)return; const Pn=v=>v?{x:v[0]*DW,y:v[1]*DH}:null;
+  const nose=Pn(sk[0]),Ls=Pn(sk[1]),Rs=Pn(sk[2]),Le=Pn(sk[3]),Re=Pn(sk[4]),Lw=Pn(sk[5]),Rw=Pn(sk[6]),Lh=Pn(sk[7]),Rh=Pn(sk[8]);
+  const mid=(a,b)=>(a&&b)?{x:(a.x+b.x)/2,y:(a.y+b.y)/2}:(a||b);
+  const msh=mid(Ls,Rs), mhip=mid(Lh,Rh);
+  const bones=[[nose,msh],[msh,mhip],[Ls,Le],[Le,Lw],[Rs,Re],[Re,Rw],[Ls,Rs]];
+  const base=(S.radius||140)*0.5;
+  withBounds(()=>{
+    ctx.beginPath();
+    for(const b of bones){ if(!b[0]||!b[1])continue;
+      for(let i=0;i<=8;i++){ const t=i/8, x=b[0].x+(b[1].x-b[0].x)*t, y=b[0].y+(b[1].y-b[0].y)*t, r=base*(0.45+0.55*Math.sin(t*Math.PI)); ctx.moveTo(x+r,y); ctx.arc(x,y,r,0,Math.PI*2); } }
+    if(mhip){ let px=mhip.x,py=mhip.y; const ph=performance.now()/250;   // flowing dragon tail
+      for(let i=1;i<=14;i++){ const t=i/14; px+=Math.sin(ph+i*0.6)*14; py+=base*0.85; const r=base*(1-t)*0.9; if(r>1){ctx.moveTo(px+r,py);ctx.arc(px,py,r,0,Math.PI*2);} } }
+    ctx.clip(); ctx.drawImage(scCvs,0,0,DW,DH);
+  });
+}
+// 众声成墨 — the DISPLAY's own mic samples room loudness -> drives the global breath bloom/re-flood
+let roomMic=null,roomAna=null,roomData=null;
+function toggleRoom(){
+  if(S.room){ try{roomMic&&roomMic.getTracks().forEach(t=>t.stop());}catch(e){} roomMic=roomAna=null; S.room=false; S.breath=0; flashHint('众声 关'); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{ roomMic=st; const c=new (window.AudioContext||window.webkitAudioContext)();
+    const s=c.createMediaStreamSource(st); roomAna=c.createAnalyser(); roomAna.fftSize=512; s.connect(roomAna); roomData=new Uint8Array(roomAna.fftSize);
+    S.room=true; flashHint('🎙 众声成墨 开'); roomLoop();
+  }).catch(()=>flashHint('麦克风不可用'));
+}
+function roomLoop(){ if(!S.room||!roomAna)return; roomAna.getByteTimeDomainData(roomData);
+  let s=0; for(let i=0;i<roomData.length;i++){const v=(roomData[i]-128)/128;s+=v*v;}
+  S.breath=0.2*Math.max(0,Math.min(1,(Math.sqrt(s/roomData.length)-0.02)/0.2))+0.8*(S.breath||0);
+  requestAnimationFrame(roomLoop);
+}
+// 氛围音 — Eno-style generative pentatonic bed (key 'a'): 3 non-commensurate slow timers fire long, soft, panned 宫商角徵羽 tones → a never-repeating 留白 soundscape under the idle/attract wall
+let ambCtx=null, ambOn=false;
+function toggleAmbient(){
+  if(ambOn){ ambOn=false; try{ambCtx&&ambCtx.close();}catch(e){} ambCtx=null; flashHint('氛围音 关'); return; }
+  try{ ambCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ flashHint('音频不可用'); return; }
+  ambOn=true; flashHint('🎐 氛围音 开');
+  const SC=[130.81,146.83,164.81,196,220,261.63,293.66,329.63,392,440];
+  function voice(){ if(!ambOn||!ambCtx)return; const c=ambCtx, now=c.currentTime, f=SC[Math.floor(Math.random()*SC.length)];
+    const o=c.createOscillator(); o.type='sine'; o.frequency.value=f;
+    const o2=c.createOscillator(); o2.type='sine'; o2.frequency.value=f*2.001; const o2g=c.createGain(); o2g.gain.value=0.3;
+    const g=c.createGain(); let out=g; if(c.createStereoPanner){const p=c.createStereoPanner();p.pan.value=Math.random()*1.6-0.8;g.connect(p);out=p;}
+    out.connect(c.destination); o.connect(g); o2.connect(o2g); o2g.connect(g);
+    const dur=4+Math.random()*5; o.start(now); o2.start(now);
+    g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.06,now+dur*0.4); g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+    o.stop(now+dur+0.1); o2.stop(now+dur+0.1);
+  }
+  [5300,7100,9700].forEach(period=>{ (function tick(){ if(!ambOn)return; voice(); setTimeout(tick, period+Math.random()*period*0.4); })(); });
+}
+// 题字成境 — text -> scene keyword + a constellation of motif blooms (deterministic by char)
+function inkText(id,text){ if(!text)return; const map={山:0,水:0,峰:0,竹:1,林:1,雪:2,冬:2,寒:2,花:3,鸟:3,春:3,星:4,夜:4,空:4,月:4}; let scened=false;
+  for(const ch of text){ if(map[ch]!==undefined && !scened){ changeScene(map[ch]); scened=true; } }
+  for(let i=0;i<text.length && i<12;i++){ const c=text.charCodeAt(i); pushSplat(((c*53)%1000)/1000*DW, ((c*97)%1000)/1000*DH, 24+(c%30), c%180); }
+  flashHint('題 · '+text.slice(0,8));
+}
+// 石头剪刀布 — first two players within 2.5s resolve; winner's light blooms
+function rpsMove(id,move){ const now=performance.now(); if(!S.rps.moves)S.rps.moves={}; S.rps.moves[id]={move:move,t:now};
+  const ids=Object.keys(S.rps.moves).filter(k=>now-S.rps.moves[k].t<2500);
+  if(ids.length>=2){ const a=ids[0],b=ids[1], ma=S.rps.moves[a].move, mb=S.rps.moves[b].move, beats={rock:'scissors',scissors:'paper',paper:'rock'};
+    let winner = (ma===mb)?null:(beats[ma]===mb?a:b);
+    const t2=winner&&S.phone.targets[winner];
+    if(t2){ pushSplat(t2.smX,t2.smY,82,160); phoneHaptic(String(winner).split('#')[0],[10,30,10,30,60]); flashHint('✊✋✌ 胜者绽放!'); } else flashHint('✊✋✌ 平局');
+    S.rps.moves={}; }
+}
+// 击节点墨 — tap vs the display's own beat clock; on-beat = bigger splat + buzz
+function beatTap(id){ if(!S.beat.on)return; const ph=((performance.now()-S.beat.t0)%S.beat.period)/S.beat.period, off=Math.min(ph,1-ph), acc=Math.max(0,1-off*4);
+  const t2=S.phone.targets[id]; if(t2)pushSplat(t2.smX,t2.smY,22+acc*60,120); if(acc>0.6)phoneHaptic(String(id).split('#')[0],[12]); }
+function phoneMap(id,msg){
+  const P=S.phone;
+  if(msg.touch){ return {x:clampN(+msg.touch.nx||0,0,1)*DW, y:clampN(+msg.touch.ny||0,0,1)*DH, radius:phoneRadius(msg)}; }
+  const c=P.calib[id]||{beta:0,gamma:0};
+  const range=32; // degrees of tilt to reach a screen edge
+  const fx=clampN(((+msg.gamma||0)-c.gamma)/range,-1,1);
+  const fy=clampN(((+msg.beta ||0)-c.beta )/range,-1,1);
+  return {x:DW/2+fx*DW/2, y:DH/2+fy*DH/2, radius:phoneRadius(msg)};
+}
+function phoneRadius(msg){ const p=+msg.pinch||1; return clampN(S.radius*p, S.radius*0.4, S.radius*2.6); }
+
+/* Pairing overlay + lazy QR (qrcode-generator from CDN, same pattern as js-aruco2) */
+function showPhonePair(url){
+  const ov=document.getElementById('phone-pair'); if(!ov)return;
+  document.getElementById('pp-url').textContent=url;
+  refreshPhoneCount();
+  const er=document.getElementById('pp-err'); if(er)er.style.display='none';
+  ov.classList.add('show');
+  loadQR().then(()=>{
+    const box=document.getElementById('pp-qr'); if(!box)return;
+    box.innerHTML='';
+    try{ const qr=qrcode(0,'M'); qr.addData(url); qr.make(); box.innerHTML=qr.createSvgTag({cellSize:5,margin:2}); }
+    catch(e){ box.textContent='QR'; }
+  }).catch(()=>{});
+}
+function hidePhonePair(){ const ov=document.getElementById('phone-pair'); if(ov)ov.classList.remove('show'); }
+function refreshPhoneCount(){ const el=document.getElementById('pp-count'); if(el) el.textContent=String(phoneActiveCount()); }
+// 入卷名录 — live join/leave roster of coloured seals (event-driven, zero per-frame cost)
+function refreshRoster(){
+  const el=document.getElementById('roster'); if(!el)return;
+  const now=performance.now();
+  const list=Object.values(S.phone.targets).filter(tg=>(tg.frozen||now-tg.t<=4000)&&String(tg.id||'').indexOf('#')<0).sort((a,b)=>(a.seq||0)-(b.seq||0));
+  el.innerHTML='';
+  el.style.display=(S.mode==='phone' && list.length)?'flex':'none';
+  for(const tg of list){ const d=document.createElement('div'); d.className='seal'+(tg.frozen?' frozen':'');
+    d.style.background=tg.hue||'#c96442'; d.textContent=tg.seq||''; el.appendChild(d); }
+}
+let _qrP=null;
+function loadQR(){
+  if(window.qrcode) return Promise.resolve();
+  if(_qrP) return _qrP;
+  _qrP=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+    s.onload=res; s.onerror=rej; document.head.appendChild(s);
+  });
+  return _qrP;
+}
 
 /* ───────────────────────────────────────────────────────────
    Eye gaze — ArUco marker on glasses
@@ -1466,6 +1919,9 @@ function changeScene(n){
   const oldImg=document.createElement('canvas');oldImg.width=DW;oldImg.height=DH;
   oldImg.getContext('2d').drawImage(scCvs,0,0);
   S.scene=n;
+  if(paintCtx)paintCtx.clearRect(0,0,paintCvs.width,paintCvs.height);   // 留痕/运笔 mask wipes on scene change
+  if(glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);       // 长曝 buffer wipes too
+  S.phone.ink=false; S.phone.strokeLast={};
   drawScene(performance.now()/1000);target=scCvs;genHidden();
   S.transition={active:true,from:oldImg,start:performance.now(),duration:500};
   document.querySelectorAll('.scene-dot').forEach((d,i)=>d.classList.toggle('active',i===n));
@@ -1486,30 +1942,125 @@ function processFrame(){
     wkCtx.save();if(S.mirrorX){wkCtx.translate(VW,0);wkCtx.scale(-1,1);}
     wkCtx.drawImage(vid,0,0,VW,VH);wkCtx.restore();
   }
-  const fd=wkCvs?wkCtx.getImageData(0,0,VW,VH):null;
-  let spot=fd?m.spot(fd):null;
-  if(!spot&&S.mode==='mouse'){spot={x:S.mouseX,y:S.mouseY,radius:S.radius};}
-  drawScene(performance.now()/1000);target=scCvs;
+  const fd=(m.needsPixels&&vid&&vid.readyState>=2&&wkCvs)?wkCtx.getImageData(0,0,VW,VH):null;   // only flashlight/gaze read raw pixels — skip the ~1.2MB readback otherwise
+  let spots;
+  if(typeof m.spots==='function'){ spots=m.spots(fd)||[]; }
+  else { let sp=(m.needCam&&!(vid&&vid.readyState>=2))?null:m.spot(fd); if(!sp&&S.mode==='mouse')sp={x:S.mouseX,y:S.mouseY,radius:S.radius}; spots=sp?[sp]:[]; }
+  // 吸引循环 / 卷轴 — when idle, a lone spotlight drifts right→left (展卷), teasing the hidden layer to recruit passersby
+  // …but NOT when a hand is present in hand-mode making a fist (收光 = deliberately dark); only attract when truly idle (no hand)
+  if(spots.length===0 && S.running && !(S.mode==='hand' && S.gesture!=='none')){ S.attract=(S.attract||0)+0.0045;
+    spots=[{x:DW*(0.82-0.64*((S.attract*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.attract*0.9)), radius:S.radius*0.8}]; }
+  // 留白守卫 — don't let a crowd floodlight the whole scroll; shrink radii once total revealed area passes ~38% of the painting
+  if(S.imgBounds && spots.length>2){ const ib=S.imgBounds, maxA=ib.w*ib.h*0.38; let area=0; for(const s of spots){const r=s.radius||S.radius;area+=Math.PI*r*r;}
+    if(area>maxA){ const k=Math.sqrt(maxA/area); for(const s of spots)s.radius=(s.radius||S.radius)*k; } }
+  // skip the scene re-render (+ its particle animation) when nothing will reveal it (idle wall)
+  const revealActive = spots.length||S.paint||S.phone.ink||S.glow||S.phone.splats.length||S.creature||S.mirror||S.orbs.length||S.transition.active;
+  if(revealActive) drawScene(performance.now()/1000);
+  target=scCvs;
 
   ctx.clearRect(0,0,DW,DH);
   if(vid&&vid.readyState>=2&&S.imgBounds){
-    const ib=S.imgBounds;
+    const c=camCover(),ib=c.ib;
     ctx.save();ctx.globalAlpha=.15;
-    if(S.mirrorX){ctx.translate(ib.x+ib.w,ib.y);ctx.scale(-1,1);ctx.drawImage(vid,0,0,ib.w,ib.h);}
-    else{ctx.drawImage(vid,ib.x,ib.y,ib.w,ib.h);}
+    if(S.mirrorX){ctx.translate(ib.x+ib.w,ib.y);ctx.scale(-1,1);ctx.drawImage(vid,c.sx,c.sy,c.sw,c.sh,0,0,ib.w,ib.h);}
+    else{ctx.drawImage(vid,c.sx,c.sy,c.sw,c.sh,ib.x,ib.y,ib.w,ib.h);}
     ctx.restore();
   }
   ctx.drawImage(hiCvs,0,0,DW,DH);
-  if(spot){
-    const r=spot.radius||S.radius;
-    ctx.save();
-    if(S.imgBounds){const ib=S.imgBounds;ctx.beginPath();ctx.rect(ib.x,ib.y,ib.w,ib.h);ctx.clip();}
-    ctx.beginPath();ctx.arc(spot.x,spot.y,r,0,Math.PI*2);ctx.clip();
-    ctx.drawImage(scCvs,0,0,DW,DH);
-    ctx.restore();
-    ctx.strokeStyle='rgba(201,100,66,.22)';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.arc(spot.x,spot.y,r,0,Math.PI*2);ctx.stroke();
+  // 留痕 — persistent paint-on reveal (mode toggle 'i'): spots paint into a lasting mask; scene shows through it
+  if(S.paint || S.phone.ink){
+    ensurePaint();
+    if(S.paint){ paintCtx.globalCompositeOperation='source-over';
+      for(let i=0;i<Math.min(spots.length,6);i++){ const s=spots[i]; const r=s.radius||S.radius;
+        paintCtx.drawImage(paintBrush, s.x-r, s.y-r, r*2, r*2); } }
+    const fade=Math.max(S.paintFade,(S.breath||0)*0.03);   // 吐纳: exhale slowly re-floods the ink
+    if(fade>0){ paintCtx.globalCompositeOperation='destination-out'; paintCtx.fillStyle=`rgba(0,0,0,${fade})`; paintCtx.fillRect(0,0,DW,DH); paintCtx.globalCompositeOperation='source-over'; }
+    paintSctx.clearRect(0,0,DW,DH);
+    paintSctx.globalCompositeOperation='source-over'; paintSctx.drawImage(scCvs,0,0,DW,DH);
+    paintSctx.globalCompositeOperation='destination-in'; paintSctx.drawImage(paintCvs,0,0,DW,DH);
+    paintSctx.globalCompositeOperation='source-over';
+    withBounds(()=>ctx.drawImage(paintScratch,0,0,DW,DH));
   }
+  if(spots.length){
+    const cap=Math.min(spots.length,6);
+    // per-spot reveal (each phone its own light/brush) — clip to imgBounds to bound the blit
+    for(let i=0;i<cap;i++){ const s=spots[i];
+      withBounds(()=>{ ctx.beginPath(); buildSpotPath(s); ctx.clip(); ctx.drawImage(scCvs,0,0,DW,DH); });
+    }
+    // identity rings (frozen = thicker)
+    for(let i=0;i<cap;i++){ const s=spots[i]; const r=s.radius||S.radius;
+      ctx.strokeStyle=s.hue?hexA(s.hue,.5):'rgba(201,100,66,.22)';
+      ctx.lineWidth=s.frozen?3:1.5;
+      ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);ctx.stroke();
+    }
+    // 合手成圆 — where two beams overlap, the colour blooms; gold seam + a one-shot buzz
+    if(spots.length>=2){
+      const seen={};
+      for(let i=0;i<cap;i++)for(let j=i+1;j<cap;j++){
+        const A=spots[i],B=spots[j],ra=A.radius||S.radius,rb=B.radius||S.radius;
+        if(Math.hypot(A.x-B.x,A.y-B.y)>=ra+rb) continue;
+        withBounds(()=>{ ctx.beginPath();ctx.arc(A.x,A.y,ra,0,Math.PI*2);ctx.clip();
+          ctx.beginPath();ctx.arc(B.x,B.y,rb,0,Math.PI*2);ctx.clip();
+          ctx.globalCompositeOperation='lighter';ctx.drawImage(scCvs,0,0,DW,DH); });
+        ctx.save();ctx.strokeStyle='rgba(212,175,55,.6)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(A.x,A.y,ra,0,Math.PI*2);ctx.stroke();
+        ctx.beginPath();ctx.arc(B.x,B.y,rb,0,Math.PI*2);ctx.stroke();ctx.restore();
+        if(A.id&&B.id){ const key=A.id<B.id?A.id+'|'+B.id:B.id+'|'+A.id; seen[key]=1;
+          if(!S.phone.overlap[key]){ S.phone.overlap[key]=1; const ai=String(A.id).split('#')[0], bi=String(B.id).split('#')[0];
+            phoneHaptic(ai,[15,30,15]); phoneHaptic(bi,[15,30,15]);
+            phoneSend(ai,{type:'sfx',sound:'pluck',pan:A.x/DW*2-1}); phoneSend(bi,{type:'sfx',sound:'pluck',pan:B.x/DW*2-1}); } }   // 砚台之声
+      }
+      for(const k in S.phone.overlap){ if(!seen[k]) delete S.phone.overlap[k]; }
+    }
+  }
+
+  // 摇出泼墨 — transient ink splatters reveal the colour layer, bloom, then fade
+  if(S.phone.splats.length){
+    const tnow=performance.now();
+    S.phone.splats=S.phone.splats.filter(sp=>tnow-sp.t0<sp.life);
+    for(const sp of S.phone.splats){
+      const age=(tnow-sp.t0)/sp.life;                       // 0..1
+      const grow=0.55+0.45*Math.min(1,age*2.6);             // expand fast, then settle
+      const fade=age<0.12 ? age/0.12 : 1-(age-0.12)/0.88;   // quick fade-in, slow fade-out
+      withBounds(()=>{ ctx.beginPath();
+        for(const b of sp.blobs){const r=b.r*grow*sp.size; ctx.moveTo(sp.x+b.dx*sp.size+r,sp.y+b.dy*sp.size); ctx.arc(sp.x+b.dx*sp.size,sp.y+b.dy*sp.size,r,0,Math.PI*2);}
+        ctx.clip(); ctx.globalAlpha=Math.max(0,Math.min(1,fade)); ctx.drawImage(scCvs,0,0,DW,DH); });
+      if(sp.pop && age<0.3){ ctx.save(); ctx.globalAlpha=(1-age/0.3)*0.7; ctx.strokeStyle='rgba(255,240,214,0.95)'; ctx.lineWidth=Math.max(2,5*(1-age/0.3)); ctx.beginPath(); ctx.arc(sp.x,sp.y, sp.size*(0.5+age*4),0,6.2832); ctx.stroke(); ctx.restore(); }
+    }
+  }
+
+  // 长曝留痕 — accumulate glowing light-trails from every spotlight ('g' toggle, 's' save PNG)
+  if(S.glow){
+    ensureGlow();
+    glowCtx.globalCompositeOperation='lighter'; glowCtx.globalAlpha=0.5;
+    for(let i=0;i<Math.min(spots.length,6);i++){ const s=spots[i], r=(s.radius||S.radius)*0.9; glowCtx.drawImage(glowSprite(s.hue||'#c96442'), s.x-r,s.y-r,r*2,r*2); }
+    glowCtx.globalAlpha=1; glowCtx.globalCompositeOperation='destination-out'; glowCtx.fillStyle='rgba(0,0,0,0.004)'; glowCtx.fillRect(0,0,DW,DH);
+    glowCtx.globalCompositeOperation='source-over';
+    withBounds(()=>{ ctx.globalCompositeOperation='lighter'; ctx.drawImage(glowCvs,0,0,DW,DH); });
+  }
+
+  // 通灵生兽 — render an ink creature from each 体感 skeleton ('k' toggle)
+  if(S.creature){ for(const k in S.phone.targets){ const tg=S.phone.targets[k]; if(tg.skel && String(tg.id).indexOf('#')<0) renderCreature(tg); } }
+  // 镜影双修 — when two lights mirror about the centre, a glowing seam-band blooms ('y' toggle)
+  if(S.mirror && spots.length>=2){ const a=spots[0],b=spots[1];
+    const sym=1-Math.min(1,Math.abs((a.x+b.x)/2-DW/2)/(DW*0.4)), yo=1-Math.min(1,Math.abs(a.y-b.y)/(DH*0.4)), sc=Math.max(0,sym*0.6+yo*0.4);
+    if(sc>0.15){ withBounds(()=>{ ctx.globalAlpha=sc*0.8; const bw=DW*0.08; ctx.beginPath(); ctx.rect(DW/2-bw/2,0,bw,DH); ctx.clip(); ctx.drawImage(scCvs,0,0,DW,DH); });
+      ctx.save(); ctx.fillStyle='rgba(212,175,55,'+(0.18+sc*0.45)+')'; ctx.fillRect(DW/2-2,0,4,DH); ctx.restore(); } }
+  // 天时入卷 — tint the scroll by hour of day ('t' toggle)
+  if(S.timeTint){ const h=(new Date()).getHours(); let c=(h<6||h>=20)?'rgba(20,30,70,0.18)':(h<9?'rgba(230,150,90,0.14)':(h<17?'rgba(255,240,210,0.07)':'rgba(210,110,60,0.16)'));
+    withBounds(()=>{ ctx.fillStyle=c; ctx.fillRect(0,0,DW,DH); }); }
+  // 投光接光 — flying light orbs; caught when they reach another phone's spot
+  if(S.orbs.length){ for(const o of S.orbs){ o.x+=o.vx; o.y+=o.vy; o.vy+=0.25; o.vx*=0.995;
+      for(const s of spots){ if(String(s.id||'').split('#')[0]===o.owner)continue; if(Math.hypot(s.x-o.x,s.y-o.y)<(s.radius||S.radius)){ pushSplat(o.x,o.y,70,140); if(s.id)phoneHaptic(String(s.id).split('#')[0],[15,40,15]); o.t0=0; } } }
+    S.orbs=S.orbs.filter(o=>o.t0&&performance.now()-o.t0<5000&&o.x>-60&&o.x<DW+60&&o.y<DH+100);
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.85;
+    for(const o of S.orbs){ ctx.drawImage(glowSprite(o.hue), o.x-40,o.y-40,80,80); }
+    ctx.restore(); }
+  // 远客生辉 — persistent faint stars at each visitor's place on Earth
+  if(S.geo.length){ withBounds(()=>{ ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.9;
+    for(const st of S.geo){ ctx.drawImage(glowSprite(st.hue), st.x*DW-11,st.y*DH-11,22,22); } }); }
+  // 击节点墨 — a pulsing beat ring (display owns the clock)
+  if(S.beat.on){ const ph=((performance.now()-S.beat.t0)%S.beat.period)/S.beat.period; ctx.save(); ctx.strokeStyle='rgba(201,100,66,'+(0.25+(1-ph)*0.5)+')'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(DW/2,46,14+(1-ph)*26,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
 
   if(S.transition.active){
     const elapsed=performance.now()-S.transition.start;
@@ -1528,6 +2079,12 @@ function processFrame(){
   gh.style.opacity = exText ? 1 : 0;
   document.getElementById('he-row').style.display = exText ? 'flex' : 'none';
 
+  // 右侧手势图例 — show only in the webcam hand mode, highlight the gesture being made right now
+  const gl=document.getElementById('glegend');
+  if(gl){ if(S.mode==='hand'){ gl.classList.add('show');
+      for(const row of gl.querySelectorAll('.gl-row')) row.classList.toggle('on', row.dataset.g===S.gesture);
+    } else gl.classList.remove('show'); }
+
   fc++;const now=performance.now();if(now-ft>=1000){S.fps=fc;fc=0;ft=now;}
 
   // HUD updates
@@ -1537,7 +2094,7 @@ function processFrame(){
   document.getElementById('hr').textContent=S.radius+' · '+S.camSens+'×';
   if (exText) document.getElementById('he').textContent = exText.replace(/^🖐\s*/,'');
 
-  if(S.mode==='hand'&&fc%10===0)setTimeout(pH,0);
+  if(S.mode==='hand'&&fc%4===0)setTimeout(pH,0);
   }catch(e){console.error('Frame error:',e.message);}
   requestAnimationFrame(processFrame);
 }
@@ -1566,6 +2123,7 @@ const FIRST_HINT_KEYS = {
   hand: 'firstHintHand',
   gaze: 'firstHintGaze',
   mouse: 'firstHintMouse',
+  phone: 'firstHintPhone',
 };
 function firstHintText(){
   return t(FIRST_HINT_KEYS[S.mode] || 'firstHintMouse');
@@ -1670,13 +2228,12 @@ function hideError(){
    Keyboard & pointer
    ─────────────────────────────────────────────────────────── */
 document.addEventListener('keydown',e=>{
-  if(e.key === 'Shift' && e.shiftKey && e.code === 'KeyD'){
-    // shift+D toggles debug (handled below in keyup logic) — placeholder
-  }
   if(!S.running)return;
   switch(e.key.toLowerCase()){
     case'q':case'escape':stop();break;
     case'm':{const ks=Object.keys(M);wM(ks[(ks.indexOf(S.mode)+1)%ks.length]);break;}
+    case'h':wM('hand');break;   // 手势模式: 用本机摄像头,挪手移光圈 + 握拳/食指/张开手势
+
     case'arrowleft':changeScene((S.scene+4)%5);break;
     case'arrowright':changeScene((S.scene+1)%5);break;
     case'1':S.style='edges';genHidden();break;
@@ -1689,6 +2246,17 @@ document.addEventListener('keydown',e=>{
     case']':S.camSens=parseFloat(Math.min(5.0,S.camSens+0.2).toFixed(1));break;
     case'r':S.smooth.x=S.smooth.y=-1;break;
     case'c':if(S.mode==='gaze'&&arDetector)startCalibration();break;
+    case'p':if(S.mode==='phone'&&S.phone.room)showPhonePair(`${location.origin}/phone.html?v=${S.phone.room}#room=${S.phone.room}`);break;
+    case'i':S.paint=!S.paint;flashHint(S.paint?'🖌 留痕 开':'留痕 关');break;
+    case'o':S.paintFade=S.paintFade?0:0.01;flashHint(S.paintFade?'回墨呼吸 开':'回墨呼吸 关');break;
+    case'g':S.glow=!S.glow;if(!S.glow&&glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);flashHint(S.glow?'📷 长曝留痕 开':'长曝 关(已清空)');break;
+    case's':savePNG();break;
+    case'k':S.creature=!S.creature;flashHint(S.creature?'🐉 通灵生兽 开':'生兽 关');break;
+    case'y':S.mirror=!S.mirror;flashHint(S.mirror?'🪞 镜影双修 开':'镜影 关');break;
+    case't':S.timeTint=!S.timeTint;flashHint(S.timeTint?'🕓 天时入卷 开':'天时 关');break;
+    case'u':toggleRoom();break;
+    case'a':toggleAmbient();break;
+    case'b':S.beat.on=!S.beat.on;S.beat.t0=performance.now();flashHint(S.beat.on?'🥁 击节点墨 开':'击节 关');break;
     case'x':S.mirrorX=!S.mirrorX;break;
     case'd':if(e.shiftKey){
       S.debug=!S.debug;
@@ -1729,14 +2297,15 @@ btnStart.addEventListener('mousemove',e=>{
 const mg=document.getElementById('mg');
 function rebuildModeCards(){
   mg.innerHTML='';
-  ['flashlight','hand','gaze','mouse'].forEach(k=>{
+  ['flashlight','hand','gaze','mouse','phone','ir'].forEach(k=>{
+    if(k==='ir' && !('serial' in navigator)) return;   // 🔴 IR-tracker card only where WebSerial exists (desktop Chromium)
     const m=M[k];const c=document.createElement('button');
     c.type='button';
     c.className='mode-card'+(k===S.mode?' active':'');
     c.dataset.mode=k;
     c.setAttribute('aria-pressed',k===S.mode?'true':'false');
     c.setAttribute('aria-label',t(m.nameKey));
-    const req = m.needCam ? '📷' : '—';
+    const req = m.needCam ? '📷' : (k==='phone' ? '📱' : (k==='ir' ? '🔌' : '—'));
     c.innerHTML=`<span class="icon">${m.icon}</span><span class="name">${t(m.nameKey)}</span><span class="req">${req}</span>`;
     c.addEventListener('click',()=>wM(k));
     mg.appendChild(c);
@@ -1766,6 +2335,7 @@ document.getElementById('calib-dismiss').addEventListener('click',()=>{
   document.getElementById('calib-dismiss').style.display='none';
   if(S.running && S.mode==='gaze') wM('mouse');
 });
+document.getElementById('pp-close').addEventListener('click',hidePhonePair);
 window.addEventListener('resize',()=>{
   if(!S.running)return;
   DW=window.innerWidth;DH=window.innerHeight;D.width=DW;D.height=DH;
