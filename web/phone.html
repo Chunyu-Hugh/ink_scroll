@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#f5f4ed">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f5f4ed'/%3E%3Crect x='10' y='10' width='12' height='12' fill='%23c96442'/%3E%3C/svg%3E">
+<title>墨卷 · 手机魔杖</title>
+<style>
+  :root{
+    --ink:#141413;--stone:#5e5d59;--stone-soft:#7a7975;--clay:#c96442;--clay-deep:#b8583a;
+    --parchment:#f5f4ed;--ivory:#faf9f5;--cream:#e8e6dc;--jade:#6b8e6e;
+    --serif:'Noto Serif SC','Songti SC',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;height:100dvh;overflow:hidden;background:var(--parchment);color:var(--ink);
+    font-family:var(--serif);-webkit-user-select:none;user-select:none;touch-action:none}
+  body{display:flex;flex-direction:column;padding:max(env(safe-area-inset-top),14px) 16px max(env(safe-area-inset-bottom),14px)}
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .brand{font-size:1.05rem;font-weight:600;letter-spacing:.3em}
+  .brand small{display:block;font-size:.58rem;letter-spacing:.22em;color:var(--stone-soft);font-weight:400;margin-top:3px}
+  .status{font-size:.62rem;letter-spacing:.16em;color:var(--stone);text-align:right;line-height:1.5}
+  .status b{display:inline-flex;align-items:center;gap:6px;font-weight:500;color:var(--clay)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--stone-soft);display:inline-block;transition:background .3s}
+  .dot.on{background:var(--jade);box-shadow:0 0 0 4px rgba(107,142,110,.16)}
+  .dot.warn{background:var(--clay)}
+  /* the pad: drag your thumb to push the light around */
+  #pad{
+    flex:1;margin:14px 0;border:1px solid var(--cream);border-radius:20px;background:var(--ivory);
+    position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  }
+  #pad .hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;text-align:center;color:var(--stone-soft);font-size:.8rem;letter-spacing:.12em;line-height:1.8;pointer-events:none}
+  #pad .hint .big{font-size:1.6rem;color:var(--clay);letter-spacing:.1em}
+  #orb{position:absolute;width:96px;height:96px;border-radius:50%;pointer-events:none;
+    transform:translate(-50%,-50%);left:50%;top:50%;
+    background:radial-gradient(circle at 50% 50%,rgba(201,100,66,.28),rgba(201,100,66,.06) 65%,transparent 72%);
+    border:1.5px solid rgba(201,100,66,.55);transition:opacity .3s}
+  #pad.active #orb{opacity:1}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .grid button{
+    font:inherit;font-size:.86rem;letter-spacing:.14em;padding:15px 8px;border-radius:14px;cursor:pointer;
+    border:1px solid var(--cream);background:var(--ivory);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,background .2s,border-color .2s;
+  }
+  .grid button:active{transform:scale(.97);background:#fbf2ec;border-color:var(--clay)}
+  .grid button.on{background:var(--clay);border-color:var(--clay);color:var(--ivory)}
+  footer{margin-top:10px;font-size:.6rem;color:var(--stone-soft);letter-spacing:.1em;text-align:center;line-height:1.8}
+  footer a{color:inherit}
+  #perm{
+    position:fixed;inset:0;z-index:9;background:rgba(245,244,237,.96);display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:32px;text-align:center
+  }
+  #perm.show{display:flex}
+  #perm h1{font-size:1.1rem;font-weight:600;letter-spacing:.18em}
+  #perm p{font-size:.8rem;color:var(--stone);line-height:1.9;letter-spacing:.08em;max-width:300px}
+  #perm button{font:inherit;letter-spacing:.2em;padding:13px 34px;border:none;border-radius:999px;
+    background:var(--clay);color:var(--ivory);cursor:pointer}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">墨卷<small>PHONE WAND</small></div>
+  <div class="status" id="status"><b><span class="dot" id="dot"></span><span id="stat">连接中</span></b><br><span id="count"></span></div>
+</header>
+
+<div id="pad">
+  <div class="hint" id="hint">
+    <div class="big">☝︎</div>
+    <div>倾斜手机 <span style="color:var(--stone-soft)">或</span> 在这块面上拖动<br>光圈会跟着你走</div>
+  </div>
+  <div id="orb"></div>
+</div>
+
+<div class="grid">
+  <button id="b-scene" type="button">✌️ 换场景</button>
+  <button id="b-freeze" type="button">✊ 收光</button>
+  <button id="b-paint" type="button">🖌 留痕</button>
+  <button id="b-splash" type="button">💦 泼墨</button>
+</div>
+
+<footer>双指捏合 → 光圈大小 · 手机与画卷需在同一网络</footer>
+
+<div id="perm">
+  <h1>需要动感权限</h1>
+  <p>iOS 需要你允许访问方向传感器，手机才能当魔杖用。也可以直接用下方这块触摸区。</p>
+  <button id="perm-ok" type="button">允许</button>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   墨卷 · 手机魔杖 — the controller half of the "many lights"
+   mode. Everything is sent to server.py with a plain POST;
+   the display listens on the same room over SSE.
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  const qs=new URLSearchParams(location.search);
+  const hash=new URLSearchParams((location.hash||'').replace(/^#/,''));
+  const ROOM=hash.get('room')||qs.get('room')||'';
+  const ID=(function(){
+    const a=new Uint8Array(5);
+    (crypto.getRandomValues?crypto.getRandomValues(a):a.forEach((_,i)=>a[i]=Math.random()*256|0));
+    return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join('');
+  })();
+  const $=id=>document.getElementById(id);
+  const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+
+  const state={beta:0,gamma:0,twist:0,pinch:1,frozen:false,paint:false,delivered:0,lastSent:0};
+  let base=null, sending=false, seen=false, lastDelivery=0;
+
+  /* ── transport ─────────────────────────────────────────── */
+  function send(obj){
+    obj.id=ID;
+    const body=JSON.stringify(obj);
+    try{
+      fetch(`/send?room=${encodeURIComponent(ROOM)}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},body,keepalive:true
+      }).then(r=>r.ok?r.json():null).then(j=>{
+        if(j&&typeof j.delivered==='number'){
+          state.delivered=j.delivered; lastDelivery=Date.now(); paintStatus();
+        }
+      }).catch(()=>{ paintStatus(); });
+    }catch(e){}
+  }
+  function paintStatus(){
+    const live=state.delivered>0 && Date.now()-lastDelivery<6000;
+    $('dot').className='dot'+(live?' on':(ROOM?' warn':''));
+    $('stat').textContent=!ROOM?'缺少房间号':(live?'大屏已连接':'等待大屏');
+    $('count').textContent=live?'':(ROOM?'把手机对准画卷上的二维码':'请重新扫码');
+  }
+
+  /* ── tilt: the phone's own gyroscope ───────────────────── */
+  function onOrient(e){
+    if(e.beta==null&&e.gamma==null) return;
+    if(!base) base={beta:+e.beta||0,gamma:+e.gamma||0};
+    state.beta=+e.beta||0; state.gamma=+e.gamma||0;
+    // twist around the screen normal: alpha wrap needs care at 0/360
+    let a=+e.alpha||0, b=base.a==null?(base.a=a):base.a;
+    let d=((a-b+540)%360)-180;
+    state.twist=d;
+    seen=true;
+    schedule();
+  }
+  function attachOrientation(){
+    if(window._orientAttached) return;
+    window._orientAttached=true;
+    window.addEventListener('deviceorientation',onOrient,true);
+    setTimeout(()=>{ if(!seen) paintStatus(); },1500);
+  }
+  function askSensors(){
+    const DOE=window.DeviceOrientationEvent;
+    if(DOE&&typeof DOE.requestPermission==='function'){
+      DOE.requestPermission().then(p=>{
+        if(p==='granted'){ attachOrientation(); $('perm').classList.remove('show'); }
+        else $('perm').classList.remove('show');
+      }).catch(()=>$('perm').classList.remove('show'));
+    }else attachOrientation();
+  }
+
+  /* ── touch pad: works without any permission ───────────── */
+  const pad=$('pad'), orb=$('orb');
+  const touches=new Map();
+  let pinchStart=0, pinchBase=1, lastTouch=0;
+  function padPoint(t){
+    const r=pad.getBoundingClientRect();
+    return {nx:clamp((t.clientX-r.left)/r.width,0,1), ny:clamp((t.clientY-r.top)/r.height,0,1)};
+  }
+  function moveOrb(nx,ny){
+    orb.style.left=(nx*100)+'%'; orb.style.top=(ny*100)+'%';
+  }
+  pad.addEventListener('pointerdown',e=>{
+    pad.setPointerCapture&&pad.setPointerCapture(e.pointerId);
+    touches.set(e.pointerId,e);
+    pad.classList.add('active'); $('hint').style.opacity=0;
+    if(touches.size===2){
+      const v=[...touches.values()];
+      pinchStart=Math.hypot(v[0].clientX-v[1].clientX,v[0].clientY-v[1].clientY)||1;
+      pinchBase=state.pinch;
+    }else{
+      const p=padPoint(e); moveOrb(p.nx,p.ny);
+      state.touch=p; lastTouch=Date.now();
+      send({type:'tilt',touch:state.touch,pinch:state.pinch,beta:state.beta,gamma:state.gamma});
+    }
+    e.preventDefault();
+  });
+  pad.addEventListener('pointermove',e=>{
+    if(!touches.has(e.pointerId)) return;
+    touches.set(e.pointerId,e);
+    if(touches.size>=2&&pinchStart>10){
+      const v=[...touches.values()];
+      const d=Math.hypot(v[0].clientX-v[1].clientX,v[0].clientY-v[1].clientY);
+      state.pinch=clamp(pinchBase*(d/pinchStart),0.4,2.6);
+    }else{
+      const p=padPoint(e); moveOrb(p.nx,p.ny);
+      state.touch=p; lastTouch=Date.now();
+      schedule();
+    }
+    e.preventDefault();
+  });
+  function lift(e){
+    touches.delete(e.pointerId);
+    if(touches.size<2) pinchStart=0;
+    if(!touches.size) setTimeout(()=>{ if(!touches.size) pad.classList.remove('active'); },400);
+  }
+  pad.addEventListener('pointerup',lift);
+  pad.addEventListener('pointercancel',lift);
+
+  /* ── message scheduler: 25 Hz while active, 4 Hz idle ──── */
+  function schedule(){
+    if(sending) return;
+    sending=true;
+    setTimeout(()=>{
+      sending=false;
+      const now=Date.now();
+      const moving=now-lastTouch<900;
+      if(!moving && now-state.lastSent<240) return;
+      state.lastSent=now;
+      send({
+        type:'tilt',
+        beta:+(state.beta-(base?base.beta:0)).toFixed(2),
+        gamma:+(state.gamma-(base?base.gamma:0)).toFixed(2),
+        twist:+state.twist.toFixed(1),
+        pinch:+state.pinch.toFixed(2),
+        touch:state.touch||null,
+      });
+    }, 40);
+  }
+  setInterval(()=>{ if(!sending) schedule(); }, 250);
+
+  /* ── buttons → discrete gestures ───────────────────────── */
+  function tap(obj){ send(obj); if(navigator.vibrate) try{navigator.vibrate(14);}catch(e){} }
+  $('b-scene').addEventListener('click',()=>tap({type:'gesture',g:'victory'}));
+  $('b-splash').addEventListener('click',()=>tap({type:'splash',power:80,spin:140}));
+  $('b-paint').addEventListener('click',()=>{
+    state.paint=!state.paint; $('b-paint').classList.toggle('on',state.paint);
+    tap({type:'paint'});
+  });
+  $('b-freeze').addEventListener('click',()=>{
+    state.frozen=!state.frozen; $('b-freeze').classList.toggle('on',state.frozen);
+    tap({type:'freeze',on:state.frozen});
+  });
+  $('perm-ok').addEventListener('click',()=>{ askSensors(); });
+
+  /* ── reverse channel: the display can buzz / pluck us ──── */
+  function pluck(pan){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+      const c=window._ac||(window._ac=new C());
+      if(c.state==='suspended') c.resume().catch(()=>{});
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sine'; o.frequency.value=392+Math.random()*120;
+      let out=g;
+      if(c.createStereoPanner){ const p=c.createStereoPanner(); p.pan.value=clamp(+pan||0,-1,1); g.connect(p); out=p; }
+      out.connect(c.destination);
+      o.connect(g);
+      const t0=c.currentTime;
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(0.12,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t0+0.9);
+      o.start(t0); o.stop(t0+1);
+    }catch(e){}
+  }
+  try{
+    const es=new EventSource(`/events?room=${encodeURIComponent(ROOM)}`);
+    es.onmessage=ev=>{
+      let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+      if(m.to && m.to!==ID) return;
+      if(m.type==='haptic'){ if(navigator.vibrate&&m.pattern) try{navigator.vibrate(m.pattern);}catch(e){} }
+      if(m.type==='sfx') pluck(m.pan);
+    };
+  }catch(e){}
+
+  /* ── lifecycle ─────────────────────────────────────────── */
+  function bye(){ try{ navigator.sendBeacon? navigator.sendBeacon(`/send?room=${encodeURIComponent(ROOM)}`,JSON.stringify({id:ID,type:'bye'})) : send({type:'bye'}); }catch(e){} }
+  window.addEventListener('pagehide',bye);
+  window.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') bye(); });
+
+  if(!ROOM){
+    $('stat').textContent='缺少房间号';
+    $('perm').classList.add('show');
+  }else{
+    send({type:'hello'});
+    // iOS: sensors need a user gesture; show the gate only when the API demands it
+    const DOE=window.DeviceOrientationEvent;
+    if(DOE&&typeof DOE.requestPermission==='function'){ $('perm').classList.add('show'); }
+    else attachOrientation();
+  }
+  paintStatus();
+  setInterval(paintStatus,1500);
+})();
+</script>
+</body>
+</html>

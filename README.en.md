@@ -19,17 +19,60 @@ Control a spotlight with your webcam flashlight or hand gestures to reveal a liv
 
 ## ✨ Features
 
+**11 ways to move the light — 4 of them need no device at all.**
+
+### No device needed
+
+| Mode | How you play |
+|---|---|
+| **Unfolding itself** | Do nothing. The scroll unfurls and the light drifts across it (gallery attract loop) |
+| **Pointer · Touch** | Mouse, trackpad, finger, stylus. Drag to reveal, **pinch** to resize the aperture, **double-tap** for the next scene, **long-press** for ink trails; a Wacom's **pressure = brush weight** |
+| **Sound · Hum** | Hum into the mic: **pitch → x**, **timbre brightness → y**, **loudness → radius**, **a clap → ink splatter** |
+| **Tilt · Handheld** | Tilt your phone or tablet to move the light (zero point captured on entry, `C` to reset) |
+
+### Camera only
+
+| Mode | How you play |
+|---|---|
+| **Shadow play** | **Zero model, zero download**: frame differencing, so a **moving body reveals the colour** as it crosses the silk |
+| **Hand · Bare** | MediaPipe Hands: palm moves the light, index finger narrows it to a beam, fist puts it out, ✌️ changes scene |
+| **Face · Head** | MediaPipe FaceMesh: **turn your head to move**, **open your mouth to widen**. No printed marker needed |
+| **Flashlight** | Point a phone flashlight at the webcam; the brightest spot becomes the light |
+
+### Needs a little setup
+
+| Mode | Requires |
+|---|---|
+| **Gaze · Glasses** | One printed ArUco marker on your glasses + 5-point calibration (sub-pixel, see below) |
+| **Many lights · Phones** | Run `python3 server.py`; the audience scans a QR and each phone becomes a light. **Several people at once** |
+| **IR tracker** | OpenMV / Pixy2 over WebSerial (desktop Chromium) |
+
+### Extras
+
 | | |
 |---|---|
-| 🔦 **Flashlight** | Point a phone flashlight at the webcam; brightest spot becomes the spotlight |
-| ✋ **Hand Gesture** | The display's own webcam: move your hand to move the spotlight + gestures (open/index/fist/✌️), with a large on-screen legend that highlights your current gesture. Press `H` |
-| 👓 **Gaze · Glasses** | Wear glasses with an ArUco marker stuck on them — drive the spotlight by turning your head/gaze. Sub-pixel precision, no model download, requires printing one paper marker (see below) |
-| 🖱 **Mouse** | Trackpad / cursor follows naturally, no camera needed |
-| 🏔 **5 Scenes** | Mountains, bamboo, snow, blossoms, starry sky — AI-generated |
-| 🎬 **Animations** | Birds, snowflakes, petals, fireflies, shooting stars — visible only inside the spotlight |
-| 🎨 **3 Styles** | Ink edges (Sobel), sketch, dark |
-| 📐 **Sensitivity** | `[ ]` keys adjust the camera-to-canvas mapping |
-| 🌐 **3 Languages** | 简 · 繁 · English, auto-detected from your browser |
+| **5 scenes** | Mountains, bamboo, snow, blossoms, starry sky — AI-generated ink paintings |
+| **4 styles** | **Paper** (ink on parchment, default) · Edges (darkroom beam) · Sketch · Dark |
+| **Animations** | Birds, snowflakes, petals, fireflies, shooting stars — only inside the light |
+| **Extra effects** | Trails · ink-fade breathing · long exposure · ink creature · mirror pair · time of day · beat dotting · ambient audio · room voice |
+| **Sharing** | `S` saves a share card with a caption and a 印 seal; deep links like `?mode=audio&scene=3` start playing on their own |
+| **Accessibility** | Fully keyboard playable, `aria-live` announcements, `prefers-reduced-motion`, `P` to pause (WCAG 2.2.2) |
+| **3 Languages** | 简 · 繁 · English, auto-detected from your browser |
+
+## 🧪 Tests & docs
+
+```bash
+node tools/test.js        # 95 end-to-end assertions in a real browser
+```
+
+Real browser, real camera (fake device fed a public-domain portrait and a moving-bar video),
+real relay: all 11 modes, the phone↔display round trip, trilingual key parity, touch gestures,
+accessibility, deep links and a frame-rate budget. Last run: **95 / 95 green**.
+
+- [docs/INTERACTIONS.md](docs/INTERACTIONS.md) — the interaction system and the registry contract (read this before adding a mode)
+- [docs/TEST-REPORT.md](docs/TEST-REPORT.md) — the audit: what was broken and how it was fixed
+- [docs/HARDWARE-TODO.md](docs/HARDWARE-TODO.md) — external-device wishlist
+- [docs/SELF-IMPROVEMENT.md](docs/SELF-IMPROVEMENT.md) — the evaluator and the improvement loop
 
 ## 🛠 Tech Stack
 
@@ -49,14 +92,22 @@ The original Python + OpenCV prototype is in `archive/`.
 
 ## 🚀 Quick Start
 
-Any static file server works.
+Any static file server works — most modes need no backend at all:
 
 ```bash
 cd web && python3 -m http.server 8888
 # Open: http://localhost:8888
 ```
 
-Camera APIs require HTTPS (localhost is exempt). For dev, Tailscale is the fastest path:
+For **Many lights · Phones** (the audience uses their own phones as spotlights), run the bundled
+zero-dependency relay instead — it serves the static files *and* the SSE room broadcast:
+
+```bash
+python3 server.py 8888
+# display: http://localhost:8888   ·   phones: scan the QR on screen
+```
+
+Camera and phone-gyroscope APIs require HTTPS (localhost is exempt). For dev, Tailscale is the fastest path:
 
 ```bash
 tailscale serve --bg 8888
@@ -86,11 +137,11 @@ tailscale serve --bg 8888
 web/
 ├── index.html        # Main app (~1770 lines, zero build, includes i18n dict)
 └── scenes/           # 5 AI-generated scene images
-    ├── shanshui.png
-    ├── bamboo.png
-    ├── snow.png
-    ├── flowers.png
-    └── stars.png
+    ├── shanshui.jpg
+    ├── bamboo.jpg
+    ├── snow.jpg
+    ├── flowers.jpg
+    └── stars.jpg
 ```
 
 ### Render pipeline
@@ -221,6 +272,11 @@ Things that can still fail:
 PRs welcome — open an issue first.
 
 ## 🔮 Roadmap
+
+> **Update:** the four no-device modes (auto / pointer+touch / sound / tilt), the zero-model
+> shadow play, FaceMesh head tracking and the phone many-lights relay are **implemented and
+> covered by tests**. What remains is the hardware list — see
+> [docs/HARDWARE-TODO.md](docs/HARDWARE-TODO.md). The survey below is the original research note.
 
 **Original vision: IR flashlight + Wii Remote** — the classic Johnny-Lee-style installation. The Wiimote's onboard IR camera does hardware blob tracking at 100Hz with sub-pixel precision and is immune to ambient light. The current webcam mode is an interim approximation.
 

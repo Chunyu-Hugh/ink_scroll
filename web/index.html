@@ -8,7 +8,7 @@
 <meta property="og:title" content="墨卷 · Ink Scroll">
 <meta property="og:description" content="光照之处，墨色生辉 — 浏览器端交互水墨画装置">
 <meta property="og:type" content="website">
-<meta property="og:image" content="scenes/shanshui.png">
+<meta property="og:image" content="scenes/shanshui.jpg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f5f4ed'/%3E%3Crect x='10' y='10' width='12' height='12' fill='%23c96442'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,7 +58,7 @@ html[lang^="en"]   {--serif:var(--serif-en),var(--serif-sc);}
 
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
-  height:100%;overflow:hidden;
+  height:100%;height:100dvh;overflow:hidden;
   background:var(--parchment);
   color:var(--ink);
   font-family:var(--serif);
@@ -86,7 +86,7 @@ html,body{
 /* ──────────────────────────────────────────────────────────
    CANVAS LAYERS
    ────────────────────────────────────────────────────────── */
-canvas#display{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1}
+canvas#display{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;touch-action:none;cursor:none}
 #pip{
   position:fixed;bottom:14px;right:14px;width:140px;
   border:1px solid rgba(245,244,237,.18);border-radius:var(--r-md);
@@ -266,18 +266,24 @@ html[lang^="zh"] .tagline{font-style:normal;letter-spacing:.18em;text-indent:.18
 }
 .mode-card .icon{font-size:1.55rem;display:block;margin-bottom:6px;line-height:1}
 .mode-card .name{
+  display:block;
   font-family:var(--serif);font-size:.78rem;
   font-weight:600;color:var(--ink);letter-spacing:.04em;
+  line-height:1.3;
 }
 html[lang^="zh"] .mode-card .name{letter-spacing:.12em;}
 .mode-card .req{
-  font-size:.625rem;color:var(--stone-soft);
-  margin-top:2px;letter-spacing:.06em;
+  display:block;
+  font-size:.6rem;color:var(--stone-soft);
+  margin-top:3px;letter-spacing:.08em;line-height:1.2;
 }
+.mode-card .icon{color:var(--ink)}
+.mode-card .icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.mode-card.active .icon{color:var(--clay)}
 
 /* ──────── Phone-controller pairing overlay ──────── */
 #phone-pair{
-  position:fixed;inset:0;z-index:6;display:none;
+  position:fixed;inset:0;z-index:168;display:none;
   align-items:center;justify-content:center;
   background:rgba(20,20,19,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
 }
@@ -297,9 +303,13 @@ html[lang^="zh"] .mode-card .name{letter-spacing:.12em;}
 #phone-pair .pp-count{margin-top:14px;font-size:.82rem}
 #phone-pair .pp-count b{color:var(--clay,#c96442)}
 #phone-pair .pp-err{margin-top:12px;font-size:.78rem;color:#b4532f;display:none}
-#phone-pair .pp-close{margin-top:18px;border:1px solid var(--cream-border,#e3e0d6);background:transparent;
-  color:var(--ink,#141413);font:inherit;font-size:.82rem;padding:9px 26px;border-radius:999px;cursor:pointer}
+#phone-pair .pp-actions{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+#phone-pair .pp-close{border:1px solid var(--cream-border,#e3e0d6);background:transparent;
+  color:var(--ink,#141413);font:inherit;font-size:.82rem;padding:9px 22px;border-radius:999px;cursor:pointer;
+  transition:border-color .2s,background-color .2s}
 #phone-pair .pp-close:hover{border-color:var(--clay,#c96442)}
+#phone-pair .pp-close:not(.ghost){background:var(--clay,#c96442);border-color:var(--clay,#c96442);color:#faf9f5}
+#phone-pair .pp-close:not(.ghost):hover{background:#b8583a}
 
 /* CTA button */
 #btn-start{
@@ -456,6 +466,7 @@ html[lang^="zh-TW"] .ui-row .lbl{font-family:var(--serif-tc)}
   font-weight:500;letter-spacing:.04em;
 }
 .ui-row .val b{color:var(--clay-soft);font-weight:600}
+.ui-row .val svg{width:13px;height:13px;vertical-align:-2px;margin-right:3px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 #ui .fps{
   display:none;
   font-family:var(--mono);font-size:.6rem;
@@ -531,7 +542,7 @@ html[lang^="zh-TW"] .ui-row .lbl{font-family:var(--serif-tc)}
 
 /* First-time hint overlay */
 #first-hint{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  position:fixed;bottom:96px;left:50%;transform:translateX(-50%);
   z-index:25;pointer-events:none;
   font-family:var(--serif);font-size:.95rem;
   color:var(--ink);
@@ -642,6 +653,160 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
   #calib .calib-sub{font-size:.82rem}
 }
 
+/* ══════════════════════════════════════════════════════════
+   MODE GROUPS — the start screen now explains *what a mode
+   needs* before you commit: no device / just a camera /
+   something extra you have to set up.
+   ══════════════════════════════════════════════════════════ */
+.mode-groups{display:flex;flex-direction:column;gap:22px;width:100%;max-width:560px;margin-bottom:30px}
+.mode-group{display:flex;flex-direction:column;align-items:center;gap:9px}
+.mode-group .cat-label{
+  display:flex;align-items:center;gap:10px;width:100%;
+  font-family:var(--serif);font-size:.66rem;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--stone-soft);
+}
+html[lang^="zh"] .mode-group .cat-label{letter-spacing:.34em;text-transform:none;font-size:.72rem}
+.mode-group .cat-label::before,
+.mode-group .cat-label::after{content:"";flex:1;height:1px;background:var(--cream-line)}
+.mode-group .cat-label span{flex:0 0 auto;padding:0 2px}
+.mode-group .mode-grid{grid-template-columns:repeat(4,minmax(84px,1fr));max-width:520px;margin-bottom:0}
+
+/* ══════════════════════════════════════════════════════════
+   CONTROL BAR — the only chrome during the piece. Touch users
+   have no keyboard, so every action must be reachable here.
+   ══════════════════════════════════════════════════════════ */
+#bar{
+  position:fixed;right:16px;bottom:16px;z-index:32;
+  display:none;align-items:center;gap:2px;
+  padding:6px;
+  background:rgba(245,244,237,.82);
+  -webkit-backdrop-filter:blur(14px) saturate(120%);
+  backdrop-filter:blur(14px) saturate(120%);
+  border:1px solid rgba(232,230,220,.9);
+  border-radius:999px;
+  box-shadow:0 10px 30px -16px rgba(20,20,19,.45);
+  opacity:0;transition:opacity .45s var(--easing-out),transform .45s var(--easing-out);
+  transform:translateY(6px);
+}
+#bar.show{display:flex;opacity:1;transform:translateY(0)}
+#bar button{
+  -webkit-appearance:none;appearance:none;
+  width:34px;height:34px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+  border:none;background:transparent;border-radius:999px;
+  color:var(--ink);cursor:pointer;
+  font-family:var(--serif);font-size:1rem;line-height:1;
+  transition:background-color .2s,color .2s,transform .2s;
+}
+#bar button:hover{background:rgba(20,20,19,.07)}
+#bar button:active{transform:scale(.92)}
+#bar button:focus-visible{outline:2px solid var(--clay);outline-offset:1px}
+#bar button.on{background:var(--clay);color:var(--ivory)}
+#bar button[disabled]{opacity:.32;cursor:not-allowed}
+#bar .b-sep{width:1px;height:18px;margin:0 3px;background:rgba(20,20,19,.12)}
+#bar svg{width:17px;height:17px;display:block;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#bar .b-label{
+  font-size:.66rem;letter-spacing:.1em;padding:0 9px 0 7px;width:auto;
+  text-transform:uppercase;color:var(--stone);
+  max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;
+}
+#bar .b-label:hover{background:transparent;color:var(--stone)}
+
+/* ══════════════════════════════════════════════════════════
+   HELP / CONSOLE PANEL — mode instructions, every mode, keys
+   ══════════════════════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;z-index:170;display:none;
+  align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;
+  background:rgba(20,20,19,.55);
+  -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+}
+.overlay.show{display:flex}
+.overlay .sheet{
+  background:var(--parchment);color:var(--ink);
+  border-radius:var(--r-xl);border:1px solid var(--cream-line);
+  box-shadow:0 30px 80px -30px rgba(20,20,19,.6);
+  padding:26px 28px 22px;width:100%;max-width:620px;margin:auto;
+  font-family:var(--serif);
+}
+.overlay .sheet h2{
+  font-size:1.15rem;font-weight:600;letter-spacing:.16em;margin-bottom:4px;
+}
+.overlay .sheet .sub{font-size:.78rem;color:var(--stone);line-height:1.7;letter-spacing:.04em}
+.overlay .sheet .sect{margin-top:22px}
+.overlay .sheet .sect-h{
+  font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;color:var(--stone-soft);
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+html[lang^="zh"] .overlay .sheet .sect-h{letter-spacing:.3em;text-transform:none;font-size:.7rem}
+.overlay .sheet .sect-h::after{content:"";flex:1;height:1px;background:var(--cream-line)}
+.help-modes{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.help-mode{
+  display:flex;align-items:center;gap:9px;text-align:left;
+  padding:8px 10px;border-radius:10px;cursor:pointer;
+  border:1px solid transparent;background:transparent;color:inherit;font:inherit;
+  transition:background-color .2s,border-color .2s;
+}
+.help-mode:hover{background:var(--ivory);border-color:var(--cream-border)}
+.help-mode.on{background:#fbf2ec;border-color:var(--clay)}
+.help-mode .hm-ico{width:22px;height:22px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--clay)}
+.help-mode .hm-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.help-mode .hm-name{font-size:.8rem;letter-spacing:.06em;line-height:1.25}
+.help-mode .hm-need{display:block;font-size:.6rem;color:var(--stone-soft);letter-spacing:.1em;margin-top:1px}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.78rem;align-items:center}
+.keys kbd{
+  font-family:var(--mono);font-size:.68rem;padding:2px 7px;border-radius:4px;
+  border:1px solid var(--cream-line);background:var(--ivory);color:var(--ink);
+  white-space:nowrap;
+}
+.keys .kd{color:var(--stone);letter-spacing:.04em}
+.help-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap}
+.help-actions button{
+  font-family:var(--serif);font-size:.8rem;letter-spacing:.14em;
+  padding:9px 22px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--cream-border);background:var(--ivory);color:var(--ink);
+  transition:border-color .2s,background-color .2s;
+}
+.help-actions button:hover{border-color:var(--stone)}
+.help-actions button.primary{background:var(--clay);border-color:var(--clay);color:var(--ivory)}
+.help-actions button.primary:hover{background:var(--clay-deep);border-color:var(--clay-deep)}
+.help-note{
+  margin-top:14px;font-size:.72rem;line-height:1.7;color:var(--stone);
+  padding:10px 12px;border-radius:10px;background:rgba(201,100,66,.07);
+  border:1px solid rgba(201,100,66,.14);
+}
+.help-note b{color:var(--clay);font-weight:600}
+
+/* Screen-reader-only live region + label */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* Audio / sensor meter shown in the HUD while a sensor mode runs */
+#meter{
+  display:none;align-items:center;gap:7px;margin-top:7px;padding-top:7px;
+  border-top:1px solid rgba(245,244,237,.06);
+}
+#meter.show{display:flex}
+#meter .m-lbl{font-size:.55rem;letter-spacing:.16em;color:var(--warm-silver);text-transform:uppercase}
+#meter .m-track{flex:1;height:3px;border-radius:2px;background:rgba(245,244,237,.14);overflow:hidden}
+#meter .m-fill{height:100%;width:0%;background:var(--clay-soft);transition:width .08s linear}
+
+@media (max-width:680px){
+  .mode-groups{gap:16px;max-width:340px}
+  .mode-group .mode-grid{grid-template-columns:1fr;max-width:300px}
+  .mode-group .mode-grid .mode-card{padding:13px 16px}
+  .overlay{padding:14px}
+  .overlay .sheet{padding:20px 18px 16px;max-height:92vh;border-radius:14px}
+  .help-modes{grid-template-columns:1fr}
+  .help-actions button{flex:1;text-align:center;padding:11px 12px}
+  #bar{right:10px;bottom:10px;padding:4px;gap:0}
+  #bar button{width:44px;height:44px}
+  #bar .b-label{display:none}
+  #bar .b-sep{margin:0 2px}
+  #first-hint{white-space:normal;max-width:86vw;text-align:center;line-height:1.7}
+}
 </style>
 </head>
 
@@ -668,7 +833,7 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
   </div>
   <div class="tagline" data-i18n="tagline">光照之处，墨色生辉</div>
 
-  <div class="mode-grid" id="mg"></div>
+  <div class="mode-groups" id="mg"></div>
 
   <button id="btn-start" data-i18n="btnStart">展开画卷</button>
 
@@ -709,12 +874,15 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
     <div class="pp-url" id="pp-url">—</div>
     <div class="pp-err" id="pp-err" data-i18n="phoneNeedServer">未连上中继：请用 python3 server.py 启动</div>
     <div class="pp-count"><span data-i18n="phoneConnPre">已连接</span> <b id="pp-count">0</b> <span data-i18n="phoneConnPost">部手机</span></div>
-    <button class="pp-close" id="pp-close" type="button" data-i18n="phonePairClose">开始</button>
+    <div class="pp-actions">
+      <button class="pp-close ghost" id="pp-fallback" type="button" data-i18n="phoneFallbackBtn">先用指针玩</button>
+      <button class="pp-close" id="pp-close" type="button" data-i18n="phonePairClose">开始</button>
+    </div>
   </div>
 </div>
 
 <!-- ──────── Canvas ──────── -->
-<canvas id="display"></canvas>
+<canvas id="display" role="img" aria-label="水墨画卷"></canvas>
 <canvas id="pip"></canvas>
 
 <!-- ──────── First-time hint ──────── -->
@@ -724,17 +892,51 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
 <div id="gh"></div>
 
 <!-- ──────── Gesture legend (hand mode, right side) ──────── -->
-<div id="glegend">
-  <div class="gl-title">手势</div>
-  <div class="gl-row" data-g="open"><span class="gl-ico">🖐️</span><span class="gl-name">张开</span><span class="gl-act">正常光圈</span></div>
-  <div class="gl-row" data-g="point"><span class="gl-ico">☝️</span><span class="gl-name">食指</span><span class="gl-act">聚成细光</span></div>
-  <div class="gl-row" data-g="fist"><span class="gl-ico">✊</span><span class="gl-name">握拳</span><span class="gl-act">收光（灭）</span></div>
-  <div class="gl-row" data-g="victory"><span class="gl-ico">✌️</span><span class="gl-name">耶</span><span class="gl-act">换场景</span></div>
-  <div class="gl-foot">移动手 → 光圈跟随</div>
-</div>
+<div id="glegend"></div>
 
 <!-- ──────── Scene nav ──────── -->
 <div class="scene-nav" id="scene-nav"></div>
+
+<!-- ──────── Control bar — the only chrome during the piece ──────── -->
+<div id="bar" role="toolbar" aria-label="Controls">
+  <button id="b-mode" type="button"><span class="b-label" id="b-mode-name">—</span></button>
+  <div class="b-sep" aria-hidden="true"></div>
+  <button id="b-prev" type="button"></button>
+  <button id="b-next" type="button"></button>
+  <button id="b-style" type="button"></button>
+  <div class="b-sep" aria-hidden="true"></div>
+  <button id="b-smaller" type="button"></button>
+  <button id="b-bigger" type="button"></button>
+  <button id="b-paint" type="button"></button>
+  <div class="b-sep" aria-hidden="true"></div>
+  <button id="b-full" type="button"></button>
+  <button id="b-help" type="button"></button>
+  <button id="b-exit" type="button"></button>
+</div>
+
+<!-- ──────── Help / console panel ──────── -->
+<div class="overlay" id="help" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="sheet" tabindex="-1">
+    <h2 id="help-title" data-i18n="helpTitle">如何游玩</h2>
+    <div class="sub" data-i18n="helpSub"></div>
+    <div class="sect">
+      <div class="sect-h"><span data-i18n="helpModes">换一种揭示方式</span></div>
+      <div class="help-modes" id="help-modes"></div>
+    </div>
+    <div class="sect" id="help-keys-sect">
+      <div class="sect-h"><span data-i18n="helpKeys">键盘</span></div>
+      <div class="keys" id="help-keys"></div>
+    </div>
+    <div class="help-note" id="help-note"></div>
+    <div class="help-actions">
+      <button type="button" id="help-back" data-i18n="helpBack">返回标题</button>
+      <button type="button" class="primary" id="help-close" data-i18n="helpClose">继续</button>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── Live region (screen readers) ──────── -->
+<div class="sr-only" id="live" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ──────── HUD placard ──────── -->
 <div id="ui" aria-label="Status">
@@ -742,13 +944,17 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
   <div class="ui-row"><span class="lbl" data-i18n="hudScene">场景</span><span class="val" id="hsc">—</span></div>
   <div class="ui-row"><span class="lbl" data-i18n="hudStyle">风格</span><span class="val" id="hs">—</span></div>
   <div class="ui-row"><span class="lbl" data-i18n="hudRadius">光圈</span><span class="val" id="hr">—</span></div>
-  <div class="ui-row" id="he-row" style="display:none"><span class="lbl" data-i18n="hudGesture">手势</span><span class="val" id="he">—</span></div>
+  <div class="ui-row" id="he-row" style="display:none"><span class="lbl" id="he-lbl" data-i18n="hudGesture">手势</span><span class="val" id="he">—</span></div>
   <div class="fps"><span id="hf">—</span> fps</div>
+  <div id="meter" aria-hidden="true">
+    <span class="m-lbl" id="m-lbl">LEVEL</span>
+    <span class="m-track"><span class="m-fill" id="m-fill"></span></span>
+  </div>
 </div>
 <div id="roster"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    墨卷 · Ink Scroll — Core Engine
@@ -763,13 +969,40 @@ const I18N = {
     tagline:'光照之处，墨色生辉',
     btnStart:'展开画卷',
     loading:'正在展开画卷',
-    catCamera:'摄像头',
-    catNoCamera:'无需摄像头',
+    credit:'墨卷 · 开放的水墨实验',
+    // ── groups (what a mode needs) ──
+    groupFree:'无需任何设备',
+    groupCam:'只用摄像头',
+    groupGear:'需要额外装置',
+    // ── modes ──
+    modeAuto:'自动展卷',
+    modeMouse:'指针 · 触屏',
+    modeAudio:'声音 · 吟诵',
+    modeTilt:'倾斜 · 掌中',
+    modeMotion:'动影 · 皮影',
+    modeHand:'手势 · 空手',
+    modeFace:'面庞 · 头姿',
     modeFlashlight:'手电筒',
-    modeHand:'手势识别',
     modeGaze:'眼动 · 眼镜',
-    modeMouse:'鼠标跟随',
-    catHandsFree:'解放双手',
+    modePhone:'手机 · 众光',
+    modeIR:'IR · 追踪器',
+    reqNone:'即开即用',
+    reqCam:'摄像头',
+    reqMic:'麦克风',
+    reqGear:'需配置',
+    reqPhone:'需手机',
+    firstHintAuto:'画卷正自己展卷 · 触碰任意处接管',
+    firstHintMouse:'移动鼠标或手指 · 揭示画卷',
+    firstHintAudio:'对着麦克风哼一声 · 声音点亮画卷',
+    firstHintTilt:'倾斜设备 · 光随手动',
+    firstHintMotion:'在镜头前动一动 · 身影点亮画卷',
+    firstHintHand:'张开手掌移动 · 揭示画卷',
+    firstHintFace:'正对镜头 · 转头移光，张嘴放大',
+    firstHintFlash:'用手电对准摄像头 · 揭示画卷',
+    firstHintGaze:'戴上标记眼镜 · 用视线揭示',
+    firstHintPhone:'手机扫码 · 在手机上挥动光圈',
+    firstHintIR:'插上追踪器 · 光随器动',
+    // ── scenes / styles / gestures ──
     sceneShanshui:'山水',
     sceneBamboo:'竹林',
     sceneSnow:'雪景',
@@ -778,55 +1011,155 @@ const I18N = {
     styleEdges:'墨线',
     styleSketch:'素描',
     styleDark:'暗调',
+    stylePaper:'纸本',
+    gestureTitle:'手势',
     gestureOpen:'张开',
     gestureFist:'握拳',
     gesturePoint:'聚光',
+    gestureVictory:'换场景',
+    gestureFoot:'移动手 → 光圈跟随',
+    // ── HUD ──
     hudMode:'模式',
     hudScene:'场景',
     hudStyle:'风格',
     hudRadius:'光圈',
     hudGesture:'手势',
+    hudStatus:'状态',
+    meterLevel:'音量',
+    meterPitch:'音高',
+    // ── errors / permissions ──
     errTitle:'无法访问摄像头',
-    errBody:'你可以使用鼠标模式继续体验画卷，无需任何额外设置。',
-    errMouse:'切换到鼠标模式',
+    errBody:'你可以使用指针模式继续体验画卷，无需任何额外设置。',
+    errMouse:'用指针模式继续',
     errRetry:'重试',
-    firstHintMouse:'移动鼠标 · 揭示画卷',
-    firstHintFlash:'用手电对准摄像头 · 揭示画卷',
-    firstHintHand:'张开手掌移动 · 揭示画卷',
-    firstHintGaze:'用眼睛看向画卷 · 揭示',
-    firstHintPhone:'倾斜手机 · 挥动光圈',
-    modePhone:'手机魔杖',
-    modeIR:'IR 追踪器',
-    irWaiting:'连接 OpenMV / IR 追踪器(WebSerial)',
+    audioDenied:'麦克风未授权 · 已切到指针模式',
+    micWaiting:'正在聆听…',
+    tiltNoSensor:'此设备没有方向传感器 · 已切到指针模式',
+    tiltCenter:'保持自然姿势，正在记录零点…',
+    tiltRecentered:'零点已重设',
+    faceLoading:'正在加载面部追踪',
+    faceLoadingSub:'首次运行需下载 MediaPipe FaceMesh（约 3MB），通常几秒内。',
+    faceFail:'面部追踪启动失败 · 已切到指针模式',
+    faceNoFace:'把脸放进画面里',
+    motionWaiting:'等待镜头中的动静',
+    motionDark:'画面太暗 · 调亮或换个角度',
     phoneWaiting:'等待手机扫码',
     phonePairTitle:'手机当魔杖',
     phonePairSub:'用手机扫描二维码，倾斜手机即可挥动光圈；多部手机可同时加入。',
     phonePairClose:'开始',
     phoneConnPre:'已连接',
     phoneConnPost:'部手机',
-    phoneNeedServer:'未连上中继：请用 python3 server.py 启动（而非 http.server）',
+    phoneNeedServer:'未连上中继：页面旁边需要跑一个 server.py（SSE 中继），普通 http.server 不够。',
+    phoneFallbackBtn:'先用指针玩',
+    irWaiting:'连接 OpenMV / IR 追踪器 (WebSerial)',
     calibTitle:'校准眼动',
     calibSub:'戴上贴有 ArUco 标记的眼镜。依次自然地把头/视线转向每个圆点并点击，每点 2 下。',
     calibDone:'校准完成',
+    gazeRecal:'重新校准',
     gazeCalibrating:'校准中',
     gazeLoading:'正在加载追踪库',
     gazeLoadingSub:'首次需下载 js-aruco2（约 26KB，纯 JS、无模型、零依赖），通常 1 秒内。',
-    gazeFailHint:'眼动启动失败，已切换到鼠标',
-    credit:'墨卷 · 开放的水墨实验',
-    hintHTML:'<kbd>M</kbd> 切换模式<span class="sep">·</span><kbd>← →</kbd> 切换场景<span class="sep">·</span><kbd>1 2 3</kbd> 风格<br><kbd>滚轮</kbd> 光圈<span class="sep">·</span><kbd>[ ]</kbd> 灵敏度<span class="sep">·</span><kbd>X</kbd> 镜像<span class="sep">·</span><kbd>F</kbd> 全屏<span class="sep">·</span><kbd>Q</kbd> 退出',
+    gazeFailHint:'眼动启动失败，已切换到指针模式',
+    // ── flash messages (effect toggles) ──
+    fxPaintOn:'🖌 留痕 开',
+    fxPaintOff:'留痕 关',
+    fxFadeOn:'回墨呼吸 开',
+    fxFadeOff:'回墨呼吸 关',
+    fxGlowOn:'📷 长曝留痕 开',
+    fxGlowOff:'长曝 关（已清空）',
+    fxCreatureOn:'🐉 通灵生兽 开',
+    fxCreatureOff:'生兽 关',
+    fxMirrorOn:'🪞 镜影双修 开',
+    fxMirrorOff:'镜影 关',
+    fxTintOn:'🕓 天时入卷 开',
+    fxTintOff:'天时 关',
+    fxBeatOn:'🥁 击节点墨 开',
+    fxBeatOff:'击节 关',
+    fxAmbOn:'🎐 氛围音 开',
+    fxAmbOff:'氛围音 关',
+    fxRoomOn:'🎙 众声成墨 开',
+    fxRoomOff:'众声 关',
+    fxGeo:'🌏 远客生辉',
+    fxText:'題',
+    fxRpsWin:'胜者绽放',
+    fxRpsTie:'平局',
+    fxPauseOn:'⏸ 静观',
+    fxPauseOff:'▶ 继续',
+    fullUnsupported:'此设备不支持网页全屏',
+    fxSaved:'已保存分享卡',
+    fxSaveFail:'保存失败',
+    cardCaption:'墨卷 · 一起点亮一幅画',
+    // ── help panel ──
+    helpTitle:'如何游玩',
+    helpSub:'画卷外面是墨，里面是色。让光落在哪里，哪里就活过来。',
+    helpModes:'换一种揭示方式',
+    helpKeys:'键盘',
+    helpNote:'手电筒、手势、面庞、动影需要摄像头；眼动需要一张打印的 ArUco 标记；手机众光需要中继服务器。',
+    helpBack:'返回标题',
+    helpClose:'继续',
+    helpTouch:'触屏：拖动揭示 · 双指缩放光圈 · 双击换场景 · 左右滑动切场景',
+    kMode:'切换模式',
+    kScene:'切换场景',
+    kStyle:'切换风格',
+    kRadius:'光圈大小',
+    kSens:'灵敏度',
+    kMirror:'镜像',
+    kFull:'全屏',
+    kQuit:'退出',
+    kHelp:'帮助',
+    kPaint:'留痕',
+    kGlow:'长曝',
+    kSave:'存图',
+    barLabel:'控制',
+    barMode:'切换模式',
+    barPrev:'上一个场景',
+    barNext:'下一个场景',
+    barStyle:'切换风格',
+    barSmaller:'光圈变小',
+    barBigger:'光圈变大',
+    barPaint:'留痕',
+    barFull:'全屏',
+    barHelp:'帮助',
+    barExit:'退出到标题',
+    hintHTML:'<kbd>M</kbd> 模式<span class="sep">·</span><kbd>← →</kbd> 场景<span class="sep">·</span><kbd>1 2 3 4</kbd> 风格<br><kbd>滚轮</kbd> 光圈<span class="sep">·</span><kbd>[ ]</kbd> 灵敏度<span class="sep">·</span><kbd>?</kbd> 全部玩法<span class="sep">·</span><kbd>Q</kbd> 退出',
+    hintTouchHTML:'拖动揭示 · 双指缩放光圈 · 轻点右下 <b>＋ −</b> 调光圈 · <b>?</b> 看全部玩法',
   },
   'zh-TW': {
     brand:'墨卷',
     tagline:'光照之處，墨色生輝',
     btnStart:'展開畫卷',
     loading:'正在展開畫卷',
-    catCamera:'攝像頭',
-    catNoCamera:'無需攝像頭',
+    credit:'墨卷 · 開放的水墨實驗',
+    groupFree:'無需任何裝置',
+    groupCam:'只用攝像頭',
+    groupGear:'需要額外裝置',
+    modeAuto:'自動展卷',
+    modeMouse:'指標 · 觸屏',
+    modeAudio:'聲音 · 吟誦',
+    modeTilt:'傾斜 · 掌中',
+    modeMotion:'動影 · 皮影',
+    modeHand:'手勢 · 空手',
+    modeFace:'面龐 · 頭姿',
     modeFlashlight:'手電筒',
-    modeHand:'手勢辨識',
     modeGaze:'眼動 · 眼鏡',
-    modeMouse:'滑鼠跟隨',
-    catHandsFree:'解放雙手',
+    modePhone:'手機 · 眾光',
+    modeIR:'IR · 追蹤器',
+    reqNone:'即開即用',
+    reqCam:'攝像頭',
+    reqMic:'麥克風',
+    reqGear:'需設定',
+    reqPhone:'需手機',
+    firstHintAuto:'畫卷正自己展卷 · 觸碰任意處接管',
+    firstHintMouse:'移動滑鼠或手指 · 揭示畫卷',
+    firstHintAudio:'對著麥克風哼一聲 · 聲音點亮畫卷',
+    firstHintTilt:'傾斜裝置 · 光隨手動',
+    firstHintMotion:'在鏡頭前動一動 · 身影點亮畫卷',
+    firstHintHand:'張開手掌移動 · 揭示畫卷',
+    firstHintFace:'正對鏡頭 · 轉頭移光，張嘴放大',
+    firstHintFlash:'用手電對準攝像頭 · 揭示畫卷',
+    firstHintGaze:'戴上標記眼鏡 · 用視線揭示',
+    firstHintPhone:'手機掃碼 · 在手機上揮動光圈',
+    firstHintIR:'插上追蹤器 · 光隨器動',
     sceneShanshui:'山水',
     sceneBamboo:'竹林',
     sceneSnow:'雪景',
@@ -835,55 +1168,151 @@ const I18N = {
     styleEdges:'墨線',
     styleSketch:'素描',
     styleDark:'暗調',
+    stylePaper:'紙本',
+    gestureTitle:'手勢',
     gestureOpen:'張開',
     gestureFist:'握拳',
     gesturePoint:'聚光',
+    gestureVictory:'換場景',
+    gestureFoot:'移動手 → 光圈跟隨',
     hudMode:'模式',
     hudScene:'場景',
     hudStyle:'風格',
     hudRadius:'光圈',
     hudGesture:'手勢',
+    hudStatus:'狀態',
+    meterLevel:'音量',
+    meterPitch:'音高',
     errTitle:'無法存取攝像頭',
-    errBody:'您可以使用滑鼠模式繼續體驗畫卷，無需任何額外設定。',
-    errMouse:'切換到滑鼠模式',
+    errBody:'您可以使用指標模式繼續體驗畫卷，無需任何額外設定。',
+    errMouse:'用指標模式繼續',
     errRetry:'重試',
-    firstHintMouse:'移動滑鼠 · 揭示畫卷',
-    firstHintFlash:'用手電對準攝像頭 · 揭示畫卷',
-    firstHintHand:'張開手掌移動 · 揭示畫卷',
-    firstHintGaze:'用眼睛看向畫卷 · 揭示',
-    firstHintPhone:'傾斜手機 · 揮動光圈',
-    modePhone:'手機魔杖',
-    modeIR:'IR 追蹤器',
-    irWaiting:'連接 OpenMV / IR 追蹤器(WebSerial)',
+    audioDenied:'麥克風未授權 · 已切到指標模式',
+    micWaiting:'正在聆聽…',
+    tiltNoSensor:'此裝置沒有方向感測器 · 已切到指標模式',
+    tiltCenter:'保持自然姿勢，正在記錄零點…',
+    tiltRecentered:'零點已重設',
+    faceLoading:'正在載入面部追蹤',
+    faceLoadingSub:'首次執行需下載 MediaPipe FaceMesh（約 3MB），通常幾秒內。',
+    faceFail:'面部追蹤啟動失敗 · 已切到指標模式',
+    faceNoFace:'把臉放進畫面裡',
+    motionWaiting:'等待鏡頭中的動靜',
+    motionDark:'畫面太暗 · 調亮或換個角度',
     phoneWaiting:'等待手機掃碼',
     phonePairTitle:'手機當魔杖',
     phonePairSub:'用手機掃描 QR Code，傾斜手機即可揮動光圈；多部手機可同時加入。',
     phonePairClose:'開始',
     phoneConnPre:'已連接',
     phoneConnPost:'部手機',
-    phoneNeedServer:'未連上中繼：請用 python3 server.py 啟動（而非 http.server）',
+    phoneNeedServer:'未連上中繼：頁面旁邊需要跑一個 server.py（SSE 中繼），一般 http.server 不夠。',
+    phoneFallbackBtn:'先用指標玩',
+    irWaiting:'連接 OpenMV / IR 追蹤器 (WebSerial)',
     calibTitle:'校準眼動',
     calibSub:'戴上貼有 ArUco 標記的眼鏡。依次自然地把頭/視線轉向每個圓點並點擊，每點 2 下。',
     calibDone:'校準完成',
+    gazeRecal:'重新校準',
     gazeCalibrating:'校準中',
     gazeLoading:'正在載入追蹤函式庫',
     gazeLoadingSub:'首次需下載 js-aruco2（約 26KB，純 JS、無模型、零依賴），通常 1 秒內。',
-    gazeFailHint:'眼動啟動失敗，已切換到滑鼠',
-    credit:'墨卷 · 開放的水墨實驗',
-    hintHTML:'<kbd>M</kbd> 切換模式<span class="sep">·</span><kbd>← →</kbd> 切換場景<span class="sep">·</span><kbd>1 2 3</kbd> 風格<br><kbd>滾輪</kbd> 光圈<span class="sep">·</span><kbd>[ ]</kbd> 靈敏度<span class="sep">·</span><kbd>X</kbd> 鏡像<span class="sep">·</span><kbd>F</kbd> 全螢幕<span class="sep">·</span><kbd>Q</kbd> 退出',
+    gazeFailHint:'眼動啟動失敗，已切換到指標模式',
+    fxPaintOn:'🖌 留痕 開',
+    fxPaintOff:'留痕 關',
+    fxFadeOn:'回墨呼吸 開',
+    fxFadeOff:'回墨呼吸 關',
+    fxGlowOn:'📷 長曝留痕 開',
+    fxGlowOff:'長曝 關（已清空）',
+    fxCreatureOn:'🐉 通靈生獸 開',
+    fxCreatureOff:'生獸 關',
+    fxMirrorOn:'🪞 鏡影雙修 開',
+    fxMirrorOff:'鏡影 關',
+    fxTintOn:'🕓 天時入卷 開',
+    fxTintOff:'天時 關',
+    fxBeatOn:'🥁 擊節點墨 開',
+    fxBeatOff:'擊節 關',
+    fxAmbOn:'🎐 氛圍音 開',
+    fxAmbOff:'氛圍音 關',
+    fxRoomOn:'🎙 眾聲成墨 開',
+    fxRoomOff:'眾聲 關',
+    fxGeo:'🌏 遠客生輝',
+    fxText:'題',
+    fxRpsWin:'勝者綻放',
+    fxRpsTie:'平局',
+    fxPauseOn:'⏸ 靜觀',
+    fxPauseOff:'▶ 繼續',
+    fullUnsupported:'此裝置不支援網頁全螢幕',
+    fxSaved:'已儲存分享卡',
+    fxSaveFail:'儲存失敗',
+    cardCaption:'墨卷 · 一起點亮一幅畫',
+    helpTitle:'如何遊玩',
+    helpSub:'畫卷外面是墨，裡面是色。讓光落在哪裡，哪裡就活過來。',
+    helpModes:'換一種揭示方式',
+    helpKeys:'鍵盤',
+    helpNote:'手電筒、手勢、面龐、動影需要攝像頭；眼動需要一張列印的 ArUco 標記；手機眾光需要中繼伺服器。',
+    helpBack:'返回標題',
+    helpClose:'繼續',
+    helpTouch:'觸屏：拖動揭示 · 雙指縮放光圈 · 雙擊換場景 · 左右滑動切場景',
+    kMode:'切換模式',
+    kScene:'切換場景',
+    kStyle:'切換風格',
+    kRadius:'光圈大小',
+    kSens:'靈敏度',
+    kMirror:'鏡像',
+    kFull:'全螢幕',
+    kQuit:'退出',
+    kHelp:'幫助',
+    kPaint:'留痕',
+    kGlow:'長曝',
+    kSave:'存圖',
+    barLabel:'控制',
+    barMode:'切換模式',
+    barPrev:'上一個場景',
+    barNext:'下一個場景',
+    barStyle:'切換風格',
+    barSmaller:'光圈變小',
+    barBigger:'光圈變大',
+    barPaint:'留痕',
+    barFull:'全螢幕',
+    barHelp:'幫助',
+    barExit:'退出到標題',
+    hintHTML:'<kbd>M</kbd> 模式<span class="sep">·</span><kbd>← →</kbd> 場景<span class="sep">·</span><kbd>1 2 3 4</kbd> 風格<br><kbd>滾輪</kbd> 光圈<span class="sep">·</span><kbd>[ ]</kbd> 靈敏度<span class="sep">·</span><kbd>?</kbd> 全部玩法<span class="sep">·</span><kbd>Q</kbd> 退出',
+    hintTouchHTML:'拖動揭示 · 雙指縮放光圈 · 輕點右下 <b>＋ −</b> 調光圈 · <b>?</b> 看全部玩法',
   },
   'en': {
     brand:'Ink Scroll',
     tagline:'Where light falls, ink comes alive',
     btnStart:'Unfurl the Scroll',
     loading:'Unfurling',
-    catCamera:'Camera',
-    catNoCamera:'No camera',
+    credit:'An open ink-painting experiment',
+    groupFree:'No device needed',
+    groupCam:'Camera only',
+    groupGear:'Needs extra setup',
+    modeAuto:'Unfolding itself',
+    modeMouse:'Pointer · Touch',
+    modeAudio:'Sound · Hum',
+    modeTilt:'Tilt · Handheld',
+    modeMotion:'Shadow play',
+    modeHand:'Hand · Bare',
+    modeFace:'Face · Head',
     modeFlashlight:'Flashlight',
-    modeHand:'Hand',
     modeGaze:'Gaze · Glasses',
-    modeMouse:'Mouse',
-    catHandsFree:'Hands-free',
+    modePhone:'Phone · Many lights',
+    modeIR:'IR tracker',
+    reqNone:'ready to go',
+    reqCam:'camera',
+    reqMic:'microphone',
+    reqGear:'setup',
+    reqPhone:'phone',
+    firstHintAuto:'The scroll unfurls itself · touch anywhere to take over',
+    firstHintMouse:'Move the cursor or your finger to reveal',
+    firstHintAudio:'Hum or speak into the mic — sound lights the scroll',
+    firstHintTilt:'Tilt your device to move the light',
+    firstHintMotion:'Move in front of the camera — your shadow reveals',
+    firstHintHand:'Open your palm and move to reveal',
+    firstHintFace:'Face the camera · turn your head to move, open your mouth to widen',
+    firstHintFlash:'Aim a flashlight at the camera to reveal',
+    firstHintGaze:'Wear the marked glasses · reveal with your gaze',
+    firstHintPhone:'Scan with a phone · wave the light from your phone',
+    firstHintIR:'Plug in the tracker · the light follows it',
     sceneShanshui:'Mountains',
     sceneBamboo:'Bamboo',
     sceneSnow:'Snow',
@@ -892,42 +1321,114 @@ const I18N = {
     styleEdges:'Edges',
     styleSketch:'Sketch',
     styleDark:'Dark',
+    stylePaper:'Paper',
+    gestureTitle:'Gestures',
     gestureOpen:'Open',
     gestureFist:'Fist',
     gesturePoint:'Point',
+    gestureVictory:'Next scene',
+    gestureFoot:'Move your hand → the light follows',
     hudMode:'Mode',
     hudScene:'Scene',
     hudStyle:'Style',
     hudRadius:'Radius',
     hudGesture:'Gesture',
+    hudStatus:'Status',
+    meterLevel:'level',
+    meterPitch:'pitch',
     errTitle:'Camera unavailable',
-    errBody:"That's fine — you can still explore the scroll with your mouse or trackpad.",
-    errMouse:'Continue with mouse',
+    errBody:"That's fine — you can still explore the scroll with pointer or touch.",
+    errMouse:'Continue with pointer',
     errRetry:'Try again',
-    firstHintMouse:'Move the cursor to reveal',
-    firstHintFlash:'Aim a flashlight at the camera to reveal',
-    firstHintHand:'Open your palm and move to reveal',
-    firstHintGaze:'Look around the scroll to reveal',
-    firstHintPhone:'Tilt your phone to wave the light',
-    modePhone:'Phone wand',
-    modeIR:'IR tracker',
-    irWaiting:'Connect an OpenMV / IR tracker (WebSerial)',
+    audioDenied:'Microphone not allowed · switched to pointer',
+    micWaiting:'Listening…',
+    tiltNoSensor:'No orientation sensor on this device · switched to pointer',
+    tiltCenter:'Hold a comfortable posture — setting the zero point…',
+    tiltRecentered:'Zero point reset',
+    faceLoading:'Loading face tracking',
+    faceLoadingSub:'First run downloads MediaPipe FaceMesh (~3 MB). Usually a few seconds.',
+    faceFail:'Face tracking failed to start · switched to pointer',
+    faceNoFace:'Put your face in the frame',
+    motionWaiting:'Waiting for movement in the frame',
+    motionDark:'Too dark · brighten the room or move',
     phoneWaiting:'Waiting for a phone',
     phonePairTitle:'Phone as a wand',
     phonePairSub:'Scan the QR with your phone and tilt to move the light. Several phones can join at once.',
     phonePairClose:'Start',
     phoneConnPre:'Connected',
     phoneConnPost:'phone(s)',
-    phoneNeedServer:'No relay: launch with python3 server.py (not http.server)',
+    phoneNeedServer:'No relay: run server.py (an SSE relay) next to this page — plain http.server is not enough.',
+    phoneFallbackBtn:'Play with the pointer',
+    irWaiting:'Connect an OpenMV / IR tracker (WebSerial)',
     calibTitle:'Calibrate your gaze',
-    calibSub:'Wear glasses with the ArUco marker attached. Naturally turn your head/gaze toward each dot and click — 2 clicks per dot.',
+    calibSub:'Wear glasses with the ArUco marker attached. Naturally turn your head toward each dot and click — 2 clicks per dot.',
     calibDone:'Calibrated',
+    gazeRecal:'Recalibrate',
     gazeCalibrating:'Calibrating',
     gazeLoading:'Loading tracking library',
     gazeLoadingSub:'First run fetches js-aruco2 (~26 KB, pure JS, no model, no dependencies). Should be done in under a second.',
-    gazeFailHint:'Gaze failed to start — switched to mouse',
-    credit:'An open ink-painting experiment',
-    hintHTML:'<kbd>M</kbd> mode<span class="sep">·</span><kbd>← →</kbd> scene<span class="sep">·</span><kbd>1 2 3</kbd> style<br><kbd>wheel</kbd> radius<span class="sep">·</span><kbd>[ ]</kbd> sensitivity<span class="sep">·</span><kbd>X</kbd> mirror<span class="sep">·</span><kbd>F</kbd> fullscreen<span class="sep">·</span><kbd>Q</kbd> quit',
+    gazeFailHint:'Gaze failed to start — switched to pointer',
+    fxPaintOn:'🖌 Trails on',
+    fxPaintOff:'Trails off',
+    fxFadeOn:'Ink-fade breathing on',
+    fxFadeOff:'Ink-fade breathing off',
+    fxGlowOn:'📷 Long exposure on',
+    fxGlowOff:'Long exposure off (cleared)',
+    fxCreatureOn:'🐉 Ink creature on',
+    fxCreatureOff:'Ink creature off',
+    fxMirrorOn:'🪞 Mirror pair on',
+    fxMirrorOff:'Mirror pair off',
+    fxTintOn:'🕓 Time of day on',
+    fxTintOff:'Time of day off',
+    fxBeatOn:'🥁 Beat dotting on',
+    fxBeatOff:'Beat dotting off',
+    fxAmbOn:'🎐 Ambient sound on',
+    fxAmbOff:'Ambient sound off',
+    fxRoomOn:'🎙 Room voice on',
+    fxRoomOff:'Room voice off',
+    fxGeo:'🌏 a distant visitor',
+    fxText:'Inscribed',
+    fxRpsWin:'the winner blooms',
+    fxRpsTie:'a draw',
+    fxPauseOn:'⏸ Still',
+    fxPauseOff:'▶ Resume',
+    fullUnsupported:'This browser cannot go fullscreen',
+    fxSaved:'Share card saved',
+    fxSaveFail:'Could not save',
+    cardCaption:'Ink Scroll · light up a painting together',
+    helpTitle:'How to play',
+    helpSub:'Ink outside, colour inside. Wherever the light falls, the scroll comes alive.',
+    helpModes:'Choose another way to reveal',
+    helpKeys:'Keyboard',
+    helpNote:'Flashlight, hand, face and shadow need a camera; gaze needs a printed ArUco marker; many-lights needs a relay server.',
+    helpBack:'Back to title',
+    helpClose:'Continue',
+    helpTouch:'Touch: drag to reveal · pinch to resize · double-tap for the next scene · swipe to change scene',
+    kMode:'mode',
+    kScene:'scene',
+    kStyle:'style',
+    kRadius:'radius',
+    kSens:'sensitivity',
+    kMirror:'mirror',
+    kFull:'fullscreen',
+    kQuit:'quit',
+    kHelp:'help',
+    kPaint:'trails',
+    kGlow:'long exposure',
+    kSave:'save PNG',
+    barLabel:'Controls',
+    barMode:'Change mode',
+    barPrev:'Previous scene',
+    barNext:'Next scene',
+    barStyle:'Change style',
+    barSmaller:'Smaller light',
+    barBigger:'Bigger light',
+    barPaint:'Trails',
+    barFull:'Fullscreen',
+    barHelp:'Help',
+    barExit:'Exit to title',
+    hintHTML:'<kbd>M</kbd> mode<span class="sep">·</span><kbd>← →</kbd> scene<span class="sep">·</span><kbd>1 2 3 4</kbd> style<br><kbd>wheel</kbd> radius<span class="sep">·</span><kbd>[ ]</kbd> sensitivity<span class="sep">·</span><kbd>?</kbd> all controls<span class="sep">·</span><kbd>Q</kbd> quit',
+    hintTouchHTML:'Drag to reveal · pinch to resize · tap <b>＋ −</b> at the bottom right · <b>?</b> for every control',
   },
 };
 
@@ -949,9 +1450,9 @@ function applyTranslations(){
     if (k === 'hintHTML') el.innerHTML = t(k);
     else el.textContent = t(k);
   });
-  // Hint is special (HTML)
+  // Hint is special (HTML) — show touch wording on touch devices
   const hintEl = document.getElementById('hint');
-  if (hintEl) hintEl.innerHTML = t('hintHTML');
+  if (hintEl) hintEl.innerHTML = t(COARSE ? 'hintTouchHTML' : 'hintHTML');
   // Mode card req labels (require translation if shown)
   document.querySelectorAll('.lang-switch button').forEach(b=>{
     b.classList.toggle('on', b.dataset.lang === LANG);
@@ -982,18 +1483,36 @@ function setLang(l){
    State
    ─────────────────────────────────────────────────────────── */
 const S={
-  mode:'phone',scene:0,style:'edges',radius:140,threshold:50,camSens:1.0,paint:false,paintFade:0,breath:0,glow:false,timeTint:false,room:false,mirror:false,creature:false,geo:[],orbs:[],rps:{},beat:{on:false,period:620,t0:0},
+  mode:'mouse',scene:0,style:'paper',radius:140,threshold:50,camSens:1.0,paint:false,paintFade:0,breath:0,glow:false,timeTint:false,room:false,mirror:false,creature:false,geo:[],orbs:[],rps:{},beat:{on:false,period:620,t0:0},
   smooth:{x:-1,y:-1},alpha:.3,mirrorX:true,running:false,fps:0,
   mouseX:window.innerWidth/2,mouseY:window.innerHeight/2,
   hlm:null,gesture:'none',hpos:null,lastHx:0,lastHy:0,
   transition:{active:false,from:null,start:0,duration:500},
   firstHintShown:false,firstMoveDistance:0,debug:false,
   gazePos:null,gazeSmooth:null,gazeReady:false,
-  phone:{targets:{},primaryId:null,calib:{},es:null,room:null,alpha:.45,staleMs:900,splats:[],seq:0,overlap:{},ink:false,strokeLast:{}},
+  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,
+  audio:{ctx:null,ana:null,buf:null,src:null,stream:null,level:0,pitch:0,on:false,onset:0,prevRms:0,hist:[]},
+  motion:{prev:null,level:0,x:0,y:0,moving:false},
+  face:{ready:false,loading:null,lm:null,spot:null},
+  tilt:{base:null,ready:false,x:0,y:0,last:0},
+  phone:{targets:{},primaryId:null,calib:{},es:null,room:null,alpha:.45,staleMs:900,splats:[],seq:0,overlap:{},ink:false,strokeLast:{},relay:false},
 };
 const D=document.getElementById('display'),ctx=D.getContext('2d'),
   pip=document.getElementById('pip'),pipCtx=pip.getContext('2d'),
   gh=document.getElementById('gh'),sceneNav=document.getElementById('scene-nav');
+/* HUD element cache — the loop used to call getElementById five times a frame. */
+const HUD={
+  get hm(){return this._hm||(this._hm=document.getElementById('hm'));},
+  get hs(){return this._hs||(this._hs=document.getElementById('hs'));},
+  get hr(){return this._hr||(this._hr=document.getElementById('hr'));},
+  get hf(){return this._hf||(this._hf=document.getElementById('hf'));},
+  get he(){return this._he||(this._he=document.getElementById('he'));},
+  get heRow(){return this._heRow||(this._heRow=document.getElementById('he-row'));},
+  get meter(){return this._meter||(this._meter=document.getElementById('meter'));},
+  get mFill(){return this._mFill||(this._mFill=document.getElementById('m-fill'));},
+  get mLbl(){return this._mLbl||(this._mLbl=document.getElementById('m-lbl'));},
+};
+const STYLE_KEY={edges:'styleEdges',sketch:'styleSketch',dark:'styleDark',paper:'stylePaper'};
 let hiCvs,hiCtx,mkCvs,mkCtx,wkCvs,wkCtx,scCvs,scCtx,target,paintCvs,paintCtx,paintScratch,paintSctx,paintBrush,glowCvs,glowCtx,
   vid=null,str=null,DW,DH,VW=640,VH=480,pipW=160,pipH=90,fc=0,ft=performance.now();
 let hands=null,hr=false;
@@ -1001,9 +1520,8 @@ let hands=null,hr=false;
 /* ───────────────────────────────────────────────────────────
    Scene metadata — names are looked up via i18n
    ─────────────────────────────────────────────────────────── */
-const sceneIcons=['🏔','🎋','❄','🌸','🌌'];
 const sceneKeys=['sceneShanshui','sceneBamboo','sceneSnow','sceneFlowers','sceneStars'];
-const sceneNameOf=(i)=> `${sceneIcons[i]} ${t(sceneKeys[i])}`;
+const sceneNameOf=(i)=> t(sceneKeys[i]);
 
 function refreshSceneNav(){
   // Rebuild scene dots with current locale names
@@ -1023,7 +1541,7 @@ function refreshSceneNav(){
    Scene images
    ─────────────────────────────────────────────────────────── */
 const sceneImages=[];
-const sceneFiles=['shanshui.png','bamboo.png','snow.png','flowers.png','stars.png'];
+const sceneFiles=['shanshui.jpg','bamboo.jpg','snow.jpg','flowers.jpg','stars.jpg'];
 
 function preloadImages(){
   return Promise.all(sceneFiles.map((f,i)=>{
@@ -1035,35 +1553,56 @@ function preloadImages(){
     });
   }));
 }
+/* Every painting has a different aspect ratio (one is 16:9, four are 7:10), so
+   "contain" used to leave huge empty bars. We COVER the viewport instead: the
+   scroll always bleeds edge to edge, the way a hanging scroll fills a wall.
+   The fitted bitmap is cached per scene at canvas resolution, so the per-frame
+   cost is a 1:1 blit instead of rescaling a 1.5MP JPEG every frame. */
+const sceneCache=[];
+function fitScene(img,W,H){
+  const iw=img.naturalWidth||img.width, ih=img.naturalHeight||img.height;
+  const scale=Math.max(W/iw,H/ih);
+  const dw=iw*scale, dh=ih*scale;
+  return {dx:(W-dw)/2, dy:(H-dh)/2, dw, dh};
+}
+function sceneLayer(i,W,H){
+  const img=sceneImages[i];
+  if(!img) return null;
+  let c=sceneCache[i];
+  if(!c || c.width!==W || c.height!==H){
+    c=document.createElement('canvas'); c.width=W; c.height=H;
+    const x=c.getContext('2d');
+    const r=fitScene(img,W,H);
+    x.imageSmoothingQuality='high';
+    x.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,r.dx,r.dy,r.dw,r.dh);
+    sceneCache[i]=c;
+  }
+  return c;
+}
 function initScene(){
   scCvs=document.createElement('canvas');scCvs.width=DW;scCvs.height=DH;
   scCtx=scCvs.getContext('2d');
+  sceneCache.length=0;                       // size changed → drop fitted copies
 }
 function drawScene(t){
   const g=scCtx,W=DW,H=DH;
-  if(scCvs.width!==W||scCvs.height!==H){scCvs.width=W;scCvs.height=H;}else{g.clearRect(0,0,W,H);}   // don't reallocate the backing store every frame
-  const img=sceneImages[S.scene];
-  if(img){
-    const iw=img.naturalWidth,ih=img.naturalHeight;
-    const scale=Math.min(W/iw,H/ih);
-    const dw=iw*scale,dh=ih*scale,dx=(W-dw)/2,dy=(H-dh)/2;
-    g.fillStyle='#1a1a18';g.fillRect(0,0,W,H);
-    g.drawImage(img,0,0,iw,ih,dx,dy,dw,dh);
-    animateOverlay(g,W,H,dx,dy,dw,dh,t);
-    S.imgBounds={x:dx,y:dy,w:dw,h:dh};
+  if(scCvs.width!==W||scCvs.height!==H){scCvs.width=W;scCvs.height=H;}else{g.clearRect(0,0,W,H);}
+  const layer=sceneLayer(S.scene,W,H);
+  if(layer){
+    g.drawImage(layer,0,0);
+    animateOverlay(g,W,H,0,0,W,H,t);           // cover fit → the painting IS the viewport
+    S.imgBounds={x:0,y:0,w:W,h:H};
   }else{
     g.fillStyle=['#f5f0e8','#e8f0e0','#dce8f0','#faf5ee','#0a0a2e'][S.scene];
     g.fillRect(0,0,W,H);
     S.imgBounds=null;
   }
 }
-
-/* ───────────────────────────────────────────────────────────
-   Animated overlay (unchanged from previous version)
-   ─────────────────────────────────────────────────────────── */
 function animateOverlay(g,W,H,ix,iy,iw,ih,t){
   const s=S.scene;
   const PI=Math.PI;
+  if(S.paused) return;                       // 静观: the painting holds still
+  if(REDUCE) t=Math.floor(t);                // reduced motion: no shimmering particles
   for(let i=0;i<16;i++){
     const mx=ix+((i*.0625+t*.012)%1)*iw;
     const my=iy+ih*(.12+.76*Math.sin(i*2.2+t*.04));
@@ -1180,24 +1719,31 @@ function animateOverlay(g,W,H,ix,iy,iw,ih,t){
 /* ───────────────────────────────────────────────────────────
    Hidden layer (Sobel / Sketch / Dark)
    ─────────────────────────────────────────────────────────── */
+/* The ink layer is generated once per scene/style/size. It is computed at a
+   reduced resolution (≤1.25 MP) and upscaled when composited: the Sobel pass is
+   O(pixels) in plain JS, so this keeps a 4K/retina canvas from spending a
+   quarter of a second in a synchronous loop on every scene change. */
+const MASK_BUDGET=1250000;
 function genHidden(){
-  if(!target)return;const w=target.width,h=target.height;
-  if(!hiCvs){hiCvs=document.createElement('canvas');hiCtx=hiCvs.getContext('2d');mkCvs=document.createElement('canvas');mkCtx=mkCvs.getContext('2d');wkCvs=document.createElement('canvas');wkCtx=wkCvs.getContext('2d');}
-  hiCvs.width=mkCvs.width=w;hiCvs.height=mkCvs.height=h;
-  const tmpCvs=document.createElement('canvas');tmpCvs.width=w;tmpCvs.height=h;
-  const tmpCtx=tmpCvs.getContext('2d');
-  tmpCtx.fillStyle='#1a1a18';tmpCtx.fillRect(0,0,w,h);
+  if(!target)return;
+  const w=target.width||DW,h=target.height||DH;
+  const k=Math.min(1,Math.sqrt(MASK_BUDGET/Math.max(1,w*h)));
+  const mw=Math.max(2,Math.round(w*k)), mh=Math.max(2,Math.round(h*k));
+  if(!hiCvs){hiCvs=document.createElement('canvas');mkCvs=document.createElement('canvas');wkCvs=document.createElement('canvas');}
+  hiCvs.width=mw;hiCvs.height=mh;
+  mkCvs.width=mw;mkCvs.height=mh;wkCvs.width=mw;wkCvs.height=mh;
+  hiCtx=hiCvs.getContext('2d');
+  mkCtx=mkCvs.getContext('2d');
+  wkCtx=wkCvs.getContext('2d',{willReadFrequently:true});
+  const tmpCtx=mkCtx;
+  tmpCtx.fillStyle='#1a1a18';tmpCtx.fillRect(0,0,mw,mh);
   const img=sceneImages[S.scene];
-  if(img){
-    const iw=img.naturalWidth,ih=img.naturalHeight;
-    const scale=Math.min(w/iw,h/ih);
-    const dw=iw*scale,dh=ih*scale,dx=(w-dw)/2,dy=(h-dh)/2;
-    tmpCtx.drawImage(img,0,0,iw,ih,dx,dy,dw,dh);
-  }
-  const src=tmpCtx.getImageData(0,0,w,h);
-  if(S.style==='edges')hiCtx.putImageData(sobel(src,w,h),0,0);
-  else if(S.style==='sketch')hiCtx.putImageData(sk(src,w,h),0,0);
-  else hiCtx.putImageData(dk(src,w,h),0,0);
+  if(img){const r=fitScene(img,mw,mh);tmpCtx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,r.dx,r.dy,r.dw,r.dh);}
+  const src=tmpCtx.getImageData(0,0,mw,mh);
+  if(S.style==='edges')hiCtx.putImageData(sobel(src,mw,mh),0,0);
+  else if(S.style==='sketch')hiCtx.putImageData(sk(src,mw,mh),0,0);
+  else if(S.style==='paper')hiCtx.putImageData(pap(src,mw,mh),0,0);
+  else hiCtx.putImageData(dk(src,mw,mh),0,0);
 }
 function sobel(d,w,h){
   const g=new Float32Array(w*h);for(let i=0;i<w*h;i++)g[i]=d.data[i*4]*.299+d.data[i*4+1]*.587+d.data[i*4+2]*.114;
@@ -1210,15 +1756,37 @@ function sobel(d,w,h){
   }return o;
 }
 function sk(d,w,h){
-  wkCtx.putImageData(new ImageData(new Uint8ClampedArray(d.data.map((v,i)=>i%4<3?255-v:255)),w,h),0,0);
+  const inv=new ImageData(w,h),di=d.data,ii=inv.data;
+  for(let i=0;i<di.length;i+=4){ii[i]=255-di[i];ii[i+1]=255-di[i+1];ii[i+2]=255-di[i+2];ii[i+3]=255;}
+  wkCtx.putImageData(inv,0,0);
   wkCtx.filter='blur(8px)';wkCtx.drawImage(wkCvs,0,0);wkCtx.filter='none';
   const b=wkCtx.getImageData(0,0,w,h),o=new ImageData(w,h);
-  for(let i=0;i<d.data.length;i+=4)for(let c=0;c<3;c++){const den=255-b.data[i+c];o.data[i+c]=den===0?255:Math.min(255,d.data[i+c]*255/den);}
+  for(let i=0;i<di.length;i+=4)for(let c=0;c<3;c++){const den=255-b.data[i+c];o.data[i+c]=den===0?255:Math.min(255,di[i+c]*255/den);}
   return o;
 }
 function dk(d,w,h){
   const o=new ImageData(w,h);
   for(let i=0;i<d.data.length;i+=4){o.data[i]=d.data[i]*.1;o.data[i+1]=d.data[i+1]*.1;o.data[i+2]=d.data[i+2]*.1;o.data[i+3]=255;}
+  return o;
+}
+/* 纸本 — ink on parchment instead of light on black. The same edge map, but
+   rendered as ink (dark) on mulberry paper: this is the "hanging scroll in a
+   lit room" look, and it reads beautifully in daylight and in screenshots. */
+function pap(d,w,h){
+  const g=new Float32Array(w*h);for(let i=0;i<w*h;i++)g[i]=d.data[i*4]*.299+d.data[i*4+1]*.587+d.data[i*4+2]*.114;
+  const o=new ImageData(w,h),p=o.data;
+  for(let i=0;i<w*h;i++){const idx=i*4;p[idx]=245;p[idx+1]=244;p[idx+2]=237;p[idx+3]=255;}
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    const tl=g[(y-1)*w+x-1],tc=g[(y-1)*w+x],tr=g[(y-1)*w+x+1],ml=g[y*w+x-1],mr=g[y*w+x+1],bl=g[(y+1)*w+x-1],bc=g[(y+1)*w+x],br=g[(y+1)*w+x+1];
+    const gx=-tl+tr-2*ml+2*mr-bl+br,gy=-tl-2*tc-tr+bl+2*bc+br;
+    let ink=Math.min(1,Math.sqrt(gx*gx+gy*gy)/120)*0.92;       // thicker, softer line
+    if(ink<0.02) continue;
+    const idx=(y*w+x)*4;
+    p[idx]  =Math.round(245+(26-245)*ink);
+    p[idx+1]=Math.round(244+(26-244)*ink);
+    p[idx+2]=Math.round(237+(24-237)*ink);
+    p[idx+3]=255;
+  }
   return o;
 }
 
@@ -1256,12 +1824,13 @@ function smap(cx,cy){
    ─────────────────────────────────────────────────────────── */
 function iH(){
   if(hr)return;
-  hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4/${f}`});
+  if(hands){ hr=true; return; }              // reuse the warm instance (see cln below)
+  hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
   hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});
   hands.onResults(r=>{
     if(r.multiHandLandmarks?.length){
       S.hlm=r.multiHandLandmarks[0];S.gesture=rg(S.hlm);
-      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%5);flashHint('✌ 换场景');}
+      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%5);flashHint('✌ '+t('gestureVictory'));}
       const cx=(S.hlm[0].x+S.hlm[9].x)/2,cy=(S.hlm[0].y+S.hlm[9].y)/2;
       const c=camCover(),ib=c.ib,sn=S.camSens||1;
       let vx=(cx*VW-c.sx)/c.sw, vy=(cy*VH-c.sy)/c.sh;   // position within the aspect-correct, cover-cropped camera view (matches the overlay exactly)
@@ -1292,76 +1861,378 @@ function camCover(){
   return {ib, sx:(VW-sw)/2, sy:(VH-sh)/2, sw, sh};
 }
 let _hbusy=false;
-async function pH(){if(!hr||!wkCvs||_hbusy)return;_hbusy=true;try{await hands.send({image:wkCvs});}catch(e){console.warn('MediaPipe Hands send failed:',e.message);}finally{_hbusy=false;}}
+async function pH(){if(!hr||!hands||!wkCvs||_hbusy)return;_hbusy=true;try{await hands.send({image:wkCvs});}catch(e){console.warn('MediaPipe Hands send failed:',e.message);}finally{_hbusy=false;}}
 
 /* ───────────────────────────────────────────────────────────
    Modes
    ─────────────────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────────────────
+   Inline icon set — stroke SVGs instead of emoji. Emoji render
+   differently (or as tofu) on every OS; these follow DESIGN.md:
+   one ink line, no colour, no gloss.
+   ─────────────────────────────────────────────────────────── */
+const ICONS={
+  auto:'<path d="M4 7h10a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h12"/><path d="M4 7v4"/>',
+  pointer:'<path d="M5 3l13 7-5.5 1.2L10 19z"/><path d="M13 13l5 5"/>',
+  audio:'<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+  tilt:'<rect x="8" y="3" width="9" height="17" rx="2"/><path d="M11 6h3"/><path d="M3 8a9 9 0 0 1 3.5-3.5M3 4.5V8h3.5"/>',
+  motion:'<circle cx="12" cy="7" r="3"/><path d="M6.5 21c0-4 2-7 5.5-7s5.5 3 5.5 7"/><path d="M2 9h2M20 9h2M3 14h1.5M19.5 14H21"/>',
+  hand:'<path d="M8.5 11V5.5a1.4 1.4 0 0 1 2.8 0V11m0 0V4.5a1.4 1.4 0 0 1 2.8 0V11m0 0V6.5a1.4 1.4 0 0 1 2.8 0V13c0 4.5-2.6 8-6.4 8H9c-2 0-3-1-4-2.6L3.4 15A1.4 1.4 0 0 1 6 13.4L8.5 16"/>',
+  face:'<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/>',
+  flashlight:'<path d="M9 3h6l-1.2 4.5H10.2z"/><path d="M10.2 7.5h3.6V21h-3.6z"/><path d="M12 1v1M6 4.5l.8.8M18 4.5l-.8.8"/>',
+  gaze:'<circle cx="7.5" cy="13" r="3.6"/><circle cx="16.5" cy="13" r="3.6"/><path d="M11.1 13h1.8M3.9 12.2L2 9.2M20.1 12.2L22 9.2"/>',
+  phone:'<rect x="7" y="2" width="10" height="20" rx="2.4"/><path d="M10.5 18.5h3"/>',
+  ir:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+};
+function iconSvg(k){ return `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||ICONS.pointer}</svg>`; }
+
+/* ═══════════════════════════════════════════════════════════
+   SENSOR ENGINES — everything here runs on hardware people
+   already own (built-in mic, built-in webcam, the phone's own
+   tilt sensor). No printer, no marker, no relay, no plugin.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 声音 · 吟诵 ── loudness → radius, pitch → x, timbre → y, transient → ink splat */
+function audioStart(){
+  const A=S.audio;
+  if(A.on) return;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ audioFail(); return; }
+  navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})
+    .then(st=>{
+      if(S.mode!=='audio' && S.running){ try{st.getTracks().forEach(x=>x.stop());}catch(e){} return; }
+      const C=window.AudioContext||window.webkitAudioContext;
+      if(!C){ audioFail(); return; }
+      A.stream=st;
+      A.ctx=new C();
+      if(A.ctx.state==='suspended'){ A.ctx.resume().catch(()=>{}); }
+      A.src=A.ctx.createMediaStreamSource(st);
+      A.ana=A.ctx.createAnalyser();
+      A.ana.fftSize=2048;
+      A.ana.smoothingTimeConstant=.65;
+      A.src.connect(A.ana);
+      A.buf=new Uint8Array(A.ana.fftSize);
+      A.freq=new Uint8Array(A.ana.frequencyBinCount);
+      A.sr=A.ctx.sampleRate;
+      A.level=0;A.pitch=0;A.centroid=.5;A.t=0;A.hit=0;A.nx=.5;A.on=true;
+      audioLoop();
+    })
+    .catch(()=>audioFail());
+}
+function audioFail(){
+  flashHint(t('audioDenied'));
+  if(S.running && S.mode==='audio') wM('mouse',{silent:true});
+}
+function audioStop(){
+  const A=S.audio; A.on=false;
+  try{A.stream&&A.stream.getTracks().forEach(x=>x.stop());}catch(e){}
+  try{A.ctx&&A.ctx.close();}catch(e){}
+  A.stream=null;A.ctx=null;A.ana=null;A.src=null;A.level=0;A.pitch=0;A.nx=.5;
+}
+function audioLoop(){
+  const A=S.audio;
+  if(!A.on||!A.ana) return;
+  A.ana.getByteTimeDomainData(A.buf);
+  let sum=0,peak=0;
+  for(let i=0;i<A.buf.length;i++){ const v=(A.buf[i]-128)/128; sum+=v*v; const av=v<0?-v:v; if(av>peak)peak=av; }
+  const rms=Math.sqrt(sum/A.buf.length);
+  A.rms=rms;
+  const target=clampN((rms-0.006)*7,0,1);
+  A.level=A.level*.72+target*.28;
+  if(peak>0.30 && performance.now()-(A.hit||0)>380){
+    A.hit=performance.now();
+    const sp=audioSpot(); if(sp) pushSplat(sp.x, sp.y, 34+A.level*46, 90);
+  }
+  A.ana.getByteFrequencyData(A.freq);
+  let num=0,den=0;
+  for(let i=2;i<A.freq.length;i++){ const v=A.freq[i]; num+=i*v; den+=v; }
+  if(den>200){ A.centroid=A.centroid*.86+clampN((num/den)/(A.freq.length*.5),0,1)*.14; }
+  A.t+=0.016;
+  A.frame=(A.frame||0)+1;
+  if(A.frame%5===0) audioPitch();
+  requestAnimationFrame(audioLoop);
+}
+/* autocorrelation pitch: decimate by 3 so a 2048-sample frame costs ~150k ops */
+function audioPitch(){
+  const A=S.audio,b=A.buf,sr=A.sr||44100,d=3,n=b.length;
+  if(!b||(A.rms||0)<0.004){ A.pitch=0; return; }
+  const e=new Float64Array(n+1);
+  for(let i=0;i<n;i++){ const v=b[i]-128; e[i+1]=e[i]+v*v; }
+  const minLag=Math.max(4,Math.round(sr/(1000*d))), maxLag=Math.min(Math.floor(n/(2*d)),Math.round(sr/(85*d)));
+  let best=0,bestLag=0;
+  for(let lag=minLag;lag<=maxLag;lag++){
+    let c=0,lim=n-lag*d;
+    for(let i=0;i<lim;i+=2){ c+=(b[i]-128)*(b[i+lag*d]-128); }
+    c*=2;
+    const e2=e[n]-e[lag*d-1];
+    const norm=c/(Math.sqrt((e[n]-e[0])*e2)+1e-6);
+    if(norm>best){ best=norm; bestLag=lag; }
+  }
+  A.pitch = (best>0.32 && bestLag>0) ? sr/(bestLag*d) : 0;
+}
+function audioSpot(){
+  const A=S.audio;
+  if(!A.on) return null;
+  const raw = A.pitch ? clampN(Math.log2(A.pitch/85)/Math.log2(1400/85),0,1) : .5;
+  A.nx = A.nx==null ? raw : A.nx*.78+raw*.22;
+  const yN = clampN(A.centroid*.72 + .28*(.5+.5*Math.sin(A.t*.55)),0,1);
+  return {x:DW*(.07+.86*A.nx), y:DH*(.12+.76*yN), radius:S.radius*(.42+A.level*1.75)};
+}
+
+/* ── 动影 · 皮影 ── frame differencing, zero models. The centroid of CHANGE
+   becomes the light: you do not need to be recognised, just to move. */
+const MOTION_W=72, MOTION_H=54;
+function motionReset(){ const m=S.motion; m.prev=null; m.level=0; m.x=DW/2; m.y=DH/2; m.nx=.5; m.ny=.5; m.seen=false; m.t=0; }
+function motionTick(){
+  const m=S.motion;
+  if(!wkCvs||!vid||vid.readyState<2) return;
+  const now=performance.now();
+  if(now-m.t<45) return;
+  m.t=now;
+  if(!m.c){
+    m.c=document.createElement('canvas'); m.c.width=MOTION_W; m.c.height=MOTION_H;
+    m.cx=m.c.getContext('2d',{willReadFrequently:true});
+  }
+  m.cx.drawImage(wkCvs,0,0,MOTION_W,MOTION_H);
+  const cur=m.cx.getImageData(0,0,MOTION_W,MOTION_H).data;
+  const prev=m.prev;
+  m.prev=cur;
+  if(!prev) return;
+  let sw=0,sx=0,sy=0,energy=0;
+  for(let y=0;y<MOTION_H;y++){
+    for(let x=0;x<MOTION_W;x++){
+      const i=(y*MOTION_W+x)*4;
+      const l=cur[i]*.299+cur[i+1]*.587+cur[i+2]*.114;
+      const pl=prev[i]*.299+prev[i+1]*.587+prev[i+2]*.114;
+      const d=l-pl; const ad=d<0?-d:d;
+      if(ad>9){ const w=ad-9; sw+=w; sx+=x*w; sy+=y*w; energy+=ad; }
+    }
+  }
+  const area=MOTION_W*MOTION_H;
+  m.level=clampN(energy/(area*26),0,1);
+  if(sw>area*0.35){
+    let nx=sx/sw/MOTION_W, ny=sy/sw/MOTION_H;
+    if(S.mirrorX) nx=1-nx;                       // the preview is mirrored → match it
+    m.nx=m.nx*.7+nx*.3;
+    m.ny=m.ny*.7+ny*.3;
+    m.seen=true;
+    m.x=m.nx*DW; m.y=m.ny*DH;
+  }
+}
+
+/* ── 面庞 · 头姿 ── MediaPipe FaceMesh: nose tip moves the light, an open
+   mouth opens the aperture. Head pose, not eye gaze — no printed marker. */
+let fm=null, fmLoading=null, fmBusy=false;
+function loadFaceMesh(){
+  if(window.FaceMesh) return Promise.resolve();
+  if(fmLoading) return fmLoading;
+  fmLoading=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/face_mesh.js';
+    s.async=true;
+    s.onload=()=>res();
+    s.onerror=()=>rej(new Error('face_mesh.js failed to load'));
+    document.head.appendChild(s);
+  });
+  return fmLoading;
+}
+async function faceStart(){
+  const F=S.face;
+  flashHint(t('faceLoading'), 5000);
+  try{ await loadFaceMesh(); }catch(e){ console.warn('[face]',e.message); faceFail(); return; }
+  if(!S.running || S.mode!=='face'){ return; }
+  try{
+    if(!fm){
+      fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${f}`});
+      fm.setOptions({maxNumFaces:1,refineLandmarks:false,minDetectionConfidence:.5,minTrackingConfidence:.5});
+      fm.onResults(r=>{
+        const lms=r.multiFaceLandmarks&&r.multiFaceLandmarks[0];
+        const F2=S.face;
+        if(!lms){ F2.seen=false; F2.open=0; return; }
+        const nose=lms[4], up=lms[13], dn=lms[14], le=lms[33], re=lms[263];
+        const eyeD=Math.hypot(re.x-le.x, re.y-le.y)||1e-3;
+        F2.open=clampN((Math.hypot(dn.x-up.x, dn.y-up.y)/eyeD-0.06)/0.5,0,1);
+        let nx=nose.x, ny=nose.y;
+        if(S.mirrorX) nx=1-nx;
+        F2.nx=F2.nx==null?nx:F2.nx*.55+nx*.45;
+        F2.ny=F2.ny==null?ny:F2.ny*.55+ny*.45;
+        F2.seen=true;
+      });
+    }
+    if(S.mode!=='face'){ return; }
+    F.ready=true;
+    F.loading=false;
+  }catch(e){ console.warn('[face] init',e); faceFail(); }
+}
+function faceFail(){
+  S.face.ready=false;
+  flashHint(t('faceFail'));
+  if(S.running && S.mode==='face') wM('mouse',{silent:true});
+}
+function faceStop(){ S.face.ready=false; S.face.seen=false; S.face.nx=null; S.face.ny=null; }
+let _fmBusy=false;
+async function faceTick(){
+  if(S.mode!=='face'||!fm||!S.face.ready||_fmBusy||!wkCvs) return;
+  _fmBusy=true;
+  try{ await fm.send({image:wkCvs}); }catch(e){ /* transient */ }finally{ _fmBusy=false; }
+}
+
+/* ── 倾斜 · 掌中 ── the phone's own gyroscope. iOS needs an explicit
+   permission request triggered by a user gesture (the mode card click). */
+function tiltStart(){
+  const T=S.tilt;
+  T.ready=false; T.base=null; T.last=0; T.sx=null; T.sy=null;
+  const attach=()=>{ window.addEventListener('deviceorientation',tiltHandler,true); T.bound=true; };
+  const DOE=window.DeviceOrientationEvent;
+  try{
+    if(DOE && typeof DOE.requestPermission==='function'){
+      DOE.requestPermission().then(p=>{ if(p==='granted') attach(); else tiltFail(); }).catch(()=>tiltFail());
+    }else attach();
+  }catch(e){ tiltFail(); return; }
+  clearTimeout(T.timer);
+  T.timer=setTimeout(()=>{ if(S.running && S.mode==='tilt' && !T.ready) tiltFail(); }, 2800);
+}
+function tiltHandler(e){
+  const T=S.tilt;
+  if(e.beta==null && e.gamma==null) return;
+  T.last=performance.now();
+  T.beta=+e.beta||0; T.gamma=+e.gamma||0;
+  if(!T.base){
+    T.base={beta:T.beta,gamma:T.gamma};
+    T.ready=true;
+    flashHint(t('tiltCenter'), 1600);
+  }
+}
+function tiltFail(){
+  flashHint(t('tiltNoSensor'));
+  if(S.running && S.mode==='tilt') wM('mouse',{silent:true});
+}
+function tiltStop(){
+  const T=S.tilt;
+  try{ window.removeEventListener('deviceorientation',tiltHandler,true); }catch(e){}
+  clearTimeout(T.timer);
+  T.ready=false; T.bound=false;
+}
+function tiltRecenter(){
+  const T=S.tilt;
+  T.base = (T.beta!=null) ? {beta:T.beta,gamma:T.gamma} : null;
+  flashHint(t('tiltRecentered'), 1400);
+}
+
+/* ───────────────────────────────────────────────────────────
+   Modes — a registry, not a switch statement. Every entry
+   satisfies the same contract:
+     {icon, nameKey, group, needCam, needMic, init, spot, cln, ex, meter}
+   `spot()` returns {x,y,radius} (or null to fall through to the
+   attract loop) and `group` decides where the card lives.
+   Adding a modality = adding one entry here + one I18N key.
+   ─────────────────────────────────────────────────────────── */
 const M={
-  flashlight:{
-    icon:'🔦',nameKey:'modeFlashlight',
-    init(){},spot(id){return spF(id);},cln(){},
-    ex:()=>'', needCam:true, needsPixels:true,
+  auto:{
+    icon:'auto',nameKey:'modeAuto',group:'free',needCam:false,
+    init(){S.autoT=0;},
+    spot(){ S.autoT=(S.autoT||0)+0.0045;
+      return {x:DW*(0.82-0.64*((S.autoT*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.autoT*0.9)), radius:S.radius*0.8}; },
+    cln(){}, ex:()=>'',
+  },
+  mouse:{
+    icon:'pointer',nameKey:'modeMouse',group:'free',needCam:false,
+    init(){},
+    spot(){ const r=(S.pen&&S.pressure>0)?S.radius*(0.45+1.1*S.pressure):S.radius;
+      return {x:S.mouseX,y:S.mouseY,radius:r}; },
+    cln(){}, ex:()=>'',
+  },
+  audio:{
+    icon:'audio',nameKey:'modeAudio',group:'free',needMic:true,
+    init(){ audioStart(); },
+    spot(){ return audioSpot(); },
+    cln(){ audioStop(); },
+    ex(){ return S.audio.on?'':'🎙 '+t('micWaiting'); },
+    meter(){ return {label:t('meterLevel'), value:S.audio.level}; },
+  },
+  tilt:{
+    icon:'tilt',nameKey:'modeTilt',group:'free',
+    init(){ tiltStart(); },
+    spot(){ const T=S.tilt;
+      if(!T.ready||performance.now()-T.last>1600) return null;
+      const nx=clampN((T.gamma-T.base.gamma)/26*0.5+0.5,0,1);
+      const ny=clampN((T.beta-T.base.beta)/26*0.5+0.5,0,1);
+      T.sx=T.sx==null?nx:T.sx*.82+nx*.18;
+      T.sy=T.sy==null?ny:T.sy*.82+ny*.18;
+      return {x:T.sx*DW, y:T.sy*DH, radius:S.radius}; },
+    cln(){ tiltStop(); },
+    ex(){ return S.tilt.ready?'':'📐 '+t('tiltCenter'); },
+  },
+  motion:{
+    icon:'motion',nameKey:'modeMotion',group:'cam',needCam:true,
+    init(){ motionReset(); },
+    spot(){ motionTick(); const m=S.motion;
+      if(!m.seen) return null;
+      return {x:m.x, y:m.y, radius:S.radius*(0.5+m.level*1.35)}; },
+    cln(){ motionReset(); },
+    ex(){ const m=S.motion; return m.seen?'':'🌗 '+t('motionWaiting'); },
+    meter(){ return {label:t('meterLevel'), value:S.motion.level}; },
   },
   hand:{
-    icon:'✋',nameKey:'modeHand',
+    icon:'hand',nameKey:'modeHand',group:'cam',needCam:true,
     init(){iH();},
     spot(id){if(S.hpos&&S.gesture!=='fist')return{x:S.hpos.x,y:S.hpos.y,radius:S.gesture==='point'?25:S.radius};return null;},
-    cln(){if(hands){try{hands.close();}catch(e){console.warn('hands.close failed:',e.message);}hands=null;hr=false;}S.hlm=null;S.hpos=null;S.gesture='none';},
+    cln(){hr=false;S.hlm=null;S.hpos=null;S.gesture='none';},  // hands stays warm: closing mid-frame breaks the wasm loader
     ex:()=>{
-      if(S.gesture==='victory') return '✌ 换场景';
+      if(S.gesture==='victory') return '✌ '+t('gestureVictory');
       const map={open:'gestureOpen',fist:'gestureFist',point:'gesturePoint'};
-      return map[S.gesture] ? `🖐 ${t(map[S.gesture])}` : '';
+      return map[S.gesture] ? '🖐 '+t(map[S.gesture]) : '';
     },
-    needCam:true,
+  },
+  face:{
+    icon:'face',nameKey:'modeFace',group:'cam',needCam:true,
+    init(){ faceStart(); },
+    spot(){ const F=S.face;
+      if(!F.ready||!F.seen) return null;
+      return {x:clampN(F.nx,0,1)*DW, y:clampN(F.ny,0,1)*DH, radius:S.radius*(0.55+(F.open||0)*1.7)}; },
+    cln(){ faceStop(); },
+    ex(){ const F=S.face; return F.seen?'':'🙂 '+t('faceNoFace'); },
+    meter(){ return {label:t('meterLevel'), value:S.face.open||0}; },
+  },
+  flashlight:{
+    icon:'flashlight',nameKey:'modeFlashlight',group:'cam',needCam:true,needsPixels:true,
+    init(){},spot(id){return spF(id);},cln(){},
+    ex:()=>'',
   },
   gaze:{
-    icon:'👓',nameKey:'modeGaze',
+    icon:'gaze',nameKey:'modeGaze',group:'gear',needCam:true,needsPixels:true,
     init(){ enterGaze(); },
     spot(fd){
       if(!S.gazeReady || !gazeFit || !arDetector) return null;
-      const f = getArFrame() || fd; // prefer unmirrored frame from the side canvas
+      const f = getArFrame() || fd;
       if(!f) return null;
       let markers;
-      try{ markers = arDetector.detect(f); }
-      catch(e){ return null; }
-      if(!markers.length){
-        // Marker briefly off-frame — hold last smoothed position so the spotlight doesn't disappear
-        return S.gazeSmooth ? {x:S.gazeSmooth.x, y:S.gazeSmooth.y, radius:S.radius} : null;
-      }
+      try{ markers = arDetector.detect(f); }catch(e){ return null; }
+      if(!markers.length){ return S.gazeSmooth ? {x:S.gazeSmooth.x, y:S.gazeSmooth.y, radius:S.radius} : null; }
       const c = markerCenter(markers[0], f.width, f.height);
       const px = gazeFit.x[0] + gazeFit.x[1]*c.nx + gazeFit.x[2]*c.ny;
       const py = gazeFit.y[0] + gazeFit.y[1]*c.nx + gazeFit.y[2]*c.ny;
-      const a = 0.45; // ArUco is sub-pixel precise → lighter smoothing than iris
+      const a = 0.45;
       if(!S.gazeSmooth) S.gazeSmooth={x:px,y:py};
       else{ S.gazeSmooth.x=a*px+(1-a)*S.gazeSmooth.x; S.gazeSmooth.y=a*py+(1-a)*S.gazeSmooth.y; }
       return {x:S.gazeSmooth.x, y:S.gazeSmooth.y, radius:S.radius};
     },
     cln(){ exitGaze(); },
-    ex(){ return S.gazeReady ? '' : `👓 ${t('gazeCalibrating')}`; },
-    needCam:true, needsPixels:true, // app provides the camera; we run ArUco on the camera ImageData
-  },
-  mouse:{
-    icon:'🖱',nameKey:'modeMouse',
-    init(){},spot(id){return{x:S.mouseX,y:S.mouseY,radius:S.radius};},
-    cln(){},ex:()=>'',needCam:false,
+    ex(){ return S.gazeReady ? '' : '👓 '+t('gazeCalibrating'); },
   },
   phone:{
-    icon:'📱',nameKey:'modePhone',
+    icon:'phone',nameKey:'modePhone',group:'gear',
     init(){ phoneStart(); },
     spot(){ const tg=S.phone.targets[S.phone.primaryId]; return (tg && (tg.frozen||performance.now()-tg.t<=S.phone.staleMs))?{x:tg.smX,y:tg.smY,radius:tg.smR}:null; },
     spots(){ const now=performance.now(); const br=1+(S.breath||0)*0.22; return Object.values(S.phone.targets).filter(tg=>tg.frozen||now-tg.t<=S.phone.staleMs).map(tg=>({x:tg.smX,y:tg.smY,radius:tg.smR*br*(1+(tg.expr||0)*0.8),id:tg.id,hue:tg.hue,frozen:tg.frozen,brush:tg.brush||0,ang:tg.ang||0})); },
     cln(){ phoneStop(); },
-    ex(){ const n=phoneActiveCount(); return n?`📱 ${n}`:t('phoneWaiting'); },
-    needCam:false,
+    ex(){ const n=phoneActiveCount(); return n?'📱 '+n:t('phoneWaiting'); },
   },
   ir:{
-    icon:'🔴',nameKey:'modeIR',
+    icon:'ir',nameKey:'modeIR',group:'gear',
     init(){ irStart(); },
-    spot(){ return (S.ir&&performance.now()-S.ir.t<400)?{x:S.ir.x,y:S.ir.y,radius:S.ir.r||S.radius}:null; },   // IR wand = just another spot
+    spot(){ return (S.ir&&performance.now()-S.ir.t<400)?{x:S.ir.x,y:S.ir.y,radius:S.ir.r||S.radius}:null; },
     cln(){ irStop(); },
     ex(){ return (S.ir&&S.ir.port)?'':'🔴 '+t('irWaiting'); },
-    needCam:false,
   },
 };
 
@@ -1383,17 +2254,17 @@ function phoneNewToken(){
   if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a); else for(let i=0;i<a.length;i++)a[i]=Math.floor(Math.random()*256);
   return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join('').slice(0,8);
 }
+function phoneUrl(){ return `${location.origin}/phone.html?v=${S.phone.room}#room=${S.phone.room}`; }
 function phoneStart(){
   const P=S.phone;
   P.targets={};P.primaryId=null;P.calib={};P.splats=[];P.seq=0;P.overlap={};P.ink=false;P.strokeLast={};
   P.room=phoneNewToken();
-  const url=`${location.origin}/phone.html?v=${P.room}#room=${P.room}`;   // ?v= busts any stale phone.html cache
-  showPhonePair(url);
+  showPhonePair(phoneUrl());
   try{
     P.es=new EventSource(`/events?room=${encodeURIComponent(P.room)}`);
     P.es.onmessage=e=>phoneIngest(e.data);
-    P.es.onopen=()=>{const er=document.getElementById('pp-err');if(er)er.style.display='none';};
-    P.es.onerror=()=>{ if(!P.es||P.es.readyState===2){const er=document.getElementById('pp-err');if(er)er.style.display='block';} };
+    P.es.onopen=()=>{ P.relay=true; const er=document.getElementById('pp-err');if(er)er.style.display='none'; };
+    P.es.onerror=()=>{ if(!P.es||P.es.readyState===2){ P.relay=false; const er=document.getElementById('pp-err');if(er)er.style.display='block'; } };
   }catch(err){ const er=document.getElementById('pp-err');if(er)er.style.display='block'; }
 }
 function phoneStop(){
@@ -1413,14 +2284,14 @@ async function irStart(){ S.ir={x:DW/2,y:DH/2,r:0,t:0,port:null};
       let nl; while((nl=buf.indexOf('\n'))>=0){ const ln=buf.slice(0,nl); buf=buf.slice(nl+1);
         const p=ln.trim().split(/[,\s]+/).map(Number);
         if(p.length>=2 && isFinite(p[0]) && isFinite(p[1])){ S.ir.x=clampN(p[0],0,1)*DW; S.ir.y=clampN(p[1],0,1)*DH; if(isFinite(p[2]))S.ir.r=clampN(p[2],0.02,0.5)*Math.min(DW,DH); S.ir.t=performance.now(); } } } }catch(e){} })();
-  }catch(e){ flashHint('IR 设备未连接'); }
+  }catch(e){ flashHint(t('irWaiting')); }
 }
 function irStop(){ try{ irReader&&irReader.cancel(); }catch(e){} irReader=null; try{ S.ir&&S.ir.port&&S.ir.port.close(); }catch(e){} S.ir=null; }
 function phoneIngest(raw){
   let msg; try{msg=JSON.parse(raw);}catch(e){return;}
   if(msg.type==='haptic') return;                 // ignore our own echoed reverse-channel message
   const P=S.phone, id=msg.id; if(!id)return;
-  if(msg.type==='paint'){ S.paint=!S.paint; flashHint(S.paint?'🖌 留痕 开':'留痕 关'); return; }   // phone long-press 💦 toggles 留痕
+  if(msg.type==='paint'){ S.paint=!S.paint; flashHint(t(S.paint?'fxPaintOn':'fxPaintOff')); syncBar(); return; }   // phone long-press 💦 toggles 留痕
   const now=performance.now();
   // prune phones gone silent (missed 'bye') — but never a deliberately FROZEN one
   for(const k in P.targets){ if(!P.targets[k].frozen && now-P.targets[k].t>4000){ delete P.targets[k]; if(P.primaryId===k)P.primaryId=null; } }
@@ -1430,11 +2301,11 @@ function phoneIngest(raw){
   // content-only / position-less messages: handle BEFORE creating a wand target (no phantom roster seal/count)
   if(msg.type==='music'){ if(msg.onset){ const t2=P.targets[id]; pushSplat(t2?t2.smX:DW/2, t2?t2.smY:DH/2, 22+(+msg.level||0)*44, 90); } return; }   // 墨随声动
   if(msg.type==='text'){ inkText(id, msg.text||''); return; }   // 题字成境
-  if(msg.type==='geo'){ S.geo.push({x:clampN(+msg.x||0,0,1),y:clampN(+msg.y||0,0,1),hue:hueFromId(id)}); if(S.geo.length>200)S.geo.shift(); flashHint('🌏 远客生辉 +1'); return; }
+  if(msg.type==='geo'){ S.geo.push({x:clampN(+msg.x||0,0,1),y:clampN(+msg.y||0,0,1),hue:hueFromId(id)}); if(S.geo.length>200)S.geo.shift(); flashHint(t('fxGeo')); return; }
   if(msg.type==='rps'){ rpsMove(id, msg.move); return; }   // 石头剪刀布
   if(msg.type==='beat'){ beatTap(id); return; }   // 击节点墨
   let tg=P.targets[id];
-  if(!tg){ tg=P.targets[id]={smX:DW/2,smY:DH/2,smR:S.radius,t:now,id:id,hue:hueFromId(id),frozen:false,brush:0,twist:0,twistBase:0,ang:0,trailT:0,seq:(++P.seq)}; if(!P.primaryId)P.primaryId=id; refreshPhoneCount(); refreshRoster(); }
+  if(!tg){ tg=P.targets[id]={smX:DW/2,smY:DH/2,smR:S.radius,t:now,id:id,hue:hueFromId(id),frozen:false,brush:0,twist:0,twistBase:0,ang:0,trailT:0,seq:(++P.seq)}; if(!P.primaryId)P.primaryId=id; refreshPhoneCount(); refreshRoster(); hidePhonePair(); }
   if(msg.type==='freeze'){ tg.frozen=!!msg.on; tg.t=now; refreshRoster(); return; }
   if(msg.type==='brush'){ tg.brush=((+msg.i)||0)%3; return; }
   if(msg.type==='splash'){ pushSplat(tg.smX, tg.smY, +msg.power||26, +msg.spin||0); tg.t=now; return; }   // FIX: was missing return -> dragged wand to centre every shake/泼墨/张嘴
@@ -1548,12 +2419,13 @@ function savePNG(){ try{
   const x=sc.getContext('2d'); x.fillStyle='#141413'; x.fillRect(0,0,sc.width,sc.height); x.drawImage(D,0,0);
   x.fillStyle='#f5f4ed'; x.textBaseline='middle'; x.textAlign='left';
   x.font=`600 ${Math.round(strip*0.34)}px "Noto Serif SC","Songti SC",serif`;
-  x.fillText('墨卷 · 一起点亮一幅画', Math.round(DW*0.045), DH+strip*0.5);
+  x.fillText(t('cardCaption'), Math.round(DW*0.045), DH+strip*0.5);
   const ss=Math.round(strip*0.62), sx=DW-ss-Math.round(DW*0.045), sy=DH+(strip-ss)/2;
   x.fillStyle='#c96442'; x.fillRect(sx,sy,ss,ss);
   x.fillStyle='#fff'; x.textAlign='center'; x.font=`${Math.round(ss*0.62)}px "Songti SC",serif`; x.fillText('印', sx+ss/2, sy+ss*0.54);
-  const a=document.createElement('a'); a.download='inkscroll-'+Math.floor(performance.now())+'.png'; a.href=sc.toDataURL('image/png'); a.click(); flashHint('已保存分享卡');
-}catch(e){ flashHint('保存失败(摄像头模式画布受限)'); } }
+  const a=document.createElement('a'); a.download='inkscroll-'+Math.floor(performance.now())+'.png'; a.href=sc.toDataURL('image/png'); a.click(); flashHint(t('fxSaved'));
+  announce(t('fxSaved'));
+}catch(e){ flashHint(t('fxSaveFail')); } }
 // quality helpers: clip-to-imgBounds wrapper (kills ~9 copies of the save/clip/restore preamble) + cached glow sprite (no per-frame gradients)
 function withBounds(fn){ ctx.save(); if(S.imgBounds){const ib=S.imgBounds;ctx.beginPath();ctx.rect(ib.x,ib.y,ib.w,ib.h);ctx.clip();} fn(); ctx.restore(); }
 const _glowSprites={};
@@ -1582,11 +2454,11 @@ function renderCreature(tg){
 // 众声成墨 — the DISPLAY's own mic samples room loudness -> drives the global breath bloom/re-flood
 let roomMic=null,roomAna=null,roomData=null;
 function toggleRoom(){
-  if(S.room){ try{roomMic&&roomMic.getTracks().forEach(t=>t.stop());}catch(e){} roomMic=roomAna=null; S.room=false; S.breath=0; flashHint('众声 关'); return; }
-  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{ roomMic=st; const c=new (window.AudioContext||window.webkitAudioContext)();
+  if(S.room){ try{roomMic&&roomMic.getTracks().forEach(t=>t.stop());}catch(e){} roomMic=roomAna=null; S.room=false; S.breath=0; flashHint(t('fxRoomOff')); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(st=>{ roomMic=st; const c=new (window.AudioContext||window.webkitAudioContext)(); if(c.state==='suspended') c.resume().catch(()=>{});
     const s=c.createMediaStreamSource(st); roomAna=c.createAnalyser(); roomAna.fftSize=512; s.connect(roomAna); roomData=new Uint8Array(roomAna.fftSize);
-    S.room=true; flashHint('🎙 众声成墨 开'); roomLoop();
-  }).catch(()=>flashHint('麦克风不可用'));
+    S.room=true; flashHint(t('fxRoomOn')); roomLoop();
+  }).catch(()=>flashHint(t('audioDenied')));
 }
 function roomLoop(){ if(!S.room||!roomAna)return; roomAna.getByteTimeDomainData(roomData);
   let s=0; for(let i=0;i<roomData.length;i++){const v=(roomData[i]-128)/128;s+=v*v;}
@@ -1596,9 +2468,10 @@ function roomLoop(){ if(!S.room||!roomAna)return; roomAna.getByteTimeDomainData(
 // 氛围音 — Eno-style generative pentatonic bed (key 'a'): 3 non-commensurate slow timers fire long, soft, panned 宫商角徵羽 tones → a never-repeating 留白 soundscape under the idle/attract wall
 let ambCtx=null, ambOn=false;
 function toggleAmbient(){
-  if(ambOn){ ambOn=false; try{ambCtx&&ambCtx.close();}catch(e){} ambCtx=null; flashHint('氛围音 关'); return; }
-  try{ ambCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ flashHint('音频不可用'); return; }
-  ambOn=true; flashHint('🎐 氛围音 开');
+  if(ambOn){ ambOn=false; try{ambCtx&&ambCtx.close();}catch(e){} ambCtx=null; flashHint(t('fxAmbOff')); return; }
+  try{ ambCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ flashHint(t('audioDenied')); return; }
+  if(ambCtx.state==='suspended') ambCtx.resume().catch(()=>{});
+  ambOn=true; flashHint(t('fxAmbOn'));
   const SC=[130.81,146.83,164.81,196,220,261.63,293.66,329.63,392,440];
   function voice(){ if(!ambOn||!ambCtx)return; const c=ambCtx, now=c.currentTime, f=SC[Math.floor(Math.random()*SC.length)];
     const o=c.createOscillator(); o.type='sine'; o.frequency.value=f;
@@ -1615,7 +2488,7 @@ function toggleAmbient(){
 function inkText(id,text){ if(!text)return; const map={山:0,水:0,峰:0,竹:1,林:1,雪:2,冬:2,寒:2,花:3,鸟:3,春:3,星:4,夜:4,空:4,月:4}; let scened=false;
   for(const ch of text){ if(map[ch]!==undefined && !scened){ changeScene(map[ch]); scened=true; } }
   for(let i=0;i<text.length && i<12;i++){ const c=text.charCodeAt(i); pushSplat(((c*53)%1000)/1000*DW, ((c*97)%1000)/1000*DH, 24+(c%30), c%180); }
-  flashHint('題 · '+text.slice(0,8));
+  flashHint(t('fxText')+' · '+text.slice(0,8));
 }
 // 石头剪刀布 — first two players within 2.5s resolve; winner's light blooms
 function rpsMove(id,move){ const now=performance.now(); if(!S.rps.moves)S.rps.moves={}; S.rps.moves[id]={move:move,t:now};
@@ -1623,7 +2496,7 @@ function rpsMove(id,move){ const now=performance.now(); if(!S.rps.moves)S.rps.mo
   if(ids.length>=2){ const a=ids[0],b=ids[1], ma=S.rps.moves[a].move, mb=S.rps.moves[b].move, beats={rock:'scissors',scissors:'paper',paper:'rock'};
     let winner = (ma===mb)?null:(beats[ma]===mb?a:b);
     const t2=winner&&S.phone.targets[winner];
-    if(t2){ pushSplat(t2.smX,t2.smY,82,160); phoneHaptic(String(winner).split('#')[0],[10,30,10,30,60]); flashHint('✊✋✌ 胜者绽放!'); } else flashHint('✊✋✌ 平局');
+    if(t2){ pushSplat(t2.smX,t2.smY,82,160); phoneHaptic(String(winner).split('#')[0],[10,30,10,30,60]); flashHint('✊✋✌ '+t('fxRpsWin')); } else flashHint('✊✋✌ '+t('fxRpsTie'));
     S.rps.moves={}; }
 }
 // 击节点墨 — tap vs the display's own beat clock; on-beat = bigger splat + buzz
@@ -1847,7 +2720,9 @@ function startCalibration(){
   gazeFit=null; calibSamples=[];
   const cal=document.getElementById('calib');
   cal.classList.remove('error');
-  document.getElementById('calib-dismiss').style.display='none';
+  const dismiss=document.getElementById('calib-dismiss');
+  dismiss.textContent=t('phoneFallbackBtn');
+  dismiss.style.display='';                 // always escapable — no printed marker? go pointer
   const layer=document.getElementById('calib-dots');
   layer.innerHTML='';
   document.getElementById('calib-title').textContent=t('calibTitle');
@@ -1870,8 +2745,8 @@ function startCalibration(){
               const c = markerCenter(markers[0], fd.width, fd.height);
               calibSamples.push({
                 nx:c.nx, ny:c.ny,
-                tx:window.innerWidth*px/100,
-                ty:window.innerHeight*py/100,
+                tx:window.innerWidth*px/100*(S.dpr||1),   // fit maps to canvas device px
+                ty:window.innerHeight*py/100*(S.dpr||1),
               });
             }
           }
@@ -1989,8 +2864,10 @@ function processFrame(){
     }
     // identity rings (frozen = thicker)
     for(let i=0;i<cap;i++){ const s=spots[i]; const r=s.radius||S.radius;
-      ctx.strokeStyle=s.hue?hexA(s.hue,.5):'rgba(201,100,66,.22)';
-      ctx.lineWidth=s.frozen?3:1.5;
+      ctx.strokeStyle='rgba(20,20,19,.30)';ctx.lineWidth=(s.frozen?4:2.5);
+      ctx.beginPath();ctx.arc(s.x,s.y,r+1,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=s.hue?hexA(s.hue,.62):'rgba(201,100,66,.34)';
+      ctx.lineWidth=s.frozen?2.5:1.4;
       ctx.beginPath();ctx.arc(s.x,s.y,r,0,Math.PI*2);ctx.stroke();
     }
     // 合手成圆 — where two beams overlap, the colour blooms; gold seam + a one-shot buzz
@@ -2087,14 +2964,26 @@ function processFrame(){
 
   fc++;const now=performance.now();if(now-ft>=1000){S.fps=fc;fc=0;ft=now;}
 
-  // HUD updates
-  document.getElementById('hf').textContent=S.fps;
-  document.getElementById('hm').textContent=`${m.icon} ${t(m.nameKey)}`;
-  document.getElementById('hs').textContent=t({edges:'styleEdges',sketch:'styleSketch',dark:'styleDark'}[S.style]);
-  document.getElementById('hr').textContent=S.radius+' · '+S.camSens+'×';
-  if (exText) document.getElementById('he').textContent = exText.replace(/^🖐\s*/,'');
+  // HUD updates (cached nodes — this runs 60× a second)
+  HUD.hf.textContent=S.fps;
+  HUD.hm.innerHTML=`${iconSvg(m.icon)} ${t(m.nameKey)}`;
+  HUD.hs.textContent=t(STYLE_KEY[S.style]||'styleEdges');
+  HUD.hr.textContent=Math.round(S.radius/S.dpr)+' · '+S.camSens+'×';
+  if (exText){
+    HUD.he.textContent = exText.replace(/^[\p{Emoji}\s]+/u,'');
+    const lbl=document.getElementById('he-lbl');
+    if(lbl) lbl.textContent=t(S.mode==='hand'?'hudGesture':'hudStatus');
+  }
+
+  // sensor meter: makes an invisible input (sound, movement) legible
+  if(typeof m.meter==='function'){
+    const mt=m.meter();
+    HUD.meter.classList.add('show');
+    if(mt){ HUD.mLbl.textContent=mt.label; HUD.mFill.style.width=Math.round(Math.max(0,Math.min(1,mt.value))*100)+'%'; }
+  }else HUD.meter.classList.remove('show');
 
   if(S.mode==='hand'&&fc%4===0)setTimeout(pH,0);
+  if(S.mode==='face'&&fc%3===0)setTimeout(faceTick,0);
   }catch(e){console.error('Frame error:',e.message);}
   requestAnimationFrame(processFrame);
 }
@@ -2102,13 +2991,17 @@ function processFrame(){
 /* ───────────────────────────────────────────────────────────
    Camera
    ─────────────────────────────────────────────────────────── */
-async function initCam(){
+async function initCam(room=false){
   if(str){str.getTracks().forEach(t=>t.stop());}
-  try{str=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});}
-  catch(e){str=await navigator.mediaDevices.getUserMedia({video:true,audio:false});}
-  vid=document.createElement('video');vid.srcObject=str;vid.setAttribute('playsinline','');
+  const want=room?'environment':'user';        // flashlight looks at the room, everything else at you
+  try{str=await navigator.mediaDevices.getUserMedia({video:{facingMode:want,width:{ideal:1280},height:{ideal:720}},audio:false});}
+  catch(e){
+    try{str=await navigator.mediaDevices.getUserMedia({video:{facingMode:want},audio:false});}
+    catch(e2){ str=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+  }
+  vid=document.createElement('video');vid.srcObject=str;vid.setAttribute('playsinline','');vid.muted=true;
   await vid.play();
-  VW=vid.videoWidth;VH=vid.videoHeight;
+  VW=vid.videoWidth||640;VH=vid.videoHeight||480;
   pipW=160;pipH=Math.round(160*VH/VW);
   pip.width=pipW;pip.height=pipH;pip.style.height=pipH+'px';
   if(!wkCvs){wkCvs=document.createElement('canvas');wkCtx=wkCvs.getContext('2d');}
@@ -2119,12 +3012,28 @@ async function initCam(){
    First-time hint — per-mode wording
    ─────────────────────────────────────────────────────────── */
 const FIRST_HINT_KEYS = {
-  flashlight: 'firstHintFlash',
-  hand: 'firstHintHand',
-  gaze: 'firstHintGaze',
+  auto: 'firstHintAuto',
   mouse: 'firstHintMouse',
+  audio: 'firstHintAudio',
+  tilt: 'firstHintTilt',
+  motion: 'firstHintMotion',
+  hand: 'firstHintHand',
+  face: 'firstHintFace',
+  flashlight: 'firstHintFlash',
+  gaze: 'firstHintGaze',
   phone: 'firstHintPhone',
+  ir: 'firstHintIR',
 };
+const COARSE = !!(window.matchMedia && window.matchMedia('(hover:none) and (pointer:coarse)').matches);
+const REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* 静观 — a real pause switch for the ambient animation (WCAG 2.2.2). */
+function togglePause(){
+  S.paused=!S.paused;
+  flashHint(t(S.paused?'fxPauseOn':'fxPauseOff'));
+}
+document.addEventListener('keydown',e=>{
+  if(S.running && (e.key||'').toLowerCase()==='p' && !e.shiftKey){ e.preventDefault(); togglePause(); }
+});
 function firstHintText(){
   return t(FIRST_HINT_KEYS[S.mode] || 'firstHintMouse');
 }
@@ -2132,8 +3041,18 @@ function flashHint(text, dur=2800){
   const fh=document.getElementById('first-hint');
   fh.textContent=text;
   fh.classList.add('show');
+  announce(text);
   clearTimeout(flashHint._t);
   flashHint._t=setTimeout(()=>fh.classList.remove('show'), dur);
+}
+/* Screen readers get every state change through one polite live region. */
+let _annT=0;
+function announce(text){
+  const el=document.getElementById('live');
+  if(!el) return;
+  el.textContent='';
+  clearTimeout(_annT);
+  _annT=setTimeout(()=>{ el.textContent=text; },40);
 }
 function showFirstHint(){
   if(S.firstHintShown) return;
@@ -2154,67 +3073,114 @@ function noteFirstMove(dx,dy){
 /* ───────────────────────────────────────────────────────────
    Start / Stop / Mode switch
    ─────────────────────────────────────────────────────────── */
+/* A pixel budget keeps the canvas sharp on retina phones without turning a
+   4K desk display into a 33 MP per-frame blit. 3.2 MP is the sweet spot:
+   crisp text-free line art, still 60 fps for the particle layers. */
+function computeDPR(){
+  const raw=window.devicePixelRatio||1;
+  const area=Math.max(1,window.innerWidth*window.innerHeight);
+  const budget=3200000;
+  return Math.max(1,Math.min(2,raw,Math.sqrt(budget/area)));
+}
+function radiusBounds(){ return [16*S.dpr, 340*S.dpr]; }
+function clampRadius(v){ const b=radiusBounds(); return Math.max(b[0],Math.min(b[1],v)); }
+function resizeCanvas(){
+  DW=Math.round(window.innerWidth*S.dpr);
+  DH=Math.round(window.innerHeight*S.dpr);
+  D.width=DW;D.height=DH;
+  S.mouseX=Math.min(S.mouseX,DW); S.mouseY=Math.min(S.mouseY,DH);
+  initScene();
+  drawScene(performance.now()/1000);
+  target=scCvs; genHidden();
+}
+/* Ask for the camera that actually faces the user: hands, faces and shadows
+   are self-portraits; only the flashlight wants to look at the room. */
+async function ensureCam(){
+  if(str && vid && vid.readyState>=2) return;
+  await initCam(S.mode==='flashlight');
+}
 async function start(){
-  // Leaving animation
   const ss = document.getElementById('start-screen');
   ss.classList.add('leaving');
   await new Promise(r=>setTimeout(r,300));
   ss.style.display='none';
 
-  DW=window.innerWidth;DH=window.innerHeight;
-  D.width=DW;D.height=DH;
-  initScene();drawScene(0);target=scCvs;genHidden();
+  S.dpr=computeDPR();
+  resizeCanvas();
+  S.mouseX=DW/2; S.mouseY=DH/2;
+  S.radius=clampRadius(140*S.dpr);
 
-  if(M[S.mode].needCam){
-    try{ await initCam(); }
+  const m=M[S.mode];
+  if(m.needCam){
+    try{ await initCam(S.mode==='flashlight'); }
     catch(e){
       console.warn('Camera unavailable:',e.message);
       showError();
+      ss.classList.remove('leaving'); ss.style.display='flex';
       return;
     }
   }
-  M[S.mode].init();
+  m.init();
   S.running=true;S.smooth.x=S.smooth.y=-1;
-  if(M[S.mode].needCam) pip.style.display='block';
+  pip.style.display=m.needCam?'block':'none';
   document.getElementById('hsc').textContent=sceneNameOf(S.scene);
   sceneNav.classList.add('show');
   setTimeout(()=>sceneNav.classList.remove('show'), 2200);
   showFirstHint();
+  showBar(true);
+  wakeLockOn();
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+  announce(`${t(m.nameKey)} · ${sceneNameOf(S.scene)}`);
   requestAnimationFrame(processFrame);
 }
 function stop(){
   S.running=false;M[S.mode].cln();S.transition.active=false;
+  audioStop();
   if(str){str.getTracks().forEach(t=>t.stop());str=null;}
-  pip.style.display='none';
+  if(vid){vid.srcObject=null;vid=null;}
+  pip.style.display='none';sceneNav.classList.remove('show');
+  hideBar();hideHelp();
   document.getElementById('first-hint').classList.remove('show');
   S.firstHintShown=false;S.firstMoveDistance=0;
+  wakeLockOff();
   const ss=document.getElementById('start-screen');
-  // Reset so child entry animations replay on the way back in
   ss.classList.remove('leaving','ready');
   ss.style.display='flex';
-  void ss.offsetWidth; // force reflow to restart animations
+  void ss.offsetWidth;
   requestAnimationFrame(()=>ss.classList.add('ready'));
+  rebuildModeCards();
+  announce(t('credit'));
 }
-async function wM(name){
+async function wM(name,opts){
+  if(!M[name]) return;
+  const silent=!!(opts&&opts.silent);
+  const prev=S.mode;
   if(S.running){
-    M[S.mode].cln();S.mode=name;S.smooth.x=S.smooth.y=-1;
-    // A camera mode may need the app stream that gaze mode released — re-init it.
+    M[prev].cln();
+    // leaving camera modes must release the camera: a pointer user should not keep
+    // the camera light on (privacy), and the 15% ghost overlay should stop too.
+    if(!M[name].needCam && str){
+      try{ str.getTracks().forEach(t=>t.stop()); }catch(e){}
+      str=null; vid=null; pip.style.display='none';
+    }
+    S.mode=name;S.smooth.x=S.smooth.y=-1;
     if(M[name].needCam && !str){
-      try{ await initCam(); }
+      try{ await initCam(name==='flashlight'); }
       catch(e){ console.warn('Camera reinit failed:',e.message); }
     }
-    if(S.mode!==name) return; // user switched again while the camera was initializing
+    if(S.mode!==name) return;               // user switched again mid-await
     M[name].init();
-    // Flash a per-mode hint so the user knows how to interact in the new mode
-    flashHint(firstHintText());
+    if(!silent) flashHint(firstHintText());
     S.firstMoveDistance = 0;
     pip.style.display = (M[name].needCam && str) ? 'block' : 'none';
+    document.getElementById('he-row').style.display='none';
+    refreshRoster();
+    announce(t(M[name].nameKey));
+    try{ history.replaceState(null,'',`?mode=${name}`); }catch(e){}
   }else{S.mode=name;}
-  document.querySelectorAll('.mode-card').forEach(c=>{
-    const on=c.dataset.mode===name;
-    c.classList.toggle('active',on);
-    c.setAttribute('aria-pressed',on?'true':'false');
-  });
+  rebuildModeCards();
+  buildHelpModes();
+  showBar(true);
 }
 
 function showError(){
@@ -2227,61 +3193,306 @@ function hideError(){
 /* ───────────────────────────────────────────────────────────
    Keyboard & pointer
    ─────────────────────────────────────────────────────────── */
-document.addEventListener('keydown',e=>{
-  if(!S.running)return;
-  switch(e.key.toLowerCase()){
-    case'q':case'escape':stop();break;
-    case'm':{const ks=Object.keys(M);wM(ks[(ks.indexOf(S.mode)+1)%ks.length]);break;}
-    case'h':wM('hand');break;   // 手势模式: 用本机摄像头,挪手移光圈 + 握拳/食指/张开手势
+/* ═══════════════════════════════════════════════════════════
+   RUNTIME UI — control bar, help sheet, kiosk niceties
+   ═══════════════════════════════════════════════════════════ */
+let _barTimer=0;
+function showBar(sticky){
+  const bar=document.getElementById('bar');
+  if(!bar) return;
+  bar.classList.add('show');
+  clearTimeout(_barTimer);
+  const keep = sticky || COARSE || !S.running;
+  if(!keep) _barTimer=setTimeout(()=>bar.classList.remove('show'), 4200);
+}
+function hideBar(){ const bar=document.getElementById('bar'); if(bar){ clearTimeout(_barTimer); bar.classList.remove('show'); } }
+function noteActivity(){
+  S.lastInput=performance.now();
+  if(S.running && !document.getElementById('bar').classList.contains('show')) showBar();
+}
+function setStyle(st){
+  if(!['edges','sketch','dark','paper'].includes(st)) return;
+  S.style=st; genHidden(); syncBar();
+  announce(t({edges:'styleEdges',sketch:'styleSketch',dark:'styleDark',paper:'stylePaper'}[st]));
+}
+function bumpRadius(d){
+  S.radius=clampRadius(S.radius+d*S.dpr);
+  flashHint(`◯ ${Math.round(S.radius/S.dpr)}`, 900);
+}
+function toggleFullscreen(){
+  const el=document.documentElement;
+  if(document.fullscreenElement||document.webkitFullscreenElement){
+    (document.exitFullscreen||document.webkitExitFullscreen||(()=>{})).call(document);
+  }else{
+    const req=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(req) Promise.resolve(req.call(el)).catch(()=>flashHint(t('fullUnsupported')));
+    else flashHint(t('fullUnsupported'));
+  }
+  syncBar();
+}
+function togglePaint(){
+  S.paint=!S.paint;
+  flashHint(t(S.paint?'fxPaintOn':'fxPaintOff'));
+  syncBar();
+  vibrate(12);
+}
+function vibrate(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} }
+/* keep the screen awake while the piece is on show (kiosk / gallery) */
+let _wake=null;
+async function wakeLockOn(){
+  try{
+    if('wakeLock' in navigator && !_wake){
+      _wake=await navigator.wakeLock.request('screen');
+      _wake.addEventListener('release',()=>{ _wake=null; });
+    }
+  }catch(e){ /* not supported / denied — harmless */ }
+}
+async function wakeLockOff(){ try{ if(_wake){ await _wake.release(); _wake=null; } }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&S.running) wakeLockOn(); });
 
-    case'arrowleft':changeScene((S.scene+4)%5);break;
-    case'arrowright':changeScene((S.scene+1)%5);break;
-    case'1':S.style='edges';genHidden();break;
-    case'2':S.style='sketch';genHidden();break;
-    case'3':S.style='dark';genHidden();break;
-    case'f':document.fullscreenElement?document.exitFullscreen():document.body.requestFullscreen().catch(()=>{});break;
-    case'=':case'+':S.radius=Math.min(350,S.radius+8);break;
-    case'-':S.radius=Math.max(15,S.radius-8);break;
-    case'[':S.camSens=parseFloat(Math.max(0.5,S.camSens-0.2).toFixed(1));break;
-    case']':S.camSens=parseFloat(Math.min(5.0,S.camSens+0.2).toFixed(1));break;
-    case'r':S.smooth.x=S.smooth.y=-1;break;
-    case'c':if(S.mode==='gaze'&&arDetector)startCalibration();break;
-    case'p':if(S.mode==='phone'&&S.phone.room)showPhonePair(`${location.origin}/phone.html?v=${S.phone.room}#room=${S.phone.room}`);break;
-    case'i':S.paint=!S.paint;flashHint(S.paint?'🖌 留痕 开':'留痕 关');break;
-    case'o':S.paintFade=S.paintFade?0:0.01;flashHint(S.paintFade?'回墨呼吸 开':'回墨呼吸 关');break;
-    case'g':S.glow=!S.glow;if(!S.glow&&glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);flashHint(S.glow?'📷 长曝留痕 开':'长曝 关(已清空)');break;
+const BAR_ICONS={
+  prev:'<path d="M15 5l-7 7 7 7"/>',
+  next:'<path d="M9 5l7 7-7 7"/>',
+  style:'<path d="M4 20l4-1 10-10-3-3L5 16z"/><path d="M14 6l3 3"/>',
+  smaller:'<circle cx="12" cy="12" r="4"/><path d="M5 12h1M18 12h1"/>',
+  bigger:'<circle cx="12" cy="12" r="7"/><path d="M12 9v6M9 12h6"/>',
+  paint:'<path d="M4 20c3 0 4-2 4-4a4 4 0 0 1 4-4h3"/><path d="M15 4l5 5-3 3-5-5z"/>',
+  full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.2 2.4c-.5.2-.7.6-.7 1.1v.5"/><path d="M12 17h.01"/>',
+  exit:'<path d="M6 6l12 12M18 6L6 18"/>',
+};
+function barIcon(name){ return `<svg viewBox="0 0 24 24" aria-hidden="true">${BAR_ICONS[name]||''}</svg>`; }
+function syncBar(){
+  const st={edges:'styleEdges',sketch:'styleSketch',dark:'styleDark',paper:'stylePaper'}[S.style];
+  const m=M[S.mode];
+  const bn=document.getElementById('b-mode-name');
+  if(bn) bn.textContent=t(m?m.nameKey:'modeMouse');
+  const bs=document.getElementById('b-style');
+  if(bs){ bs.innerHTML=barIcon('style'); bs.title=t('barStyle')+' · '+t(st); bs.setAttribute('aria-label',t('barStyle')+' · '+t(st)); }
+  const bp=document.getElementById('b-paint');
+  if(bp){ bp.classList.toggle('on',!!S.paint); bp.setAttribute('aria-pressed',S.paint?'true':'false'); }
+  const bf=document.getElementById('b-full');
+  if(bf){ const fs=!!(document.fullscreenElement||document.webkitFullscreenElement); bf.classList.toggle('on',fs); bf.setAttribute('aria-pressed',fs?'true':'false'); }
+  rebuildModeCards();
+}
+function wireBar(){
+  const on=(id,fn,icon,label)=>{ const b=document.getElementById(id); if(!b)return;
+    if(icon) b.innerHTML=barIcon(icon);
+    if(label){ b.title=t(label); b.setAttribute('aria-label',t(label)); }
+    b.addEventListener('click',ev=>{ ev.preventDefault(); showBar(true); fn(); });
+  };
+  const bar=document.getElementById('bar');
+  if(bar) bar.setAttribute('aria-label',t('barLabel'));
+  on('b-mode',()=>{ const ks=Object.keys(M).filter(modeAvailable); const i=ks.indexOf(S.mode); wM(ks[(i+1)%ks.length]); },'','barMode');
+  on('b-prev',()=>{ changeScene((S.scene+4)%5); },'prev','barPrev');
+  on('b-next',()=>{ changeScene((S.scene+1)%5); },'next','barNext');
+  on('b-style',()=>{ const order=['edges','sketch','dark','paper']; setStyle(order[(order.indexOf(S.style)+1)%order.length]); },'style','barStyle');
+  on('b-smaller',()=>bumpRadius(-12),'smaller','barSmaller');
+  on('b-bigger',()=>bumpRadius(12),'bigger','barBigger');
+  on('b-paint',()=>togglePaint(),'paint','barPaint');
+  on('b-full',()=>toggleFullscreen(),'full','barFull');
+  on('b-help',()=>toggleHelp(),'help','barHelp');
+  on('b-exit',()=>stop(),'exit','barExit');
+  const bm=document.getElementById('b-mode');
+  if(bm){ bm.title=t('barMode'); bm.setAttribute('aria-label',t('barMode')); }
+  syncBar();
+}
+
+/* ── Help sheet: every mode, every key, in one place ── */
+function buildHelpModes(){
+  const host=document.getElementById('help-modes');
+  if(!host) return;
+  host.innerHTML='';
+  for(const k of Object.keys(M)){
+    if(!modeAvailable(k)) continue;
+    const m=M[k];
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='help-mode'+(k===S.mode?' on':'');
+    b.dataset.mode=k;
+    b.innerHTML=`<span class="hm-ico">${iconSvg(m.icon)}</span><span class="hm-name">${t(m.nameKey)}<span class="hm-need">${t(modeReqKey(k))}</span></span>`;
+    b.addEventListener('click',()=>{ hideHelp(); wM(k); flashHint(firstHintText()); });
+    host.appendChild(b);
+  }
+  const keys=document.getElementById('help-keys');
+  if(keys){
+    const rows=[['M','kMode'],['← →','kScene'],['1 2 3 4','kStyle'],['+/− · wheel','kRadius'],['[ ]','kSens'],['X','kMirror'],['I','kPaint'],['G','kGlow'],['S','kSave'],['F','kFull'],['?','kHelp'],['Q','kQuit']];
+    keys.innerHTML=rows.map(([k,key])=>`<kbd>${k}</kbd><span class="kd">${t(key)}</span>`).join('');
+  }
+  const note=document.getElementById('help-note');
+  if(note) note.innerHTML = `<b>${t(MODE_GROUPS[1].label)}</b> · ${t('helpNote')}<br>${t('helpTouch')}`;
+  const ks=document.getElementById('help-keys-sect');
+  if(ks) ks.style.display = COARSE ? 'none' : '';
+}
+let _helpReturn=null;
+function toggleHelp(){ const el=document.getElementById('help'); if(el.classList.contains('show')) hideHelp(); else showHelp(); }
+function showHelp(){
+  if(!S.running) return;
+  buildHelpModes();
+  _helpReturn=document.activeElement;
+  const ov=document.getElementById('help');
+  ov.classList.add('show');
+  document.getElementById('display').setAttribute('aria-hidden','true');
+  hideBar();
+  // focus the sheet itself (not the last button) and pin it to the top: focusing a
+  // button at the bottom of a tall sheet scrolled the title out of sight.
+  const sheet=ov.querySelector('.sheet');
+  setTimeout(()=>{ try{ sheet.focus({preventScroll:true}); }catch(e){} ov.scrollTop=0; },20);
+  announce(t('helpTitle'));
+}
+function hideHelp(){
+  const el=document.getElementById('help');
+  if(!el.classList.contains('show')) return;
+  el.classList.remove('show');
+  document.getElementById('display').removeAttribute('aria-hidden');
+  if(_helpReturn && _helpReturn.focus) try{_helpReturn.focus();}catch(e){}
+  showBar();
+}
+document.addEventListener('click',e=>{
+  const ov=document.getElementById('help');
+  if(ov && ov.classList.contains('show') && e.target===ov) hideHelp();
+});
+/* Keep Tab inside the open sheet — otherwise focus wanders into a canvas nobody can see. */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Tab') return;
+  const ov=document.getElementById('help');
+  if(!ov.classList.contains('show')) return;
+  const f=[...ov.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>el.offsetParent!==null);
+  if(!f.length) return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INPUT — one pointer pipeline for mouse, finger and stylus.
+   Touch carries no keyboard, so gestures are first-class:
+     drag      → move the light
+     pinch     → resize the aperture
+     double-tap→ next scene
+     long-press→ ink trails (留痕)
+   ═══════════════════════════════════════════════════════════ */
+const ptrs=new Map();
+let pinchStart=0, pinchR=0, longPressT=0, lastTap=0, tapX=0, tapY=0;
+function ptrDist(){
+  const v=[...ptrs.values()];
+  if(v.length<2) return 0;
+  return Math.hypot(v[0].x-v[1].x, v[0].y-v[1].y);
+}
+function setPtr(clientX,clientY){
+  const x=clientX*S.dpr, y=clientY*S.dpr;
+  const dx=x-S.mouseX, dy=y-S.mouseY;
+  S.mouseX=x; S.mouseY=y;
+  if(S.running) noteFirstMove(dx,dy);
+  noteActivity();
+}
+D.addEventListener('pointerdown',e=>{
+  if(!S.running) return;
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  S.pointerDown=true;
+  S.pen = e.pointerType==='pen';
+  S.pressure = e.pressure||0;
+  setPtr(e.clientX,e.clientY);
+  showBar(true);
+  if(ptrs.size===2){ clearTimeout(longPressT); pinchStart=ptrDist(); pinchR=S.radius; }
+  else if(ptrs.size===1){
+    clearTimeout(longPressT);
+    if(COARSE || e.pointerType==='touch'){
+      longPressT=setTimeout(()=>{ togglePaint(); longPressT=0; lastTap=0; }, 620);
+    }
+  }
+  try{ D.setPointerCapture(e.pointerId); }catch(err){}
+});
+D.addEventListener('pointermove',e=>{
+  if(!S.running) return;
+  if(ptrs.has(e.pointerId)) ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size>=2){
+    const d=ptrDist();
+    if(pinchStart>8 && d>8) S.radius=clampRadius(pinchR*(d/pinchStart));
+    return;
+  }
+  S.pressure = e.pressure||0;
+  if(e.pointerType==='pen') S.pen=true;
+  setPtr(e.clientX,e.clientY);
+  if(longPressT){ clearTimeout(longPressT); longPressT=0; }
+});
+function endPtr(e){
+  if(!S.running) return;
+  const had=ptrs.delete(e.pointerId);
+  if(ptrs.size<2) pinchStart=0;
+  if(ptrs.size===0){
+    S.pointerDown=false; S.pressure=0;
+    clearTimeout(longPressT); longPressT=0;
+    if(had && (COARSE||e.pointerType==='touch') && e.type==='pointerup'){
+      const now=performance.now();
+      const moved=Math.hypot((e.clientX*S.dpr)-tapX,(e.clientY*S.dpr)-tapY);
+      if(now-lastTap<320 && moved<30*S.dpr){ changeScene((S.scene+1)%5); lastTap=0; }
+      else { lastTap=now; tapX=e.clientX*S.dpr; tapY=e.clientY*S.dpr; }
+    }
+  }
+}
+D.addEventListener('pointerup',endPtr);
+D.addEventListener('pointercancel',e=>{ ptrs.delete(e.pointerId); S.pointerDown=false; clearTimeout(longPressT); });
+D.addEventListener('wheel',e=>{
+  if(!S.running) return;
+  e.preventDefault();
+  const unit=e.deltaMode===1?16:(e.deltaMode===2?window.innerHeight:1);
+  S.radius=clampRadius(S.radius+e.deltaY*unit*0.25*S.dpr);
+  noteActivity();
+},{passive:false});
+
+/* ── Keyboard ── */
+document.addEventListener('keydown',e=>{
+  if(!S.running) return;
+  const k=(e.key||'').toLowerCase();
+  if(k==='escape'){
+    const h=document.getElementById('help');
+    if(h.classList.contains('show')){ hideHelp(); return; }
+    if(document.getElementById('phone-pair').classList.contains('show')){ hidePhonePair(); return; }
+    const c=document.getElementById('calib');
+    if(c.classList.contains('show')){ exitGaze(); wM('mouse'); return; }
+  }
+  noteActivity();
+  if(k==='?'||k==='/'||e.key==='F1'){ e.preventDefault(); toggleHelp(); return; }
+  if(k==='escape'||k==='q'){ stop(); return; }
+  switch(k){
+    case'm':{const ks=Object.keys(M).filter(modeAvailable);wM(ks[(ks.indexOf(S.mode)+1)%ks.length]);break;}
+    case'h':wM('hand');break;
+    case'arrowleft':case'pageup':changeScene((S.scene+4)%5);break;
+    case'arrowright':case'pagedown':case' ':e.preventDefault();changeScene((S.scene+1)%5);break;
+    case'1':setStyle('edges');break;
+    case'2':setStyle('sketch');break;
+    case'3':setStyle('dark');break;
+    case'4':setStyle('paper');break;
+    case'f':toggleFullscreen();break;
+    case'=':case'+':bumpRadius(8);break;
+    case'-':bumpRadius(-8);break;
+    case'[':S.camSens=parseFloat(Math.max(0.5,S.camSens-0.2).toFixed(1));flashHint('◯ '+S.camSens+'×',900);break;
+    case']':S.camSens=parseFloat(Math.min(5.0,S.camSens+0.2).toFixed(1));flashHint('◯ '+S.camSens+'×',900);break;
+    case'r':S.smooth.x=S.smooth.y=-1;flashHint('↺',700);break;
+    case'c':
+      if(S.mode==='gaze'&&arDetector) startCalibration();
+      else if(S.mode==='tilt') tiltRecenter();
+      break;
+    case'p':if(e.shiftKey&&S.mode==='phone'&&S.phone.room) showPhonePair(phoneUrl());break;
+    case'i':togglePaint();break;
+    case'o':S.paintFade=S.paintFade?0:0.01;flashHint(t(S.paintFade?'fxFadeOn':'fxFadeOff'));break;
+    case'g':S.glow=!S.glow;if(!S.glow&&glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);flashHint(t(S.glow?'fxGlowOn':'fxGlowOff'));break;
     case's':savePNG();break;
-    case'k':S.creature=!S.creature;flashHint(S.creature?'🐉 通灵生兽 开':'生兽 关');break;
-    case'y':S.mirror=!S.mirror;flashHint(S.mirror?'🪞 镜影双修 开':'镜影 关');break;
-    case't':S.timeTint=!S.timeTint;flashHint(S.timeTint?'🕓 天时入卷 开':'天时 关');break;
+    case'k':S.creature=!S.creature;flashHint(t(S.creature?'fxCreatureOn':'fxCreatureOff'));break;
+    case'y':S.mirror=!S.mirror;flashHint(t(S.mirror?'fxMirrorOn':'fxMirrorOff'));break;
+    case't':S.timeTint=!S.timeTint;flashHint(t(S.timeTint?'fxTintOn':'fxTintOff'));break;
     case'u':toggleRoom();break;
     case'a':toggleAmbient();break;
-    case'b':S.beat.on=!S.beat.on;S.beat.t0=performance.now();flashHint(S.beat.on?'🥁 击节点墨 开':'击节 关');break;
-    case'x':S.mirrorX=!S.mirrorX;break;
+    case'b':S.beat.on=!S.beat.on;S.beat.t0=performance.now();flashHint(t(S.beat.on?'fxBeatOn':'fxBeatOff'));break;
+    case'x':S.mirrorX=!S.mirrorX;flashHint(S.mirrorX?'⇄':'⇆',700);break;
     case'd':if(e.shiftKey){
       S.debug=!S.debug;
       document.getElementById('ui').classList.toggle('debug',S.debug);
     }break;
   }
 });
-D.addEventListener('mousemove',e=>{
-  const dx=e.clientX-S.mouseX, dy=e.clientY-S.mouseY;
-  S.mouseX=e.clientX;S.mouseY=e.clientY;
-  if(S.running) noteFirstMove(dx,dy);
-});
-D.addEventListener('touchmove',e=>{
-  e.preventDefault();
-  const x=e.touches[0].clientX, y=e.touches[0].clientY;
-  const dx=x-S.mouseX, dy=y-S.mouseY;
-  S.mouseX=x;S.mouseY=y;
-  if(S.running) noteFirstMove(dx,dy);
-},{passive:false});
-D.addEventListener('wheel',e=>{
-  if(!S.running)return;
-  e.preventDefault();
-  const step=e.deltaY>0?-8:8;
-  S.radius=Math.max(15,Math.min(350,S.radius+step));
-},{passive:false});
 
 /* CTA button ripple position */
 const btnStart = document.getElementById('btn-start');
@@ -2295,21 +3506,53 @@ btnStart.addEventListener('mousemove',e=>{
    Mode card builder
    ─────────────────────────────────────────────────────────── */
 const mg=document.getElementById('mg');
+/* Grouped by hardware requirement, so nobody has to discover the hard way
+   that "gaze" wants a printed marker. Order = easiest first. */
+const MODE_GROUPS=[
+  {label:'groupFree', modes:['auto','mouse','audio','tilt']},
+  {label:'groupCam',  modes:['motion','hand','face','flashlight']},
+  {label:'groupGear', modes:['gaze','phone','ir']},
+];
+function modeAvailable(k){
+  if(!M[k]) return false;
+  if(k==='ir') return 'serial' in navigator;      // WebSerial = desktop Chromium only
+  return true;
+}
+function modeReqKey(k){
+  const m=M[k];
+  if(m.needMic) return 'reqMic';
+  if(m.needCam) return 'reqCam';
+  if(m.group==='gear') return 'reqGear';
+  return 'reqNone';
+}
 function rebuildModeCards(){
   mg.innerHTML='';
-  ['flashlight','hand','gaze','mouse','phone','ir'].forEach(k=>{
-    if(k==='ir' && !('serial' in navigator)) return;   // 🔴 IR-tracker card only where WebSerial exists (desktop Chromium)
-    const m=M[k];const c=document.createElement('button');
-    c.type='button';
-    c.className='mode-card'+(k===S.mode?' active':'');
-    c.dataset.mode=k;
-    c.setAttribute('aria-pressed',k===S.mode?'true':'false');
-    c.setAttribute('aria-label',t(m.nameKey));
-    const req = m.needCam ? '📷' : (k==='phone' ? '📱' : (k==='ir' ? '🔌' : '—'));
-    c.innerHTML=`<span class="icon">${m.icon}</span><span class="name">${t(m.nameKey)}</span><span class="req">${req}</span>`;
-    c.addEventListener('click',()=>wM(k));
-    mg.appendChild(c);
-  });
+  for(const g of MODE_GROUPS){
+    const modes=g.modes.filter(modeAvailable);
+    if(!modes.length) continue;
+    const box=document.createElement('div');
+    box.className='mode-group';
+    const label=document.createElement('div');
+    label.className='cat-label';
+    label.innerHTML=`<span>${t(g.label)}</span>`;
+    box.appendChild(label);
+    const grid=document.createElement('div');
+    grid.className='mode-grid';
+    for(const k of modes){
+      const m=M[k];
+      const c=document.createElement('button');
+      c.type='button';
+      c.className='mode-card'+(k===S.mode?' active':'');
+      c.dataset.mode=k;
+      c.setAttribute('aria-pressed',k===S.mode?'true':'false');
+      c.setAttribute('aria-label',`${t(m.nameKey)} — ${t(modeReqKey(k))}`);
+      c.innerHTML=`<span class="icon">${iconSvg(m.icon)}</span><span class="name">${t(m.nameKey)}</span><span class="req">${t(modeReqKey(k))}</span>`;
+      c.addEventListener('click',()=>{ showBar(true); wM(k); });
+      grid.appendChild(c);
+    }
+    box.appendChild(grid);
+    mg.appendChild(box);
+  }
 }
 
 /* ───────────────────────────────────────────────────────────
@@ -2335,21 +3578,53 @@ document.getElementById('calib-dismiss').addEventListener('click',()=>{
   document.getElementById('calib-dismiss').style.display='none';
   if(S.running && S.mode==='gaze') wM('mouse');
 });
+document.getElementById('help-close').addEventListener('click',()=>hideHelp());
+document.getElementById('help-back').addEventListener('click',()=>{ hideHelp(); stop(); });
 document.getElementById('pp-close').addEventListener('click',hidePhonePair);
+document.getElementById('pp-fallback').addEventListener('click',()=>{
+  hidePhonePair();
+  flashHint(t('firstHintMouse'));
+  wM('mouse');
+});
+let _resizeT=0;
 window.addEventListener('resize',()=>{
   if(!S.running)return;
-  DW=window.innerWidth;DH=window.innerHeight;D.width=DW;D.height=DH;
-  initScene();drawScene(performance.now()/1000);target=scCvs;genHidden();
+  clearTimeout(_resizeT);
+  _resizeT=setTimeout(()=>{ S.dpr=computeDPR(); resizeCanvas(); refreshRoster(); }, 140);
 });
 
+/* Deep links: ?mode=audio&scene=2&style=paper — shareable, no build step. */
+let DEEP_PLAY=false;
+function applyDeepLink(){
+  try{
+    const q=new URLSearchParams(location.search||'');
+    DEEP_PLAY = q.has('mode') || q.has('play');
+    const md=q.get('mode');
+    if(md && M[md] && modeAvailable(md)) S.mode=md;
+    const sc=parseInt(q.get('scene'),10);
+    if(isFinite(sc)) S.scene=Math.max(0,Math.min(4,sc));
+    const st=q.get('style');
+    if(st && ['edges','sketch','dark','paper'].includes(st)) S.style=st;
+    const lg=q.get('lang');
+    if(lg && I18N[lg]) LANG=lg;
+    if(q.get('debug')==='1') S.debug=true;
+    if(q.get('effects')==='1'){ S.paint=true;S.glow=true;S.mirror=true;S.timeTint=true; }
+  }catch(e){}
+}
+
 /* Initial translations + preload + reveal */
+applyDeepLink();
 applyTranslations();
+rebuildModeCards();
+buildHelpModes();
+wireBar();
 preloadImages().then(()=>{
   // Hide loading, reveal start screen
   document.getElementById('loading').classList.add('gone');
   const ss=document.getElementById('start-screen');
   ss.classList.add('ready');
   setTimeout(()=>{ document.getElementById('loading').style.display='none'; }, 700);
+  if(DEEP_PLAY) setTimeout(()=>{ start(); }, 700);   // a shared link plays itself
 }).catch(e=>{
   console.warn('Preload error:', e);
   document.getElementById('loading').classList.add('gone');

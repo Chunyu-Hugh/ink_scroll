@@ -1,0 +1,12 @@
+{
+  "name": "ink-scroll-tests",
+  "private": true,
+  "description": "End-to-end interaction tests for Ink Scroll (Playwright, real Chromium)",
+  "scripts": {
+    "fixtures": "python3 make-fixtures.py",
+    "test": "node test.js"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.49.1"
+  }
+}
