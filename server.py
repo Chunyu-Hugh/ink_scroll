@@ -19,12 +19,24 @@ Ink Scroll — tiny SSE relay + static file server (stdlib only, no dependencies
 接口 / Endpoints
     GET  /events?room=<token>   → text/event-stream（大屏订阅）
     POST /send?room=<token>     → 广播一段 JSON 给该 room 的所有订阅者（手机发送）
+    POST /osc                   → 同上，但专给本地脚本用（JSON）
+    UDP  :9000                  → OSC（TouchDesigner / Max / Pure Data / python-osc）
     GET  /*                     → web/ 静态文件
+
+OSC → 光圈 的约定（地址 → 字段）
+    /spot   f,f[,f]   → x, y, radius   (0..1, 0..1, 0.02..3)
+    /spot/x f         → x
+    /spot/y f         → y
+    /spot/r f         → radius
+    /scene  i         → 0..4
+    /style  i         → 0=墨线 1=素描 2=暗调 3=纸本
 """
 
 import json
 import os
 import queue
+import socket
+import struct
 import sys
 import threading
 from http import HTTPStatus
@@ -69,6 +81,65 @@ def broadcast(room: str, payload: bytes) -> int:
     return sent
 
 
+# ── OSC (UDP) ────────────────────────────────────────────────────────────
+OSC_PORT = int(os.environ.get("OSC_PORT", "9000"))
+OSC_ROOM = "osc"
+
+
+def _osc_str(data, i):
+    j = data.index(b"\x00", i)
+    return data[i:j].decode("utf-8", "replace"), (j + 4) & ~3
+
+
+def parse_osc(data):
+    """Minimal OSC reader: enough for /spot, /scene, /style from any tool."""
+    address, i = _osc_str(data, 0)
+    tags, i = _osc_str(data, i)
+    args = []
+    for t in tags[1:]:
+        if t == "f":
+            args.append(struct.unpack(">f", data[i:i + 4])[0]); i += 4
+        elif t == "i":
+            args.append(struct.unpack(">i", data[i:i + 4])[0]); i += 4
+        elif t in "TF":
+            args.append(t == "T")
+        elif t == "s":
+            v, i = _osc_str(data, i); args.append(v)
+    msg = {}
+    if address.startswith("/spot"):
+        tail = address[5:].lstrip("/")
+        if tail in ("x", "y", "r") and args:
+            msg[tail] = float(args[0])
+        elif len(args) >= 2:
+            msg["x"] = float(args[0]); msg["y"] = float(args[1])
+            if len(args) >= 3:
+                msg["r"] = float(args[2])
+    elif address.rstrip("/") == "/scene" and args:
+        msg["scene"] = int(args[0])
+    elif address.rstrip("/") == "/style" and args:
+        msg["style"] = int(args[0])
+    return msg
+
+
+def _osc_loop():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        sock.bind(("0.0.0.0", OSC_PORT))
+    except OSError as e:
+        print("  ! OSC port %d unavailable (%s) — OSC disabled" % (OSC_PORT, e))
+        return
+    print("  osc       udp/%d  → /spot  /scene  /style" % OSC_PORT)
+    while True:
+        try:
+            data, _ = sock.recvfrom(65535)
+            msg = parse_osc(data)
+            if msg:
+                broadcast(OSC_ROOM, b"data: " + json.dumps(msg).encode() + b"\n\n")
+        except Exception:
+            pass
+
+
 class Handler(SimpleHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -98,10 +169,12 @@ class Handler(SimpleHTTPRequestHandler):
     # ── POST /send ────────────────────────────────────────────────────────
     def do_POST(self):
         u = urlparse(self.path)
-        if u.path != "/send":
+        if u.path == "/osc":                     # local script / TouchDesigner bridge
+            room = OSC_ROOM
+        elif u.path != "/send":
             self.send_error(HTTPStatus.NOT_FOUND)
             return
-        room = parse_qs(u.query).get("room", [""])[0]
+        room = parse_qs(u.query).get("room", [""])[0] if u.path != "/osc" else OSC_ROOM
         try:
             n = int(self.headers.get("Content-Length") or 0)
         except ValueError:
@@ -163,7 +236,9 @@ def main():
     print("\n  墨卷 · Ink Scroll")
     print("  display   http://localhost:%d" % port)
     print("  phone     http://<your-lan-ip>:%d/phone.html  (scan the QR on screen)" % port)
-    print("  relay     /events  /send   (SSE, rooms)\n  Ctrl-C to stop\n")
+    print("  relay     /events  /send  /osc   (SSE, rooms)")
+    threading.Thread(target=_osc_loop, daemon=True).start()
+    print("  Ctrl-C to stop\n")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

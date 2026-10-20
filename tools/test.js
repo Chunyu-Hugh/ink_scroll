@@ -68,8 +68,11 @@ function watch(page, bucket) {
   page.on('console', m => { if (m.type() === 'error') bucket.push('console: ' + m.text().slice(0, 200)); });
   page.on('requestfailed', r => {
     const u = r.url();
+    const why = (r.failure() && r.failure().errorText) || '';
     if (/favicon/.test(u)) return;
-    bucket.push('requestfailed: ' + u.slice(0, 120));
+    if (/ABORTED|NS_BINDING_ABORTED/.test(why)) return;   // intentionally closed EventSource
+    if (/\/events\?room=/.test(u) && /ABORTED|Canceled/i.test(why)) return;
+    bucket.push('requestfailed: ' + u.slice(0, 120) + ' :: ' + why);
   });
 }
 
@@ -137,7 +140,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const modeCards = await page.evaluate(() => [...document.querySelectorAll('.mode-card')].map(c => c.dataset.mode));
   ok('11 个模式卡片渲染（含 IR 的 WebSerial 检测）', modeCards.length >= 10, modeCards.join(','));
   const groups = await page.evaluate(() => [...document.querySelectorAll('.mode-group .cat-label')].map(e => e.textContent.trim()));
-  ok('模式按「需要什么」分组', groups.length === 3, groups.join(' | '));
+  ok('模式按「需要什么」分组', groups.length === 4, groups.join(' | '));
 
   /* ═══════════════ 2. i18n switching ═══════════════ */
   group('2 · 语言 / language switching');
@@ -180,7 +183,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     pip: getComputedStyle(document.getElementById('pip')).display,
   }), m);
 
-  for (const m of ['auto', 'mouse', 'audio', 'tilt', 'motion', 'hand', 'face', 'flashlight', 'gaze']) {
+  for (const m of ['auto', 'mouse', 'multi', 'keys', 'pen', 'dwell', 'breath', 'shake',
+    'gamepad', 'osc', 'audio', 'tilt', 'motion', 'hand', 'face', 'flashlight', 'gaze']) {
     errs.length = 0;
     await page.evaluate((mm) => wM(mm), m);
     await sleep(m === 'face' ? 3500 : 1300);
@@ -247,6 +251,128 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await sleep(1200);
   ok('手电筒：像素读取路径不报错', errs.length === 0, errs.join('|'));
 
+  /* ═══════════════ 4b. 第二批模态 ═══════════════ */
+  group('4b · 第二批模态（键盘 / 多指 / 笔锋 / 凝视 / 吐纳 / 语音 / 摇一摇 / 手柄 / MIDI / OSC）');
+
+  // keys: arrows drive the light and must NOT change the scene any more
+  await page.evaluate(() => wM('keys')); await sleep(300);
+  const k0 = await page.evaluate(() => ({ x: S.keys.x, scene: S.scene }));
+  await page.keyboard.down('ArrowRight'); await sleep(500); await page.keyboard.up('ArrowRight');
+  await sleep(250);
+  const k1 = await page.evaluate(() => ({ x: S.keys.x, scene: S.scene }));
+  ok('键盘：方向键移动光圈', k1.x > k0.x + 20, `${Math.round(k0.x)} → ${Math.round(k1.x)}`);
+  ok('键盘：方向键不再切换场景（交给键盘模式）', k1.scene === k0.scene);
+  await page.keyboard.press(' '); await sleep(200);
+  ok('键盘：空格泼墨', await page.evaluate(() => S.phone.splats.length > 0));
+
+  // multi-touch: three fingers → three lights
+  await page.evaluate(() => wM('multi')); await sleep(250);
+  const three = await page.evaluate(() => {
+    const D2 = document.getElementById('display');
+    const ev = (t, id, x, y) => D2.dispatchEvent(new PointerEvent(t, { pointerId: id, pointerType: 'touch', clientX: x, clientY: y, bubbles: true }));
+    ev('pointerdown', 31, 200, 300); ev('pointerdown', 32, 400, 300); ev('pointerdown', 33, 600, 300);
+    const n = M.multi.spots().length;
+    ev('pointerup', 31, 200, 300); ev('pointerup', 32, 400, 300); ev('pointerup', 33, 600, 300);
+    return n;
+  });
+  ok('多指：三根手指 = 三盏灯', three === 3, 'spots=' + three);
+
+  // pen: pressure drives the aperture
+  await page.evaluate(() => wM('pen')); await sleep(250);
+  const pen = await page.evaluate(() => {
+    const D2 = document.getElementById('display');
+    const ev = (t, pr) => D2.dispatchEvent(new PointerEvent(t, { pointerId: 41, pointerType: 'pen', clientX: 500, clientY: 400, pressure: pr, bubbles: true }));
+    ev('pointerdown', 0.15); const small = M.pen.spot().radius;
+    ev('pointermove', 0.95); const big = M.pen.spot().radius;
+    ev('pointerup', 0);
+    return [Math.round(small), Math.round(big)];
+  });
+  ok('笔锋：压感越大光圈越大', pen[1] > pen[0] * 1.8, JSON.stringify(pen));
+
+  // dwell: hold still → next painting
+  await page.evaluate(() => wM('dwell')); await sleep(250);
+  const scDwell = await page.evaluate(() => S.scene);
+  await page.mouse.move(700, 450); await sleep(1900);
+  ok('凝视停留：停住 1.4 s 换场景', (await page.evaluate(() => S.scene)) !== scDwell);
+
+  // breath: mic + low band envelope
+  await page.evaluate(() => wM('breath')); await sleep(1600);
+  ok('吐纳：低频包络在跑（麦克风）', await page.evaluate(() => S.audio.on && typeof breathLevel() === 'number' && document.getElementById('meter').className.includes('show')));
+
+  // speech: honest fallback where the API is missing
+  await page.evaluate(() => wM('speech')); await sleep(900);
+  const sp = await page.evaluate(() => ({ mode: S.mode, has: !!(window.SpeechRecognition || window.webkitSpeechRecognition) }));
+  ok('语音：可用则进入，不可用则回落指针', sp.has ? sp.mode === 'speech' : sp.mode === 'mouse', JSON.stringify(sp));
+
+  // shake: synthetic accelerometer
+  await page.evaluate(() => wM('shake')); await sleep(400);
+  await page.evaluate(() => window.dispatchEvent(new DeviceMotionEvent('devicemotion',
+    { accelerationIncludingGravity: { x: 0, y: 0, z: 26 } })));
+  await sleep(400);
+  // count can be capped at 40 by earlier groups — assert freshness, not length
+  ok('摇一摇：加速度被接收并泼墨', await page.evaluate(() =>
+    S.shake.mag > 16 && S.phone.splats.some(s => performance.now() - s.t0 < 900)),
+    await page.evaluate(() => JSON.stringify({ mag: S.shake.mag, n: S.phone.splats.length })));
+
+  // gamepad: inject a fake pad
+  await page.evaluate(() => {
+    wM('gamepad');
+    window.__pad = { axes: [0.9, 0], buttons: Array.from({ length: 8 }, () => ({ pressed: false, value: 0 })), connected: true };
+    navigator.getGamepads = () => [window.__pad];
+    M.gamepad.init();
+  });
+  const gx0 = await page.evaluate(() => M.gamepad.spot().x);
+  await sleep(350);
+  const gx1 = await page.evaluate(() => M.gamepad.spot().x);
+  ok('手柄：左摇杆推动光圈', gx1 > gx0 + 5, `${Math.round(gx0)} → ${Math.round(gx1)}`);
+  const scPad = await page.evaluate(() => S.scene);
+  await page.evaluate(() => { window.__pad.buttons[0] = { pressed: true, value: 1 }; M.gamepad.spot(); });
+  ok('手柄：A 键换场景', (await page.evaluate(() => S.scene)) !== scPad);
+
+  // midi: fake input
+  await page.evaluate(() => wM('midi')); await sleep(300);
+  const md = await page.evaluate(async () => {
+    navigator.requestMIDIAccess = async () => ({ inputs: new Map([['k', { onmidimessage: null }]]), onstatechange: null });
+    await midiStart();
+    const inp = [...S.midi.acc.inputs.values()][0];
+    inp.onmidimessage({ data: [0xB0, 1, 120] });
+    return { seen: S.midi.seen, nx: +S.midi.nx.toFixed(2), r: +S.midi.r.toFixed(2) };
+  });
+  ok('MIDI：CC1 → X 轴', md.seen && md.nx > 0.9, JSON.stringify(md));
+
+  // OSC over the real relay: SSE + HTTP + UDP
+  await page.evaluate(() => wM('osc')); await sleep(700);
+  ok('OSC：SSE 通道已连上', await page.evaluate(() => S.osc.ok === true));
+  await page.evaluate(() => fetch('/send?room=osc', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ x: 0.8, y: 0.25, r: 0.5 }),
+  }));
+  await sleep(500);
+  const o1 = await page.evaluate(() => ({ x: +S.osc.x.toFixed(2), y: +S.osc.y.toFixed(2) }));
+  ok('OSC：HTTP 注入改变光圈', Math.abs(o1.x - 0.8) < 0.03 && Math.abs(o1.y - 0.25) < 0.03, JSON.stringify(o1));
+
+  const dgram = require('dgram');
+  const pad4 = (b) => { const r = b.length % 4; return r ? Buffer.concat([b, Buffer.alloc(4 - r)]) : b; };
+  const osc = (addr, args) => {
+    const tags = ',' + args.map(a => Number.isInteger(a) ? 'i' : 'f').join('');
+    const out = [pad4(Buffer.from(addr + '\0')), pad4(Buffer.from(tags + '\0'))];
+    for (const a of args) { const b = Buffer.alloc(4); Number.isInteger(a) ? b.writeInt32BE(a) : b.writeFloatBE(a); out.push(b); }
+    return Buffer.concat(out);
+  };
+  const usock = dgram.createSocket('udp4');
+  const oscSend = (packet) => new Promise(res => usock.send(packet, 0, packet.length, 9000, '127.0.0.1', () => res()));
+  try {
+    await oscSend(osc('/spot', [0.15, 0.72, 0.3]));
+    await sleep(600);
+    const o2 = await page.evaluate(() => ({ x: +S.osc.x.toFixed(2), y: +S.osc.y.toFixed(2) }));
+    ok('OSC：UDP /spot 包改变光圈（TouchDesigner 路径）', Math.abs(o2.x - 0.15) < 0.05 && Math.abs(o2.y - 0.72) < 0.05, JSON.stringify(o2));
+    const scOsc = await page.evaluate(() => S.scene);
+    await oscSend(osc('/scene', [4]));
+    await sleep(500);
+    ok('OSC：UDP /scene 包换场景', (await page.evaluate(() => S.scene)) === 4 && scOsc !== 4);
+  } catch (e) { ok('OSC：UDP 测试', false, e.message); }
+  usock.close();
+
   /* ═══════════════ 5. phone relay (真机链路) ═══════════════ */
   group('5 · 手机魔杖 / phone relay (server.py + phone.html)');
   errs.length = 0;
@@ -291,9 +417,10 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('有人加入后配对面板自动收起', relay.overlay === false);
   ok('入卷名录出现印章', relay.roster === 1);
 
+  const scBeforePhone = await page.evaluate(() => S.scene);
   await phone.click('#b-scene'); await sleep(700);
   const sc = await page.evaluate(() => S.scene);
-  ok('手机按钮可换场景', sc !== 0, 'scene=' + sc);
+  ok('手机按钮可换场景', sc === (scBeforePhone + 1) % 5, `${scBeforePhone} → ${sc}`);
   await phone.click('#b-splash'); await sleep(500);
   ok('手机泼墨 → 大屏出现墨点', await page.evaluate(() => S.phone.splats.length > 0));
   ok('手机链路无报错', errs.length === 0, errs.join('|'));
