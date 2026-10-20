@@ -10,12 +10,12 @@
 | 装置 | 给什么 | 需要写的代码 | 难点 | 状态 |
 |---|---|---|---|---|
 | **数位板笔压**（Wacom / XP-Pen / Huion / Apple Pencil） | `pointerType==='pen'`，`pressure` 0–1 | 已内置：指针模式里笔压直接改光圈半径。要做的是**笔倾斜 → 飞白纹理**（`tiltX/tiltY`） | 鼠标恒为 0.5，必须靠 `pointerType` 区分；iPad Safari 需要版本验证 | `ready`（压感已接，倾斜未接） |
-| **游戏手柄**（Xbox / PS / Switch Pro） | 双摇杆 + 扳机 | 摇杆 → 速度，扳机 → 半径，`gamepadconnected` 事件 | 各手柄 mapping 不一致，要按 `mapping==='standard'` 分支 | `ready` |
-| **Web MIDI**（nanoKONTROL / Launchpad / 推子） | CC 旋钮/推子 → 位置与半径 | `navigator.requestMIDIAccess()` + `onmidimessage` | 仅 Chromium/Edge；iOS 无 | `ready` |
+| **游戏手柄**（Xbox / PS / Switch Pro） | 双摇杆 + 扳机 | **已实现** `gamepad` 模式：左摇杆→速度、RT/LT→半径、A/B/Y 离散命令 | 各手柄 mapping 不一致 | ✅ 已完成 |
+| **Web MIDI**（nanoKONTROL / Launchpad / 推子） | CC 旋钮/推子 → 位置与半径 | **已实现** `midi` 模式：CC1/CC2→x,y、CC7→半径、Note→场景 | 仅 Chromium/Edge；iOS 无 | ✅ 已完成 |
 | **Wiimote** | IR 摄像头得到绝对坐标（Johnny Lee 那套） | `wiimote-webhid` 或 `joy-con-webhid` | WebHID 仅 Chromium；需要用户手势授权；配对流程啰嗦 | `ready`（Chromium） |
 | **Joy-Con** | 陀螺仪 + 摇杆 | `joy-con-webhid` | 同上；左右手柄事件不同 | `ready`（Chromium） |
 | **SpaceMouse / 3Dconnexion** | 6DoF 推杆 | WebHID 读原始报告 | 需要逆向报文格式 | `ready` |
-| **OSC（TouchDesigner / Max / Pure Data / Resolume）** | `/spot/x /spot/y /spot/r /scene/next` | 需要一个 WebSocket ↔ UDP 桥（TD 的 WebSocket DAT 或 20 行 Node） | OSC 无连接，丢包要自己平滑 | `bridge` |
+| **OSC（TouchDesigner / Max / Pure Data / Resolume）** | `/spot/x /spot/y /spot/r /scene /style` | **已实现**：`server.py` 内置 UDP 9000 的 OSC 解析 + `POST /osc`，浏览器用 SSE 订阅 `room=osc` | 无连接协议，丢包由页面端平滑 | ✅ 已完成 |
 | **激光笔 + 摄像头** | HSV 检测红/绿点 | 复用现有 `spF` 亮点检测，改成色相掩码 | 环境光、白墙反射 | `ready` |
 | **IR 手电 + 拆 IR-cut 的摄像头** | 最经典的"光点追踪" | 现有 `spF` **一行不用改** | 要拆机（不可逆）+ 找 IR-pass 滤片 | `ready`（需要硬件改造） |
 | **OpenMV / Pixy2 / ESP32 板载追踪** | 串口每行 `x,y[,area]` | **已内置** `ir` 模式（WebSerial，115200） | WebSerial 仅桌面 Chromium；固件要自己写 20 行 | `ready`（模式已存在） |
@@ -42,11 +42,11 @@
 - 引入 React / Vue / 构建流水线
 - 服务端渲染或账号系统
 
-## D. 想贡献？从这五个开始
+## D. 想贡献？从这几个开始
 
 1. **笔倾斜 → 飞白**（`tiltX` 已有值，缺纹理）— 半天
-2. **游戏手柄模态**（摇杆 + 扳机，约 60 行）— 半天
-3. **OSC 桥 + TouchDesigner patch 示例**（策展人最爱）— 一天
+2. **Wiimote / Joy-Con（WebHID）** — 一天
+3. **TouchDesigner 示例 patch**（`.toe` 文件，OSC 通道已就绪）— 半天
 4. **多 marker 阵列**（4 个 ArUco → 平均角点，抗遮挡）— 一天
 5. **IR 手电 + 拆机 webcam 的说明书**（配图 + 一步一步）— 一天
 

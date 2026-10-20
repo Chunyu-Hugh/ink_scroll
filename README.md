@@ -6,7 +6,7 @@
 [![Live](https://img.shields.io/badge/▶_在线玩-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
 [![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
-[![Tests](https://img.shields.io/badge/e2e-95%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
+[![Tests](https://img.shields.io/badge/e2e-120%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
 
 > 光照之处，墨色生辉
@@ -15,7 +15,8 @@
 
 一幅**墨色立轴**覆在一幅**彩色山水**之上。你手里那盏光落在哪里，哪里的墨就化开、显色、活过来。
 
-**11 种交互方式**，其中 **4 种不需要任何额外设备**——打开就能玩。
+**21 种交互方式**，分三档：**11 种什么都不用**（机器自带的键盘/触摸/麦克风/摄像头/陀螺仪）、
+**7 种插个装置**（手柄、MIDI、手机、串口追踪器、打印标记）、**1 种本机跑个小脚本**（OSC）。
 
 ---
 
@@ -29,6 +30,13 @@
 | **指针 · 触屏** | 鼠标、触控板、手指、压感笔。拖动揭示，**双指捏合**改光圈，**双击**换场景，**长按**留痕；Wacom 的**笔压 = 笔锋粗细** |
 | **声音 · 吟诵** | 对着麦克风哼一声：**音高 → 左右**，**音色亮度 → 上下**，**响度 → 光圈大小**，**拍手 → 泼墨** |
 | **倾斜 · 掌中** | 手机/平板倾斜即移光（进入时自动取零点，`C` 重设） |
+| **键盘 · 无鼠标** | 方向键 / WASD 带惯性移动光圈，`Shift` 加速，`Space` 泼墨——**完全不用鼠标**（无障碍主干、演示、展台） |
+| **多指 · 大屏** | 触摸大屏上**每一根手指都是一盏灯**（最多 6 盏），双指捏合改光圈 |
+| **笔锋 · 压感** | Wacom / iPad / USI 笔：**压感 = 光圈大小**，按得越重越亮 |
+| **凝视 · 停留** | 光标停在某处**不动 1.4 秒** → 泼墨 + 换画（不用点击，手抖也能用） |
+| **吐纳 · 呼吸** | 只取麦克风的**低频包络**：吸气光圈张开、呼气收拢（不看音高，嘈杂环境更稳） |
+| **语音 · 题字** | 说「山水 / 竹林 / 雪 / 花鸟 / 星空」换画，说「大 / 小 / 留痕 / 泼墨」调画 |
+| **摇一摇** | 摇手机 → 泼墨 + 振动（手机自带加速度计，不需要摄像头） |
 
 ### 📷 只用摄像头
 
@@ -46,6 +54,14 @@
 | **眼动 · 眼镜** | 打印一张 ArUco 标记贴在眼镜上 + 5 点校准（亚像素精度，详见下文） |
 | **手机 · 众光** | 跑 `python3 server.py`，观众扫码把自己手机变成一盏灯；**可多人同时在场** |
 | **IR · 追踪器** | OpenMV / Pixy2 + WebSerial（桌面 Chromium） |
+| **手柄** | 任意标准手柄（Xbox / PS / Switch Pro）：左摇杆移光，RT/LT 改光圈，A 换场景、B 泼墨、Y 留痕 |
+| **MIDI** | 任意 MIDI 控制器：CC1/CC2 移光，CC7 改光圈，音符换场景，鼓垫泼墨 |
+
+### 🖥 本机装个小脚本（最省事的专业接入）
+
+| 模式 | 需要 |
+|---|---|
+| **OSC · 本地** | `python3 server.py`（零依赖，自带 UDP 9000 的 OSC 入口）→ TouchDesigner / Max / Pure Data / python-osc 直接发 `/spot` |
 
 ### 🎨 除此之外
 
@@ -88,6 +104,36 @@ tailscale serve --bg 8888
 # 访问 https://your-machine.tailXXXXx.ts.net
 ```
 
+## 🖥 屏幕自适应
+
+同一件作品应该顺着屏幕来：
+
+| 屏幕 | 默认模态 | 为什么 |
+|---|---|---|
+| 手机 / 平板 | **多指**（每根手指一盏灯） | 触摸屏最自然的是"直接碰"，不需要摄像头也无需授权 |
+| 大屏 / 展墙（≥1600px 且高 ≥900） | **自动展卷** | 没人操作时自己展卷招呼路人 |
+| 笔记本 / 台式 | **指针** | 光标跟随 + 滚轮/捏合改光圈 |
+
+光圈大小、控制栏、HUD 都按视口与 DPR 换算（`radiusBounds()`、`computeDPR()`），
+横竖屏切换、投影、4K 墙都只是同一个公式的不同取值。
+
+## 🎛 OSC / TouchDesigner 接入
+
+```bash
+python3 server.py            # 静态服务 + SSE 中继 + UDP 9000 的 OSC 入口
+```
+
+TouchDesigner：CHOP → **OSC Out**，Network Port `9000`，Address 用 `/spot`：
+
+| 地址 | 参数 | 作用 |
+|---|---|---|
+| `/spot` | `f f` 或 `f f f` | x, y（0–1），可选半径 |
+| `/spot/x` `/spot/y` `/spot/r` | `f` | 单轴微调 |
+| `/scene` | `i` | 0–4 换画 |
+| `/style` | `i` | 0 墨线 1 素描 2 暗调 3 纸本 |
+
+任何语言都能发：`curl -X POST 'http://127.0.0.1:8888/osc' -d '{"x":0.4,"y":0.6,"r":0.3}'`
+
 ## ⌨️ 快捷键
 
 | 键 | 功能 | 键 | 功能 |
@@ -121,7 +167,7 @@ ink_scroll/
 │   ├── HARDWARE-TODO.md# 需要外设的方向（给想动手的人）
 │   ├── TEST-REPORT.md  # 审核与测试报告
 │   └── SELF-IMPROVEMENT.md # 评测器与自我改进循环
-├── tools/test.js       # 95 条端到端断言（Playwright，真实浏览器）
+├── tools/test.js       # 120 条端到端断言（Playwright，真实浏览器）
 └── archive/            # 旧版 Python + OpenCV 原型
 ```
 
@@ -152,7 +198,7 @@ node tools/test.js
 - 触屏手势、无障碍（role / aria-live / 焦点陷阱 / reduced-motion）、深链、性能预算
 - 退出必须释放摄像头
 
-最近一次：**95 / 95 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
+最近一次：**120 / 120 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
 
 ## 📐 设计系统
 

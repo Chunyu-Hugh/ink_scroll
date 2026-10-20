@@ -21,7 +21,7 @@ Control a spotlight with your webcam flashlight or hand gestures to reveal a liv
 
 ## ✨ Features
 
-**11 ways to move the light — 4 of them need no device at all.**
+**21 ways to move the light, in three tiers:** 11 need *nothing* (the keyboard, touch, mic, camera and gyroscope already in the machine), 7 need *a device you plug in*, and 1 needs *a small local script* (OSC).
 
 ### No device needed
 
@@ -64,12 +64,12 @@ Control a spotlight with your webcam flashlight or hand gestures to reveal a liv
 ## 🧪 Tests & docs
 
 ```bash
-node tools/test.js        # 95 end-to-end assertions in a real browser
+node tools/test.js        # 120 end-to-end assertions in a real browser
 ```
 
 Real browser, real camera (fake device fed a public-domain portrait and a moving-bar video),
 real relay: all 11 modes, the phone↔display round trip, trilingual key parity, touch gestures,
-accessibility, deep links and a frame-rate budget. Last run: **95 / 95 green**.
+accessibility, deep links and a frame-rate budget. Last run: **120 / 120 green**.
 
 - [docs/INTERACTIONS.md](docs/INTERACTIONS.md) — the interaction system and the registry contract (read this before adding a mode)
 - [docs/TEST-REPORT.md](docs/TEST-REPORT.md) — the audit: what was broken and how it was fixed
