@@ -2,7 +2,9 @@
 
 [简体中文](README.md) · [繁體中文](README.zh-TW.md) · **English**
 
-[![Status](https://img.shields.io/badge/status-alpha-c96442?labelColor=141413)](#-roadmap)
+[![Status](https://img.shields.io/badge/status-alpha--playable-c96442?labelColor=141413)](#-roadmap)
+[![Live](https://img.shields.io/badge/▶_play_now-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
+[![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.en.md)
 [![Discussions](https://img.shields.io/badge/💬-Discussions-7b8fa8?labelColor=141413)](../../discussions)
@@ -89,6 +91,11 @@ accessibility, deep links and a frame-rate budget. Last run: **95 / 95 green**.
 | Imagery | Grok (`grok-imagine-image`) generated |
 
 The original Python + OpenCV prototype is in `archive/`.
+
+## 🌐 Play it now
+
+**<https://chunyuhu.com/ink_scroll/>** — open and play; scan with a phone to become a light too.
+The *Many lights* mode needs the relay: run `python3 server.py` locally.
 
 ## 🚀 Quick Start
 
