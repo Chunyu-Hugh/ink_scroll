@@ -74,7 +74,7 @@ python3 -m http.server 8888
 1. Fork & 创建分支：`git checkout -b modality/wacom-pressure`
 2. 改动尽量小、可解释。一个 PR 一件事。
 3. 在浏览器里实测——单元测试在这个项目里不存在
-4. 跑 `node tools/test.js`（86 条端到端断言，需要 Playwright 的 Chromium），全绿再提
+4. 跑 `node tools/test.js`（95 条端到端断言，需要 Playwright 的 Chromium），全绿再提
 5. PR 描述里**贴一张 GIF/截图**展示效果
 6. 我（@Chunyu-Hugh）会尽快 review
 

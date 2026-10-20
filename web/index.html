@@ -1079,6 +1079,10 @@ const I18N = {
     fxAmbOff:'氛围音 关',
     fxRoomOn:'🎙 众声成墨 开',
     fxRoomOff:'众声 关',
+    fxGeo:'🌏 远客生辉',
+    fxText:'題',
+    fxRpsWin:'胜者绽放',
+    fxRpsTie:'平局',
     fxPauseOn:'⏸ 静观',
     fxPauseOff:'▶ 继续',
     fullUnsupported:'此设备不支持网页全屏',
@@ -1229,6 +1233,10 @@ const I18N = {
     fxAmbOff:'氛圍音 關',
     fxRoomOn:'🎙 眾聲成墨 開',
     fxRoomOff:'眾聲 關',
+    fxGeo:'🌏 遠客生輝',
+    fxText:'題',
+    fxRpsWin:'勝者綻放',
+    fxRpsTie:'平局',
     fxPauseOn:'⏸ 靜觀',
     fxPauseOff:'▶ 繼續',
     fullUnsupported:'此裝置不支援網頁全螢幕',
@@ -1378,6 +1386,10 @@ const I18N = {
     fxAmbOff:'Ambient sound off',
     fxRoomOn:'🎙 Room voice on',
     fxRoomOff:'Room voice off',
+    fxGeo:'🌏 a distant visitor',
+    fxText:'Inscribed',
+    fxRpsWin:'the winner blooms',
+    fxRpsTie:'a draw',
     fxPauseOn:'⏸ Still',
     fxPauseOff:'▶ Resume',
     fullUnsupported:'This browser cannot go fullscreen',
@@ -1818,7 +1830,7 @@ function iH(){
   hands.onResults(r=>{
     if(r.multiHandLandmarks?.length){
       S.hlm=r.multiHandLandmarks[0];S.gesture=rg(S.hlm);
-      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%5);flashHint('✌ 换场景');}
+      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%5);flashHint('✌ '+t('gestureVictory'));}
       const cx=(S.hlm[0].x+S.hlm[9].x)/2,cy=(S.hlm[0].y+S.hlm[9].y)/2;
       const c=camCover(),ib=c.ib,sn=S.camSens||1;
       let vx=(cx*VW-c.sx)/c.sw, vy=(cy*VH-c.sy)/c.sh;   // position within the aspect-correct, cover-cropped camera view (matches the overlay exactly)
@@ -2272,14 +2284,14 @@ async function irStart(){ S.ir={x:DW/2,y:DH/2,r:0,t:0,port:null};
       let nl; while((nl=buf.indexOf('\n'))>=0){ const ln=buf.slice(0,nl); buf=buf.slice(nl+1);
         const p=ln.trim().split(/[,\s]+/).map(Number);
         if(p.length>=2 && isFinite(p[0]) && isFinite(p[1])){ S.ir.x=clampN(p[0],0,1)*DW; S.ir.y=clampN(p[1],0,1)*DH; if(isFinite(p[2]))S.ir.r=clampN(p[2],0.02,0.5)*Math.min(DW,DH); S.ir.t=performance.now(); } } } }catch(e){} })();
-  }catch(e){ flashHint('IR 设备未连接'); }
+  }catch(e){ flashHint(t('irWaiting')); }
 }
 function irStop(){ try{ irReader&&irReader.cancel(); }catch(e){} irReader=null; try{ S.ir&&S.ir.port&&S.ir.port.close(); }catch(e){} S.ir=null; }
 function phoneIngest(raw){
   let msg; try{msg=JSON.parse(raw);}catch(e){return;}
   if(msg.type==='haptic') return;                 // ignore our own echoed reverse-channel message
   const P=S.phone, id=msg.id; if(!id)return;
-  if(msg.type==='paint'){ S.paint=!S.paint; flashHint(S.paint?'🖌 留痕 开':'留痕 关'); return; }   // phone long-press 💦 toggles 留痕
+  if(msg.type==='paint'){ S.paint=!S.paint; flashHint(t(S.paint?'fxPaintOn':'fxPaintOff')); syncBar(); return; }   // phone long-press 💦 toggles 留痕
   const now=performance.now();
   // prune phones gone silent (missed 'bye') — but never a deliberately FROZEN one
   for(const k in P.targets){ if(!P.targets[k].frozen && now-P.targets[k].t>4000){ delete P.targets[k]; if(P.primaryId===k)P.primaryId=null; } }
@@ -2289,7 +2301,7 @@ function phoneIngest(raw){
   // content-only / position-less messages: handle BEFORE creating a wand target (no phantom roster seal/count)
   if(msg.type==='music'){ if(msg.onset){ const t2=P.targets[id]; pushSplat(t2?t2.smX:DW/2, t2?t2.smY:DH/2, 22+(+msg.level||0)*44, 90); } return; }   // 墨随声动
   if(msg.type==='text'){ inkText(id, msg.text||''); return; }   // 题字成境
-  if(msg.type==='geo'){ S.geo.push({x:clampN(+msg.x||0,0,1),y:clampN(+msg.y||0,0,1),hue:hueFromId(id)}); if(S.geo.length>200)S.geo.shift(); flashHint('🌏 远客生辉 +1'); return; }
+  if(msg.type==='geo'){ S.geo.push({x:clampN(+msg.x||0,0,1),y:clampN(+msg.y||0,0,1),hue:hueFromId(id)}); if(S.geo.length>200)S.geo.shift(); flashHint(t('fxGeo')); return; }
   if(msg.type==='rps'){ rpsMove(id, msg.move); return; }   // 石头剪刀布
   if(msg.type==='beat'){ beatTap(id); return; }   // 击节点墨
   let tg=P.targets[id];
@@ -2476,7 +2488,7 @@ function toggleAmbient(){
 function inkText(id,text){ if(!text)return; const map={山:0,水:0,峰:0,竹:1,林:1,雪:2,冬:2,寒:2,花:3,鸟:3,春:3,星:4,夜:4,空:4,月:4}; let scened=false;
   for(const ch of text){ if(map[ch]!==undefined && !scened){ changeScene(map[ch]); scened=true; } }
   for(let i=0;i<text.length && i<12;i++){ const c=text.charCodeAt(i); pushSplat(((c*53)%1000)/1000*DW, ((c*97)%1000)/1000*DH, 24+(c%30), c%180); }
-  flashHint('題 · '+text.slice(0,8));
+  flashHint(t('fxText')+' · '+text.slice(0,8));
 }
 // 石头剪刀布 — first two players within 2.5s resolve; winner's light blooms
 function rpsMove(id,move){ const now=performance.now(); if(!S.rps.moves)S.rps.moves={}; S.rps.moves[id]={move:move,t:now};
@@ -2484,7 +2496,7 @@ function rpsMove(id,move){ const now=performance.now(); if(!S.rps.moves)S.rps.mo
   if(ids.length>=2){ const a=ids[0],b=ids[1], ma=S.rps.moves[a].move, mb=S.rps.moves[b].move, beats={rock:'scissors',scissors:'paper',paper:'rock'};
     let winner = (ma===mb)?null:(beats[ma]===mb?a:b);
     const t2=winner&&S.phone.targets[winner];
-    if(t2){ pushSplat(t2.smX,t2.smY,82,160); phoneHaptic(String(winner).split('#')[0],[10,30,10,30,60]); flashHint('✊✋✌ 胜者绽放!'); } else flashHint('✊✋✌ 平局');
+    if(t2){ pushSplat(t2.smX,t2.smY,82,160); phoneHaptic(String(winner).split('#')[0],[10,30,10,30,60]); flashHint('✊✋✌ '+t('fxRpsWin')); } else flashHint('✊✋✌ '+t('fxRpsTie'));
     S.rps.moves={}; }
 }
 // 击节点墨 — tap vs the display's own beat clock; on-beat = bigger splat + buzz
@@ -3145,6 +3157,12 @@ async function wM(name,opts){
   const prev=S.mode;
   if(S.running){
     M[prev].cln();
+    // leaving camera modes must release the camera: a pointer user should not keep
+    // the camera light on (privacy), and the 15% ghost overlay should stop too.
+    if(!M[name].needCam && str){
+      try{ str.getTracks().forEach(t=>t.stop()); }catch(e){}
+      str=null; vid=null; pip.style.display='none';
+    }
     S.mode=name;S.smooth.x=S.smooth.y=-1;
     if(M[name].needCam && !str){
       try{ await initCam(name==='flashlight'); }

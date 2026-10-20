@@ -442,6 +442,74 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('全特效开启仍可用（fps ≥ 20）', heavy >= 20, 'fps=' + heavy);
 
+  /* ═══════════════ 11b. 画面语义 / visual semantics ═══════════════ */
+  group('11b · 画面语义（真的在揭示吗）');
+  // clear the effect state the previous groups toggled, otherwise the paint mask
+  // and glow buffer keep revealing colour and the luminance test means nothing
+  await page.evaluate(() => {
+    S.paused = false; S.paint = false; S.glow = false; S.mirror = false;
+    S.timeTint = false; S.creature = false; S.phone.ink = false;
+    if (paintCtx) paintCtx.clearRect(0, 0, paintCvs.width, paintCvs.height);
+    if (glowCtx) glowCtx.clearRect(0, 0, glowCvs.width, glowCvs.height);
+    S.style = 'paper'; genHidden(); wM('mouse');
+  });
+  await sleep(600);
+  const sample = async (x, y) => page.evaluate(([px, py]) => {
+    const c = document.createElement('canvas'); c.width = c.height = 1;
+    const g = c.getContext('2d');
+    g.drawImage(D, px * S.dpr, py * S.dpr, 40, 40, 0, 0, 1, 1);
+    const d = g.getImageData(0, 0, 1, 1).data;
+    return [d[0], d[1], d[2]];
+  }, [x, y]);
+  const stats = async () => page.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 40;
+    const g = c.getContext('2d');
+    g.drawImage(D, 0, 0, 64, 40);
+    const d = g.getImageData(0, 0, 64, 40).data;
+    let sum = 0, sum2 = 0, n = 64 * 40;
+    for (let i = 0; i < d.length; i += 4) { const l = (d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114); sum += l; sum2 += l * l; }
+    const mean = sum / n;
+    return { mean, sd: Math.sqrt(Math.max(0, sum2 / n - mean * mean)) };
+  });
+  // park the light on the far left so the right side is untouched ink
+  await page.mouse.move(180, 200); await sleep(500);
+  const inside = await sample(180, 200);
+  const outside = await sample(1150, 700);
+  const lum = (p) => p[0] * .299 + p[1] * .587 + p[2] * .114;
+  ok('切到非摄像头模态后摄像头已释放（隐私）',
+    await page.evaluate(() => str === null && vid === null), 'camera still open');
+  ok('光圈内的颜色与圈外不同（揭示真的发生）', Math.abs(lum(inside) - lum(outside)) > 6,
+    `in=${inside.join(',')} out=${outside.join(',')}`);
+  const st1 = await stats();
+  ok('画面不是空白（有方差）', st1.sd > 6, JSON.stringify(st1));
+  ok('纸本风格整体偏亮（墨落宣纸）', st1.mean > 150, 'mean=' + Math.round(st1.mean));
+  await page.evaluate(() => setStyle('edges')); await sleep(500);
+  const st2 = await stats();
+  ok('墨线风格明显更暗（暗房光束）', st2.mean < 140 && st1.mean - st2.mean > 50,
+    `paper ${Math.round(st1.mean)} vs edges ${Math.round(st2.mean)}`);
+  const means = [st2.mean];
+  for (const st of ['sketch', 'dark']) {
+    await page.evaluate((x) => setStyle(x), st); await sleep(450);
+    means.push((await stats()).mean);
+  }
+  ok('素描与暗调都是近黑（只留线条）', means[1] < 40 && means[2] < 40,
+    means.map(m => Math.round(m)).join(' / '));
+
+  const prints = [];
+  for (let sc = 0; sc < 5; sc++) {
+    await page.evaluate((n) => changeScene(n), sc); await sleep(700);
+    prints.push(JSON.stringify(await stats()));
+  }
+  ok('5 个场景互不相同', new Set(prints).size === 5, prints.join(' '));
+
+  // the interaction matrix in the docs must describe every registered mode
+  const doc = fs.readFileSync(path.join(ROOT, 'docs', 'INTERACTIONS.md'), 'utf8');
+  const registered = await page.evaluate(() => Object.keys(M));
+  const undocumented = registered.filter(k => !doc.includes('`' + k + '`'));
+  ok('docs/INTERACTIONS.md 覆盖了每一个已注册模态', undocumented.length === 0, undocumented.join(','));
+  const noI18n = await page.evaluate(() => Object.keys(M).filter(k => !I18N.en[M[k].nameKey]));
+  ok('每个模态都有三语名字', noI18n.length === 0, noI18n.join(','));
+
   /* ═══════════════ 11. teardown ═══════════════ */
   group('11 · 退出 / teardown');
   await page.keyboard.press('q'); await sleep(500);

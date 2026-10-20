@@ -4,7 +4,7 @@
 
 [![Status](https://img.shields.io/badge/status-alpha--playable-c96442?labelColor=141413)](#-路线图)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
-[![Tests](https://img.shields.io/badge/e2e-86%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
+[![Tests](https://img.shields.io/badge/e2e-95%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
 
 > 光照之处，墨色生辉
@@ -114,7 +114,7 @@ ink_scroll/
 │   ├── HARDWARE-TODO.md# 需要外设的方向（给想动手的人）
 │   ├── TEST-REPORT.md  # 审核与测试报告
 │   └── SELF-IMPROVEMENT.md # 评测器与自我改进循环
-├── tools/test.js       # 86 条端到端断言（Playwright，真实浏览器）
+├── tools/test.js       # 95 条端到端断言（Playwright，真实浏览器）
 └── archive/            # 旧版 Python + OpenCV 原型
 ```
 
@@ -145,7 +145,7 @@ node tools/test.js
 - 触屏手势、无障碍（role / aria-live / 焦点陷阱 / reduced-motion）、深链、性能预算
 - 退出必须释放摄像头
 
-最近一次：**86 / 86 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
+最近一次：**95 / 95 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
 
 ## 📐 设计系统
 
