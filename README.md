@@ -3,6 +3,8 @@
 **简体中文** · [繁體中文](README.zh-TW.md) · [English](README.en.md)
 
 [![Status](https://img.shields.io/badge/status-alpha--playable-c96442?labelColor=141413)](#-路线图)
+[![Live](https://img.shields.io/badge/▶_在线玩-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
+[![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
 [![Tests](https://img.shields.io/badge/e2e-95%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
@@ -56,6 +58,11 @@
 | **分享** | `S` 存一张带题款与「印」的分享卡；`?mode=audio&scene=3` 这样的**深链**打开即自动开卷 |
 | **无障碍** | 全键盘可玩、`aria-live` 播报、`prefers-reduced-motion`、`P` 静观暂停 |
 | **三语界面** | 简体 · 繁體 · English，自动检测浏览器语言 |
+
+## 🌐 在线玩
+
+**<https://chunyuhu.com/ink_scroll/>** —— 打开就能玩，手机扫码把自己变成一盏灯也行。
+"手机 · 众光" 需要中继，本地跑 `python3 server.py`。
 
 ## 🚀 快速开始
 

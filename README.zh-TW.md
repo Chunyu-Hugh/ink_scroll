@@ -2,7 +2,9 @@
 
 [简体中文](README.md) · **繁體中文** · [English](README.en.md)
 
-[![Status](https://img.shields.io/badge/status-alpha-c96442?labelColor=141413)](#-路線圖)
+[![Status](https://img.shields.io/badge/status-alpha--playable-c96442?labelColor=141413)](#-路線圖)
+[![Live](https://img.shields.io/badge/▶_線上玩-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
+[![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.zh-TW.md)
 [![Discussions](https://img.shields.io/badge/💬-Discussions-7b8fa8?labelColor=141413)](../../discussions)
@@ -89,6 +91,11 @@ node tools/test.js        # 86 條端對端斷言，真實瀏覽器
 | 圖片 | Grok (`grok-imagine-image`) 生成 |
 
 舊版 Python + OpenCV 原型見 `archive/`。
+
+## 🌐 線上玩
+
+**<https://chunyuhu.com/ink_scroll/>** —— 打開就能玩，手機掃碼把自己變成一盞燈也行。
+「手機 · 眾光」需要中繼，本地跑 `python3 server.py`。
 
 ## 🚀 快速開始
 
