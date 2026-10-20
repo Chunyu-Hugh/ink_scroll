@@ -9,14 +9,16 @@
  * the phone↔display relay, accessibility invariants, i18n completeness and a
  * frame-rate budget. Exit code 0 = all green.
  */
-const { chromium } = require('playwright-core');
+let pw;
+try { pw = require('playwright'); } catch (e) { pw = require('playwright-core'); }
+const { chromium } = pw;
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 const ROOT = path.resolve(__dirname, '..');   // the repo root (server.py lives here)
-const PORT = Number(process.env.INK_PORT || 8911);
-const BASE = `http://127.0.0.1:${PORT}`;
+let PORT = Number(process.env.INK_PORT || 8911);
+let BASE = `http://127.0.0.1:${PORT}`;
 function findChrome() {
   if (process.env.INK_CHROME) return process.env.INK_CHROME;
   const base = process.env.PLAYWRIGHT_BROWSERS_PATH ||
@@ -34,6 +36,8 @@ function findChrome() {
 }
 const CHROME = findChrome();
 const HEADED = process.argv.includes('--headed');
+const MIN_FPS = Number(process.env.INK_MIN_FPS || 22);
+const MIN_FPS_HEAVY = Number(process.env.INK_MIN_FPS_HEAVY || 20);
 const SHOTS = path.join(__dirname, 'shots');
 fs.mkdirSync(SHOTS, { recursive: true });
 const FIXTURE = path.join(__dirname, 'fixtures', 'moving.y4m');
@@ -73,6 +77,16 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 (async () => {
   /* ── server ─────────────────────────────────────────────────────── */
+  // pick a free port: a stale run must never make the suite look broken
+  const net = require('net');
+  const tryBind = (p) => new Promise((res) => {
+    const s = net.createServer();
+    s.once('error', () => res(false));
+    s.once('listening', () => s.close(() => res(true)));
+    s.listen(p, '127.0.0.1');
+  });
+  for (let i = 0; i < 20; i++) { if (await tryBind(PORT)) break; PORT++; }
+  BASE = `http://127.0.0.1:${PORT}`;
   const srv = spawn('python3', ['server.py', String(PORT)], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
   const srvLog = [];
   srv.stdout.on('data', d => srvLog.push(String(d)));
@@ -248,6 +262,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await sleep(1000);
   ok('手机页连上中继', /connected|已连接/i.test(await phone.evaluate(() => document.getElementById('stat').textContent)),
     await phone.evaluate(() => document.getElementById('stat').textContent));
+
+  // the sensor-permission prompt must never block the piece (touch works without it)
+  const perm = await phone.evaluate(() => {
+    const e = document.getElementById('perm');
+    if (!e || !e.classList.contains('show')) return null;
+    const r = e.getBoundingClientRect();
+    return { h: Math.round(r.height), top: Math.round(r.top), bottom: Math.round(r.bottom) };
+  });
+  ok('手机页的权限请求只是一条横幅，不遮住操作', !perm || perm.h < 140, JSON.stringify(perm));
 
   const box = await (await phone.$('#pad')).boundingBox();
   await phone.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.4);
@@ -432,15 +455,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const maskMs = await page.evaluate(() => {
     const t = performance.now(); setStyle('edges'); return Math.round(performance.now() - t);
   });
-  ok('墨线风格 fps ≥ 22（无头软件渲染）', fps1 >= 22, 'fps=' + fps1);
-  ok('纸本风格 fps ≥ 22（无头软件渲染）', fps2 >= 22, 'fps=' + fps2);
+  ok(`墨线风格 fps ≥ ${MIN_FPS}（无头软件渲染）`, fps1 >= MIN_FPS, 'fps=' + fps1);
+  ok(`纸本风格 fps ≥ ${MIN_FPS}（无头软件渲染）`, fps2 >= MIN_FPS, 'fps=' + fps2);
   ok('墨层生成在 400ms 预算内', maskMs < 400, maskMs + 'ms');
 
   const heavy = await page.evaluate(() => {
     S.paint = true; S.glow = true; S.mirror = true; S.timeTint = true; S.paused = false;
     return new Promise(res => setTimeout(() => res(S.fps), 2000));
   });
-  ok('全特效开启仍可用（fps ≥ 20）', heavy >= 20, 'fps=' + heavy);
+  ok(`全特效开启仍可用（fps ≥ ${MIN_FPS_HEAVY}）`, heavy >= MIN_FPS_HEAVY, 'fps=' + heavy);
 
   /* ═══════════════ 11b. 画面语义 / visual semantics ═══════════════ */
   group('11b · 画面语义（真的在揭示吗）');
