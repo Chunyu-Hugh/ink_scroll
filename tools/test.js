@@ -263,6 +263,15 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('手机页连上中继', /connected|已连接/i.test(await phone.evaluate(() => document.getElementById('stat').textContent)),
     await phone.evaluate(() => document.getElementById('stat').textContent));
 
+  // the sensor-permission prompt must never block the piece (touch works without it)
+  const perm = await phone.evaluate(() => {
+    const e = document.getElementById('perm');
+    if (!e || !e.classList.contains('show')) return null;
+    const r = e.getBoundingClientRect();
+    return { h: Math.round(r.height), top: Math.round(r.top), bottom: Math.round(r.bottom) };
+  });
+  ok('手机页的权限请求只是一条横幅，不遮住操作', !perm || perm.h < 140, JSON.stringify(perm));
+
   const box = await (await phone.$('#pad')).boundingBox();
   await phone.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.4);
   await phone.mouse.down();

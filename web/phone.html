@@ -47,15 +47,21 @@
   .grid button.on{background:var(--clay);border-color:var(--clay);color:var(--ivory)}
   footer{margin-top:10px;font-size:.6rem;color:var(--stone-soft);letter-spacing:.1em;text-align:center;line-height:1.8}
   footer a{color:inherit}
+  /* A banner, never a gate: the touch pad works with zero permissions, so asking
+     for the gyroscope must not stand between you and the artwork. */
   #perm{
-    position:fixed;inset:0;z-index:9;background:rgba(245,244,237,.96);display:none;
-    flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:32px;text-align:center
+    position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:9;
+    display:none;align-items:center;gap:10px;
+    padding:9px 12px;border-radius:12px;
+    background:rgba(20,20,19,.92);color:var(--ivory);
+    font-size:.7rem;letter-spacing:.06em;line-height:1.5;
+    box-shadow:0 12px 30px -14px rgba(0,0,0,.55)
   }
   #perm.show{display:flex}
-  #perm h1{font-size:1.1rem;font-weight:600;letter-spacing:.18em}
-  #perm p{font-size:.8rem;color:var(--stone);line-height:1.9;letter-spacing:.08em;max-width:300px}
-  #perm button{font:inherit;letter-spacing:.2em;padding:13px 34px;border:none;border-radius:999px;
-    background:var(--clay);color:var(--ivory);cursor:pointer}
+  #perm p{flex:1;margin:0}
+  #perm button{flex:0 0 auto;font:inherit;font-size:.7rem;letter-spacing:.12em;
+    padding:8px 14px;border:none;border-radius:999px;background:var(--clay);color:#faf9f5;cursor:pointer}
+  #perm .x{background:transparent;color:var(--stone-soft);padding:8px 6px;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -83,9 +89,9 @@
 <footer>双指捏合 → 光圈大小 · 手机与画卷需在同一网络</footer>
 
 <div id="perm">
-  <h1>需要动感权限</h1>
-  <p>iOS 需要你允许访问方向传感器，手机才能当魔杖用。也可以直接用下方这块触摸区。</p>
+  <p>允许方向感应，倾斜手机也能控制光圈</p>
   <button id="perm-ok" type="button">允许</button>
+  <button class="x" id="perm-no" type="button" aria-label="关闭">✕</button>
 </div>
 
 <script>
@@ -152,8 +158,8 @@
     const DOE=window.DeviceOrientationEvent;
     if(DOE&&typeof DOE.requestPermission==='function'){
       DOE.requestPermission().then(p=>{
-        if(p==='granted'){ attachOrientation(); $('perm').classList.remove('show'); }
-        else $('perm').classList.remove('show');
+        if(p==='granted') attachOrientation();
+        $('perm').classList.remove('show');
       }).catch(()=>$('perm').classList.remove('show'));
     }else attachOrientation();
   }
@@ -241,6 +247,7 @@
     tap({type:'freeze',on:state.frozen});
   });
   $('perm-ok').addEventListener('click',()=>{ askSensors(); });
+  $('perm-no').addEventListener('click',()=>{ $('perm').classList.remove('show'); });
 
   /* ── reverse channel: the display can buzz / pluck us ──── */
   function pluck(pan){
