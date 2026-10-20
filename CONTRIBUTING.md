@@ -48,7 +48,11 @@ python3 -m http.server 8888
 - **不引入框架**（React/Vue/Svelte 全部 no）
 - **可以引入 CDN 单文件库**（如 MediaPipe、osc-js），但要明确写为何需要
 - **风格延续现有代码**：超紧凑、单字母变量在内部 OK、注释少而精
-- **新交互方式**：在 `M` 对象（mode dispatch table）里加一个新 entry，遵循 `{icon, nameKey, init, spot, cln, ex, needCam}` 接口
+- **新交互方式**：在 `M` 注册表里加一条，遵循
+  `{icon, nameKey, group, needCam, needMic, init, spot, cln, ex, meter}` 接口。
+  完整契约、失败回落要求和 checklist 见 **[docs/INTERACTIONS.md](docs/INTERACTIONS.md)**
+- **加完必须能测**：在 `tools/test.js` 的「每一种交互模态」段补一条断言，
+  然后 `node tools/test.js` 必须全绿（它用真实浏览器 + 假摄像头/麦克风）
 - **新场景图**：512×512+ PNG，水墨风格，放到 `web/scenes/`，在 `sceneFiles` 数组注册
 - **i18n**：新加的所有面向用户的字符串要进 `I18N` 字典三个语言都填一份。HUD 字段每帧刷新所以模式名/场景名/风格名能自动跟随语言切换
 
@@ -70,8 +74,9 @@ python3 -m http.server 8888
 1. Fork & 创建分支：`git checkout -b modality/wacom-pressure`
 2. 改动尽量小、可解释。一个 PR 一件事。
 3. 在浏览器里实测——单元测试在这个项目里不存在
-4. PR 描述里**贴一张 GIF/截图**展示效果
-5. 我（@Chunyu-Hugh）会尽快 review
+4. 跑 `node tools/test.js`（86 条端到端断言，需要 Playwright 的 Chromium），全绿再提
+5. PR 描述里**贴一张 GIF/截图**展示效果
+6. 我（@Chunyu-Hugh）会尽快 review
 
 ---
 

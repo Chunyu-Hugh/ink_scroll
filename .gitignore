@@ -18,3 +18,9 @@ Thumbs.db
 
 # Backups
 *.bak*
+
+# test harness artifacts
+tools/node_modules/
+tools/fixtures/
+tools/shots/
+tools/last-run.json
