@@ -2,6 +2,16 @@
 
 遵循 [SemVer](https://semver.org/lang/zh-CN/)。每个版本都对应一组 CI 绿了的提交。
 
+## [0.2.3] — 2026-10-21
+
+### 新增
+- **42 个模态**：+ 笔倾斜 / 房间底噪 / 节拍 BPM / 天时 / 剪贴板 / 取色 / 在场 / 多屏 / 展厅锁键 / 机器负载 / 口哨 / 滚轮 / 电池
+- **契约 `Spot{id, presence, state}`**：多人与传感器融合有了地方落
+- **双向通道**：页面 → 脚本 `room=ext-state`（500ms 状态回传）
+- **Art-Net DMX**：CH1 亮度 / CH2 x / CH3 y / CH4 半径，真灯跟着光圈走
+- **预设** `?preset=gallery|kiosk|stereo|lab` + `docs/PRESETS.md`
+- **图谱** `docs/MODALITY-ATLAS.md`：125 条模态 / 12 类传感器
+
 ## [0.2.2] — 2026-10-21
 
 ### 新增

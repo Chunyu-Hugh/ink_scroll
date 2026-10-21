@@ -121,6 +121,17 @@ tailscale serve --bg 8888
 # 访问 https://your-machine.tailXXXXx.ts.net
 ```
 
+## 🎛 一键预设
+
+| 预设 | 用途 |
+|---|---|
+| `?preset=gallery` | 日常 / 网页分享 |
+| `?preset=kiosk` | **展厅开机即用**：自动展卷 + 投影墙 + 校准网格 |
+| `?preset=stereo` | 点云 + 左右分屏 + 墙模式 |
+| `?preset=lab` | 调参：墨线 + 指针 |
+
+详见 **[docs/PRESETS.md](docs/PRESETS.md)**（含全部 URL 参数表与开机建议）。
+
 ## 🖥 屏幕自适应
 
 同一件作品应该顺着屏幕来：
