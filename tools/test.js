@@ -856,6 +856,34 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       && typeof loop.last.x === 'number' && typeof loop.last.scene === 'number',
     JSON.stringify(loop.last));
 
+  /* ═══════════════ 4h. 展厅预设 + 口哨音名 ═══════════════ */
+  group('4h · 展厅预设（?preset=）与口哨音名');
+  const pre = await page.evaluate(() => {
+    const before = { mode: S.mode, scene: S.scene, style: S.style };
+    applyPreset('kiosk');
+    const k = { mode: S.mode, scene: S.scene, style: S.style, wall: S.wall, grid: S.grid,
+                cls: document.body.classList.contains('wall') };
+    applyPreset('stereo');
+    const st = { scene: S.scene, stereo: S.stereo, wall: S.wall };
+    applyPreset('gallery');
+    const g = { mode: S.mode, style: S.style, wall: S.wall, stereo: S.stereo };
+    document.body.classList.remove('wall');
+    return { before, k, st, g, unknown: applyPreset('nope') };
+  });
+  ok('预设 kiosk：自动展卷 + 投影墙 + 网格（body.wall 生效）',
+    pre.k.mode === 'auto' && pre.k.wall === true && pre.k.grid === true && pre.k.cls, JSON.stringify(pre.k));
+  ok('预设 stereo：切到点云 + 左右分屏', pre.st.scene === 6 && pre.st.stereo === 'sbs', JSON.stringify(pre.st));
+  ok('预设 gallery：回到纸本、无墙无立体', pre.g.mode === 'auto' && pre.g.style === 'paper' && pre.g.wall === false && pre.g.stereo === null,
+    JSON.stringify(pre.g));
+  ok('未知预设安全返回 false（不崩）', pre.unknown === false);
+
+  const notes = await page.evaluate(() => ({
+    a4: noteOf(440), c4: noteOf(261.63), cents: noteOf(445), bad: noteOf(10), hi: noteOf(10000),
+  }));
+  ok('口哨：A4/C4 音名正确', notes.a4.name === 'A4' && notes.c4.name === 'C4', JSON.stringify(notes.a4) + JSON.stringify(notes.c4));
+  ok('口哨：音分偏差有符号，越界返回 null',
+    Math.abs(notes.cents.cents) <= 25 && notes.bad === null && notes.hi === null, JSON.stringify(notes.cents));
+
   /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
   group('4f · 契约升级：id / presence / state');
   const ctr = await page.evaluate(() => {

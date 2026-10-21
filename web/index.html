@@ -1139,6 +1139,7 @@ const I18N = {
     modePresence:'在场 · 人在',
     modeScreens:'多屏 · 铺开',
     modeKiosk:'展厅 · 锁键',
+    modeWhistle:'口哨 · 音名',
     modeLoad:'负载 · 机器状态',
     modeHours:'时间 · 天时',
     modeClip:'剪贴板 · 题字',
@@ -1163,6 +1164,8 @@ const I18N = {
     firstHintPresence:'人一走开，光圈自己收小 · 回来又张开（IdleDetector）',
     firstHintScreens:'接上第二块屏 · 光会落到另一块上（getScreenDetails）',
     firstHintKiosk:'锁住 Esc / Tab / F11 · 展厅里观众跑不掉',
+    firstHintWhistle:'吹一声口哨 · 光按音高左右移动，HUD 显示音名与音分',
+    fxWhistleWait:'吹一声…',
     firstHintLoad:'机器越忙，光圈越小 · 它诚实地反映自己的状态',
     fxPresenceOk:'在场感应已接入',
     fxPresenceNo:'此浏览器没有 IdleDetector',
@@ -1198,6 +1201,8 @@ const I18N = {
     firstHintPresence:'人一走開，光圈自己收小 · 回來又張開（IdleDetector）',
     firstHintScreens:'接上第二塊螢幕 · 光會落到另一塊上（getScreenDetails）',
     firstHintKiosk:'鎖住 Esc / Tab / F11 · 展廳裡觀眾跑不掉',
+    firstHintWhistle:'吹一聲口哨 · 光按音高左右移動，HUD 顯示音名與音分',
+    fxWhistleWait:'吹一聲…',
     firstHintLoad:'機器越忙，光圈越小 · 它誠實地反映自己的狀態',
     fxPresenceOk:'在場感應已接入',
     fxPresenceNo:'此瀏覽器沒有 IdleDetector',
@@ -1233,6 +1238,8 @@ const I18N = {
     firstHintPresence:'Step away and the light shrinks · come back and it opens (IdleDetector)',
     firstHintScreens:'Plug in a second display · the light lands on it (getScreenDetails)',
     firstHintKiosk:'Swallow Esc / Tab / F11 — visitors cannot escape the kiosk',
+    firstHintWhistle:'Whistle a note — the light moves by pitch, HUD shows name and cents',
+    fxWhistleWait:'whistle…',
     firstHintLoad:'The busier the machine, the smaller the light — it reports honestly',
     fxPresenceOk:'presence sensor connected',
     fxPresenceNo:'no IdleDetector in this browser',
@@ -1493,6 +1500,7 @@ const I18N = {
     modePresence:'在場 · 人在',
     modeScreens:'多屏 · 鋪開',
     modeKiosk:'展廳 · 鎖鍵',
+    modeWhistle:'口哨 · 音名',
     modeLoad:'負載 · 機器狀態',
     modeHours:'時間 · 天時',
     modeClip:'剪貼簿 · 題字',
@@ -1732,6 +1740,7 @@ const I18N = {
     modePresence:'Presence · idle',
     modeScreens:'Multi-screen',
     modeKiosk:'Kiosk · key lock',
+    modeWhistle:'Whistle · Note',
     modeLoad:'Machine load',
     modeHours:'Time of day',
     modeClip:'Clipboard',
@@ -3191,6 +3200,35 @@ async function battStart(){
   }catch(e){ flashHint(t('fxBattNo')); }
 }
 
+/* ── 展厅预设：?preset=kiosk|gallery|stereo|lab 一键配好 ── */
+const PRESETS={
+  gallery:{ mode:'auto',  scene:0, style:'paper', wall:false, grid:false, stereo:null },
+  kiosk:  { mode:'auto',  scene:6, style:'edges', wall:true,  grid:true,  stereo:null },
+  stereo: { mode:'mouse', scene:6, style:'edges', wall:true,  grid:false, stereo:'sbs' },
+  lab:    { mode:'mouse', scene:0, style:'edges', wall:false, grid:false, stereo:null },
+};
+function applyPreset(name){
+  const p=PRESETS[name]; if(!p) return false;
+  if(p.mode&&M[p.mode]&&modeAvailable(p.mode)) S.mode=p.mode;
+  if(typeof p.scene==='number') S.scene=p.scene;
+  if(p.style) S.style=p.style;
+  if(p.wall){ document.body.classList.add('wall'); S.wall=true; }
+  S.grid=!!p.grid;
+  S.stereo=p.stereo||null;
+  DEEP_PLAY=true;
+  return true;
+}
+
+/* ── 口哨 · 音高 → 音名（纯函数可单测） ── */
+const NOTE_NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function noteOf(freq){
+  if(!freq||freq<40||freq>4000) return null;
+  const midi=Math.round(69+12*Math.log2(freq/440));
+  const f2=440*Math.pow(2,(midi-69)/12);
+  return { name:NOTE_NAMES[((midi%12)+12)%12]+(Math.floor(midi/12)-1),
+           midi, cents:Math.round(1200*Math.log2(freq/f2)) };
+}
+
 /* ── 在场 · 人是否在（IdleDetector）→ 光圈大小（纯函数可单测） ── */
 function presenceRadius(idleSec, state){
   const idle=state==='idle';
@@ -3713,6 +3751,19 @@ const M={
       return {x:S.mouseX, y:S.mouseY, radius:S.radius*k, state:{pressure:S.load.state}}; },
     cln(){ try{ S.load.obs&&S.load.obs.disconnect&&S.load.obs.disconnect(); }catch(e){} S.load.obs=null; },
     ex(){ return S.load.ok?('⚙ '+S.load.state):('⚙ '+t('fxLoadNo')); },
+  },
+  whistle:{
+    icon:'audio',nameKey:'modeWhistle',group:'free',needMic:true,fallback:'hint',
+    init(){ audioStart(); },
+    spot(){
+      const A=S.audio, n=noteOf(A.pitch||0);
+      S.whistleNote=n;
+      const pos=n?clampN((n.midi-45)/36,0,1):0.5;      // A2..C6 映射到画面
+      return {x:DW*(0.08+0.84*pos), y:DH*0.5, radius:S.radius*(0.5+clampN((A.level||0)*2,0,1)),
+              state:{note:n?n.name:null, cents:n?n.cents:0}};
+    },
+    cln(){ audioStop(); S.whistleNote=null; },
+    ex(){ const n=S.whistleNote; return S.audio.on?('🎵 '+(n?n.name+' '+(n.cents>0?'+':'')+n.cents+'¢':t('fxWhistleWait'))):('🎙 '+t('micWaiting')); },
   },
   /* ── 需要本机跑一个小脚本：OSC / TouchDesigner ── */
   osc:{
@@ -5068,7 +5119,7 @@ const mg=document.getElementById('mg');
 /* Grouped by hardware requirement, so nobody has to discover the hard way
    that "gaze" wants a printed marker. Order = easiest first. */
 const MODE_GROUPS=[
-  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','pentilt','noise','beat','hours','clip','inkpick','presence','screens','kiosk','load','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
+  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','pentilt','noise','beat','hours','clip','inkpick','presence','screens','kiosk','load','whistle','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
   {label:'groupCam',   modes:['motion','hand','face','eyes','flashlight']},
   {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
   {label:'groupLocal', modes:['osc','bridge']},
@@ -5174,6 +5225,7 @@ function applyDeepLink(){
     const q=new URLSearchParams(location.search||'');
     if(q.get('wall')==='1'){ document.body.classList.add('wall'); S.wall=true; S.grid=(q.get('grid')!=='0'); }
     if(q.get('grid')==='1'){ S.grid=true; }
+    const pre=q.get('preset'); if(pre) applyPreset(pre);
     const st2=q.get('stereo');
     if(st2==='anaglyph'||st2==='sbs'){ S.stereo=st2; }
     DEEP_PLAY = q.has('mode') || q.has('play') || S.wall;
