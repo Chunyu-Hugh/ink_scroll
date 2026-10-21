@@ -485,20 +485,23 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     `${cloud.a.mean}/${cloud.a.nz} vs ${cloud.b.mean}/${cloud.b.nz}`);
   const staticDeps = [...fs.readFileSync(path.join(ROOT, 'web/index.html'), 'utf8')
     .matchAll(/<script src="(https?:[^"]+)"/g)].map(m => m[1]);
-  // 深度进契约：外部推 z → 点云推轨（画面必须变）
+  // 深度进契约：直接渲染两次同尺寸点云，z 不同 → 像素必须不同（确定性，不依赖窗口均值）
   const depth = await page.evaluate(async () => {
-    changeScene(6); await new Promise(r => setTimeout(r, 350));
-    const snap = () => { const c = document.createElement('canvas'); c.width = 48; c.height = 30;
-      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 48, 30);
-      const d = g.getImageData(0, 0, 48, 30).data; let s2 = 0;
-      for (let i = 0; i < d.length; i += 4) s2 += d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
-      return +(s2 / (48 * 30)).toFixed(1); };
-    S.bridge.z = 0.0; await new Promise(r => setTimeout(r, 280)); const near = snap();
-    S.bridge.z = 1.0; await new Promise(r => setTimeout(r, 280)); const far = snap();
-    return { near, far, got: +S.bridge.z.toFixed(1) };
+    const c1 = document.createElement('canvas'); c1.width = 240; c1.height = 150;
+    const c2 = document.createElement('canvas'); c2.width = 240; c2.height = 150;
+    const g1 = c1.getContext('2d'), g2 = c2.getContext('2d');
+    const prev = S.bridge.z;
+    S.mouseX = DW * 0.5; S.mouseY = DH * 0.5;
+    S.bridge.z = 0.0; drawCloud(g1, 240, 150, 1.0, false);
+    S.bridge.z = 1.0; drawCloud(g2, 240, 150, 1.0, false);
+    const a = g1.getImageData(0, 0, 240, 150).data, b = g2.getImageData(0, 0, 240, 150).data;
+    let diff = 0;
+    for (let i = 0; i < a.length; i += 4) if (Math.abs(a[i] - b[i]) > 6) diff++;
+    S.bridge.z = prev;
+    return { diff, total: 240 * 150 };
   });
-  ok('深度 z 进契约：推 z 会改变点云视角/推轨', depth.near !== depth.far,
-    `z=0 → ${depth.near}, z=1 → ${depth.far}`);
+  ok('深度 z 进契约：z 不同 → 点云画面不同（推轨生效）', depth.diff > depth.total * 0.05,
+    `${depth.diff}/${depth.total} 像素不同`);
   ok('postMessage 携带 z 会被接收', await page.evaluate(async () => {
     window.postMessage({ type: 'ink', x: 0.5, y: 0.5, z: 0.25 }, '*');
     await new Promise(r => setTimeout(r, 90));
