@@ -143,7 +143,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   console.log(`    · ${dict.locales.join(' / ')}, ${dict.keys} keys each`);
 
   const modeCards = await page.evaluate(() => [...document.querySelectorAll('.mode-card')].map(c => c.dataset.mode));
-  ok('11 个模式卡片渲染（含 IR 的 WebSerial 检测）', modeCards.length >= 10, modeCards.join(','));
+  ok('模态卡片全部渲染（不因 UA 能力而隐藏）', modeCards.length === 42 && !modeCards.includes(undefined),
+    `cards=${modeCards.length}`);
   const groups = await page.evaluate(() => [...document.querySelectorAll('.mode-group .cat-label')].map(e => e.textContent.trim()));
   ok('模式按「需要什么」分组', groups.length === 4, groups.join(' | '));
   ok('21+ 个模态卡片全部渲染', modeCards.length >= 24, String(modeCards.length));
@@ -920,6 +921,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('前端：42 个模态全部落在分组里', parity.all === parity.grouped && parity.missingGroup.length === 0,
     JSON.stringify(parity.missingGroup));
+  ok('前端：卡片数 == 注册表数量（不按能力隐藏）', parity.cards === parity.all,
+    `cards=${parity.cards} registry=${parity.all}`);
   ok('前端：帮助面板列出全部模态', parity.missingHelp.length === 0, JSON.stringify(parity.missingHelp));
 
   const srvApi = await page.evaluate(async () => {

@@ -260,6 +260,8 @@ html[lang^="zh"] .tagline{font-style:normal;letter-spacing:.18em;text-indent:.18
   box-shadow:0 6px 18px -10px rgba(20,20,19,.18);
 }
 .mode-card:focus-visible{outline:2px solid var(--clay);outline-offset:3px}
+.mode-card.unsupported{opacity:.62}
+.mode-card.unsupported .req{color:var(--clay-soft)}
 .mode-card.active{
   border-color:var(--clay);
   background:#fbf2ec;
@@ -1013,6 +1015,7 @@ const I18N = {
     modeGaze:'眼动 · 眼镜',
     modePhone:'手机 · 众光',
     modeIR:'IR · 追踪器',
+    reqMaybe:'此浏览器可能不支持',
     reqNone:'即开即用',
     reqCam:'摄像头',
     reqMic:'麦克风',
@@ -1378,6 +1381,7 @@ const I18N = {
     modeGaze:'眼動 · 眼鏡',
     modePhone:'手機 · 眾光',
     modeIR:'IR · 追蹤器',
+    reqMaybe:'此瀏覽器可能不支援',
     reqNone:'即開即用',
     reqCam:'攝像頭',
     reqMic:'麥克風',
@@ -1618,6 +1622,7 @@ const I18N = {
     modeGaze:'Gaze · Glasses',
     modePhone:'Phone · Many lights',
     modeIR:'IR tracker',
+    reqMaybe:'may not work here',
     reqNone:'ready to go',
     reqCam:'camera',
     reqMic:'microphone',
@@ -5142,15 +5147,21 @@ const MODE_GROUPS=[
   {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
   {label:'groupLocal', modes:['osc','bridge']},
 ];
-function modeAvailable(k){
-  if(!M[k]) return false;
-  if(k==='ir') return 'serial' in navigator;              // WebSerial = desktop Chromium only
+/* 永远展示：不支持就让用户进去看提示，而不是凭空消失 ——
+   否则每个浏览器看到的是不同的作品，这不算"全部展示"。 */
+function modeAvailable(k){ return !!M[k]; }
+/* 只影响卡片上的小字（"可能不支持"），不影响是否显示 */
+function modeSupported(k){
+  if(k==='ir') return 'serial' in navigator;
   if(k==='gamepad') return 'getGamepads' in navigator;
-  if(k==='midi') return 'requestMIDIAccess' in navigator;  // Chrome/Edge, not iOS
+  if(k==='midi') return 'requestMIDIAccess' in navigator;
   if(k==='speech') return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
   if(k==='hid') return 'hid' in navigator;
-  if(k==='ble'||k==='nfc') return 'bluetooth' in navigator || 'NDEFReader' in window;
+  if(k==='ble') return 'bluetooth' in navigator;
+  if(k==='nfc') return 'NDEFReader' in window;
   if(k==='osc'||k==='bridge') return 'EventSource' in window;
+  if(k==='light') return 'AmbientLightSensor' in window;
+  if(k==='pulse') return !!navigator.mediaDevices;
   return true;
 }
 function modeReqKey(k){
@@ -5181,7 +5192,10 @@ function rebuildModeCards(){
       c.dataset.mode=k;
       c.setAttribute('aria-pressed',k===S.mode?'true':'false');
       c.setAttribute('aria-label',`${t(m.nameKey)} — ${t(modeReqKey(k))}`);
-      c.innerHTML=`<span class="icon">${iconSvg(m.icon)}</span><span class="name">${t(m.nameKey)}</span><span class="req">${t(modeReqKey(k))}</span>`;
+      const supported=modeSupported(k);
+      if(!supported) c.classList.add('unsupported');
+      c.innerHTML=`<span class="icon">${iconSvg(m.icon)}</span><span class="name">${t(m.nameKey)}</span>`
+        +`<span class="req">${supported?t(modeReqKey(k)):t('reqMaybe')}</span>`;
       c.addEventListener('click',()=>{ showBar(true); wM(k); });
       grid.appendChild(c);
     }
