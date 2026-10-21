@@ -654,6 +654,15 @@ html[lang^="zh"] #calib .calib-title{letter-spacing:.14em}
 }
 
 /* ══════════════════════════════════════════════════════════
+   WALL MODE (?wall=1) — 投影墙：只留画面，所有 UI 消失，
+   再叠一层校准网格给 MadMapper / TD 对齐用（我们不做校准，只给参照）
+   ══════════════════════════════════════════════════════════ */
+body.wall #ui,body.wall #bar,body.wall .scene-nav,body.wall #first-hint,
+body.wall .credit,body.wall #roster,body.wall #gh,body.wall #glegend,
+body.wall .lang-switch{display:none !important}
+body.wall{cursor:none}
+
+/* ══════════════════════════════════════════════════════════
    MODE GROUPS — the start screen now explains *what a mode
    needs* before you commit: no device / just a camera /
    something extra you have to set up.
@@ -1703,7 +1712,7 @@ const S={
   transition:{active:false,from:null,start:0,duration:500},
   firstHintShown:false,firstMoveDistance:0,debug:false,
   gazePos:null,gazeSmooth:null,gazeReady:false,
-  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,
+  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,wall:false,grid:false,
   audio:{ctx:null,ana:null,buf:null,src:null,stream:null,level:0,pitch:0,on:false,onset:0,prevRms:0,hist:[]},
   motion:{prev:null,level:0,x:0,y:0,moving:false},
   keys:{x:0,y:0,vx:0,vy:0,pulse:0},
@@ -3865,6 +3874,30 @@ function processFrame(){
   // 击节点墨 — a pulsing beat ring (display owns the clock)
   if(S.beat.on){ const ph=((performance.now()-S.beat.t0)%S.beat.period)/S.beat.period; ctx.save(); ctx.strokeStyle='rgba(201,100,66,'+(0.25+(1-ph)*0.5)+')'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(DW/2,46,14+(1-ph)*26,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
 
+  // 校准网格：四角标 A/B/C/D、中心十字、1/3 与 2/3 分割线
+  if(S.grid){
+    const g=ctx;
+    g.save();
+    g.strokeStyle='rgba(217,119,87,.55)'; g.lineWidth=Math.max(1,2*S.dpr);
+    g.beginPath();
+    for(let i=1;i<=2;i++){ g.moveTo(DW*i/3,0); g.lineTo(DW*i/3,DH); g.moveTo(0,DH*i/3); g.lineTo(DW,DH*i/3); }
+    g.stroke();
+    g.strokeStyle='rgba(245,244,237,.85)'; g.lineWidth=Math.max(1,1.5*S.dpr);
+    g.strokeRect(2*S.dpr,2*S.dpr,DW-4*S.dpr,DH-4*S.dpr);
+    g.beginPath(); g.moveTo(DW/2-28*S.dpr,DH/2); g.lineTo(DW/2+28*S.dpr,DH/2);
+    g.moveTo(DW/2,DH/2-28*S.dpr); g.lineTo(DW/2,DH/2+28*S.dpr); g.stroke();
+    g.fillStyle='rgba(245,244,237,.92)';
+    g.font=`600 ${Math.round(28*S.dpr)}px "Noto Serif SC",serif`;
+    g.textAlign='left';  g.textBaseline='top';    g.fillText('A', 18*S.dpr, 14*S.dpr);
+    g.textAlign='right'; g.fillText('B', DW-18*S.dpr, 14*S.dpr);
+    g.textAlign='left';  g.textBaseline='bottom'; g.fillText('C', 18*S.dpr, DH-14*S.dpr);
+    g.textAlign='right'; g.fillText('D', DW-18*S.dpr, DH-14*S.dpr);
+    g.textAlign='center'; g.textBaseline='middle';
+    g.font=`500 ${Math.round(16*S.dpr)}px "Noto Serif SC",serif`;
+    g.fillText(`${Math.round(DW/S.dpr)}×${Math.round(DH/S.dpr)}  ${S.dpr.toFixed(2)}x`, DW/2, DH/2+52*S.dpr);
+    g.restore();
+  }
+
   if(S.transition.active){
     const elapsed=performance.now()-S.transition.start;
     const a=1-elapsed/S.transition.duration;
@@ -4409,7 +4442,8 @@ document.addEventListener('keydown',e=>{
     case'p':if(e.shiftKey&&S.mode==='phone'&&S.phone.room) showPhonePair(phoneUrl());break;
     case'i':togglePaint();break;
     case'o':S.paintFade=S.paintFade?0:0.01;flashHint(t(S.paintFade?'fxFadeOn':'fxFadeOff'));break;
-    case'g':S.glow=!S.glow;if(!S.glow&&glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);flashHint(t(S.glow?'fxGlowOn':'fxGlowOff'));break;
+    case'g':if(e.shiftKey&&S.wall){ S.grid=!S.grid; flashHint(S.grid?'grid on':'grid off',900); break; }
+      S.glow=!S.glow;if(!S.glow&&glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);flashHint(t(S.glow?'fxGlowOn':'fxGlowOff'));break;
     case's':savePNG();break;
     case'k':S.creature=!S.creature;flashHint(t(S.creature?'fxCreatureOn':'fxCreatureOff'));break;
     case'y':S.mirror=!S.mirror;flashHint(t(S.mirror?'fxMirrorOn':'fxMirrorOff'));break;
@@ -4544,7 +4578,9 @@ let DEEP_PLAY=false;
 function applyDeepLink(){
   try{
     const q=new URLSearchParams(location.search||'');
-    DEEP_PLAY = q.has('mode') || q.has('play');
+    if(q.get('wall')==='1'){ document.body.classList.add('wall'); S.wall=true; S.grid=(q.get('grid')!=='0'); }
+    if(q.get('grid')==='1'){ S.grid=true; }
+    DEEP_PLAY = q.has('mode') || q.has('play') || S.wall;
     const md=q.get('mode');
     if(md && M[md] && modeAvailable(md)) S.mode=md;
     else if(!md) S.mode=pickDefaultMode();      // phone → multi-touch, wall → attract, desk → pointer
