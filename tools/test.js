@@ -1025,6 +1025,14 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('口哨：音分偏差有符号，越界返回 null',
     Math.abs(notes.cents.cents) <= 25 && notes.bad === null && notes.hi === null, JSON.stringify(notes.cents));
 
+  /* ═══════════════ 4j. 审核补漏：四个模态缺"按名字"的断言 ═══════════════ */
+  group('4j · 审核补漏：hours / clip / inkpick / whistle 各自可进入');
+  for (const m of ['hours', 'clip', 'inkpick', 'whistle']) {
+    const st2 = await page.evaluate((mm) => { wM(mm); return { mode: S.mode, ex: M[mm].ex() }; }, m);
+    ok(`模态 ${m} 可进入并给出状态行`, st2.mode === m && typeof st2.ex === 'string', String(st2.ex).slice(0, 40));
+  }
+  await page.evaluate(() => { wM('mouse'); });
+
   /* ═══════════════ 4i. 前后端对齐 ═══════════════ */
   group('4i · 前后端对齐：每个模态都在 UI 里，后端 API 齐全');
   const parity = await page.evaluate(() => {
