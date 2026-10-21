@@ -65,6 +65,17 @@ def main():
         say(any(abs(g.get("x", -1) - 0.9) < 1e-3 for g in got), "OSC /spot/x 单轴生效")
         say(any(g.get("scene") == 3 for g in got), "OSC /scene 生效")
 
+        print("\n后端 API（/health · /rooms · /state）")
+        def get(path):
+            with urllib.request.urlopen(f"{BASE}{path}", timeout=3) as r:
+                return json.loads(r.read())
+        h = get("/health")
+        say(h.get("ok") is True and "rooms" in h and "osc_port" in h, "/health 返回服务状态",
+            f"osc={h.get('osc_port')} dmx={h.get('dmx')}")
+        say(get("/rooms").get("rooms") == {} or isinstance(get("/rooms").get("rooms"), dict),
+            "/rooms 返回房间表")
+        say(get("/state?room=ext-state").get("state") is None, "/state 在无数据时返回 null（不报错）")
+
         print("\nArt-Net DMX（灯光控台）")
         dmx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         dmx.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

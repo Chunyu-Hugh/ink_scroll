@@ -50,6 +50,7 @@ HEARTBEAT = 15.0              # seconds; keeps proxies from closing idle SSE str
 
 _lock = threading.Lock()
 _rooms: dict[str, set[queue.Queue]] = {}
+_last: dict[str, dict] = {}          # room → 最后一条 JSON（给 /state 用）
 
 
 def subscribe(room: str) -> queue.Queue:
@@ -204,9 +205,33 @@ class Handler(SimpleHTTPRequestHandler):
         u = urlparse(self.path)
         if u.path == "/events":
             return self.serve_events(parse_qs(u.query).get("room", [""])[0])
+        if u.path == "/health":
+            with _lock:
+                rooms = {k: len(v) for k, v in _rooms.items()}
+            return self.json_out({"ok": True, "rooms": rooms, "clients": sum(rooms.values()),
+                                  "osc_port": OSC_PORT, "dmx": bool(DMX_HOST), "dmx_host": DMX_HOST,
+                                  "universe": DMX_UNIVERSE, "max_body": MAX_BODY})
+        if u.path == "/rooms":
+            with _lock:
+                rooms = {k: len(v) for k, v in _rooms.items()}
+            return self.json_out({"rooms": rooms})
+        if u.path == "/state":
+            room = parse_qs(u.query).get("room", ["ext-state"])[0]
+            with _lock:
+                snap = _last.get(room)
+            return self.json_out({"room": room, "state": snap})
         return super().do_GET()
 
     # ── POST /send ────────────────────────────────────────────────────────
+    def json_out(self, obj, code=HTTPStatus.OK):
+        out = json.dumps(obj, ensure_ascii=False).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(out)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(out)
+
     def do_POST(self):
         u = urlparse(self.path)
         if u.path == "/osc":                     # local script / TouchDesigner bridge
@@ -228,6 +253,11 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception:
             self.send_error(HTTPStatus.BAD_REQUEST, "invalid json")
             return
+        try:
+            with _lock:
+                _last[room] = json.loads(body)
+        except Exception:
+            pass
         count = broadcast(room, b"data: " + body.replace(b"\n", b" ") + b"\n\n")
         if room == "ext-state":
             try:
@@ -282,6 +312,7 @@ def main():
     print("  display   http://localhost:%d" % port)
     print("  phone     http://<your-lan-ip>:%d/phone.html  (scan the QR on screen)" % port)
     print("  relay     /events  /send  /osc   (SSE, rooms)")
+    print("  api       /health  /rooms  /state?room=ext-state")
     if DMX_HOST:
         print("  artnet    %s:%d  universe %d  (ch1 亮度 / ch2 x / ch3 y / ch4 半径)" % (DMX_HOST, DMX_PORT, DMX_UNIVERSE))
     threading.Thread(target=_osc_loop, daemon=True).start()

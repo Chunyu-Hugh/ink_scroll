@@ -884,6 +884,29 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('口哨：音分偏差有符号，越界返回 null',
     Math.abs(notes.cents.cents) <= 25 && notes.bad === null && notes.hi === null, JSON.stringify(notes.cents));
 
+  /* ═══════════════ 4i. 前后端对齐 ═══════════════ */
+  group('4i · 前后端对齐：每个模态都在 UI 里，后端 API 齐全');
+  const parity = await page.evaluate(() => {
+    const all = Object.keys(M);
+    const groups = (window.MODE_GROUPS || []).flatMap(g => g.modes);
+    const cards = [...document.querySelectorAll('.mode-card')].map(c => c.dataset.mode);
+    const help = [...document.querySelectorAll('#help-modes .help-mode')].map(b => b.dataset.mode);
+    return { all: all.length, grouped: groups.length, missingGroup: all.filter(k => !groups.includes(k)),
+             missingHelp: all.filter(k => !help.includes(k)), cards: cards.length };
+  });
+  ok('前端：42 个模态全部落在分组里', parity.all === parity.grouped && parity.missingGroup.length === 0,
+    JSON.stringify(parity.missingGroup));
+  ok('前端：帮助面板列出全部模态', parity.missingHelp.length === 0, JSON.stringify(parity.missingHelp));
+
+  const srvApi = await page.evaluate(async () => {
+    const j = async (p) => (await fetch(p)).json();
+    const h = await j('/health'), rooms = await j('/rooms'), st = await j('/state?room=ext-state');
+    return { ok: h.ok, hasRooms: !!h.rooms, osc: h.osc_port, dmx: h.dmx,
+             roomsType: typeof rooms.rooms, stateNull: st.state === null || typeof st.state === 'object' };
+  });
+  ok('后端：/health 返回状态（含 osc/dmx 配置）', srvApi.ok === true && srvApi.osc > 0 && typeof srvApi.dmx === 'boolean', JSON.stringify(srvApi));
+  ok('后端：/rooms 与 /state 可用', srvApi.roomsType === 'object' && srvApi.stateNull === true, JSON.stringify(srvApi));
+
   /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
   group('4f · 契约升级：id / presence / state');
   const ctr = await page.evaluate(() => {
