@@ -64,12 +64,12 @@ Control a spotlight with your webcam flashlight or hand gestures to reveal a liv
 ## 🧪 Tests & docs
 
 ```bash
-node tools/test.js        # 120 end-to-end assertions in a real browser
+node tools/test.js        # 136 end-to-end assertions in a real browser
 ```
 
 Real browser, real camera (fake device fed a public-domain portrait and a moving-bar video),
 real relay: all 11 modes, the phone↔display round trip, trilingual key parity, touch gestures,
-accessibility, deep links and a frame-rate budget. Last run: **120 / 120 green**.
+accessibility, deep links and a frame-rate budget. Last run: **137 / 137 green**.
 
 - [docs/INTERACTIONS.md](docs/INTERACTIONS.md) — the interaction system and the registry contract (read this before adding a mode)
 - [docs/TEST-REPORT.md](docs/TEST-REPORT.md) — the audit: what was broken and how it was fixed

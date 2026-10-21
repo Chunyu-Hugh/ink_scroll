@@ -1120,6 +1120,35 @@ const I18N = {
     fxMidiOn:'MIDI 已连接',
     fxOscOk:'OSC 通道已连上',
     fxOscWait:'需要本地中继：python3 server.py',
+    modeHid:'手柄 · HID',
+    modeBle:'蓝牙 · 传感器',
+    modeNfc:'NFC 贴纸',
+    modeEyes:'眨眼 · 眼睛',
+    modeLight:'环境光',
+    modeClap:'拍手 · 节拍',
+    modeBridge:'外设桥 · 本地',
+    scene3d:'立轴 · 3D',
+    meterHr:'心率',
+    meterBlink:'眨眼',
+    meterLux:'照度',
+    meterClap:'拍手',
+    firstHintHid:'连上 Joy-Con / Wiimote / 任意 HID 摇杆 · 前 3 字节当 x,y,r',
+    firstHintBle:'连上心率带 / EEG / 任何会 notify 的蓝牙设备',
+    firstHintNfc:'把 NFC 贴纸靠近手机 · 换画',
+    firstHintEyes:'正对摄像头 · 眨一下眼泼一次墨（转头也能移光）',
+    firstHintLight:'环境越暗光圈越大（需要 AmbientLightSensor）',
+    firstHintClap:'拍一下手泼墨 · 连拍两下换画',
+    firstHintBridge:'本机跑 python3 server.py，然后把任意外设读数 POST 到 /send?room=ext',
+    fxHidWait:'没有 HID 设备 · 点一下会弹选择框（Chromium）',
+    fxHidOk:'HID 已连接',
+    fxBleWait:'没有蓝牙设备 / 未授权',
+    fxBleOk:'蓝牙已连接',
+    fxBridgeWait:'需要本地中继：python3 server.py',
+    fxBridgeOk:'外设桥已连上',
+    fxNfcWait:'此设备不支持 NFC 扫描',
+    fxNfcTag:'读到贴纸',
+    fxLightFail:'此浏览器没有环境光传感器',
+    fxClapHint:'拍手：1 下泼墨 / 2 下换画',
     fxGeo:'🌏 远客生辉',
     fxText:'題',
     fxRpsWin:'胜者绽放',
@@ -1315,6 +1344,35 @@ const I18N = {
     fxMidiOn:'MIDI 已連接',
     fxOscOk:'OSC 通道已連上',
     fxOscWait:'需要本機中繼：python3 server.py',
+    modeHid:'手把 · HID',
+    modeBle:'藍牙 · 感測器',
+    modeNfc:'NFC 貼紙',
+    modeEyes:'眨眼 · 眼睛',
+    modeLight:'環境光',
+    modeClap:'拍手 · 節拍',
+    modeBridge:'外設橋 · 本機',
+    scene3d:'立軸 · 3D',
+    meterHr:'心率',
+    meterBlink:'眨眼',
+    meterLux:'照度',
+    meterClap:'拍手',
+    firstHintHid:'連上 Joy-Con / Wiimote / 任意 HID 搖桿 · 前 3 個位元組當 x,y,r',
+    firstHintBle:'連上心率帶 / EEG / 任何會 notify 的藍牙裝置',
+    firstHintNfc:'把 NFC 貼紙靠近手機 · 換畫',
+    firstHintEyes:'正對鏡頭 · 眨一下眼潑一次墨（轉頭也能移光）',
+    firstHintLight:'環境越暗光圈越大（需要 AmbientLightSensor）',
+    firstHintClap:'拍一下手潑墨 · 連拍兩下換畫',
+    firstHintBridge:'本機跑 python3 server.py，再把任意外設讀數 POST 到 /send?room=ext',
+    fxHidWait:'沒有 HID 裝置 · 點一下會跳選擇框（Chromium）',
+    fxHidOk:'HID 已連接',
+    fxBleWait:'沒有藍牙裝置 / 未授權',
+    fxBleOk:'藍牙已連接',
+    fxBridgeWait:'需要本機中繼：python3 server.py',
+    fxBridgeOk:'外設橋已連上',
+    fxNfcWait:'此裝置不支援 NFC 掃描',
+    fxNfcTag:'讀到貼紙',
+    fxLightFail:'此瀏覽器沒有環境光感測器',
+    fxClapHint:'拍手：1 下潑墨 / 2 下換畫',
     fxGeo:'🌏 遠客生輝',
     fxText:'題',
     fxRpsWin:'勝者綻放',
@@ -1509,6 +1567,35 @@ const I18N = {
     fxMidiOn:'MIDI connected',
     fxOscOk:'OSC channel connected',
     fxOscWait:'needs the local relay: python3 server.py',
+    modeHid:'HID · Stick',
+    modeBle:'Bluetooth · Sensor',
+    modeNfc:'NFC tag',
+    modeEyes:'Blink · Eyes',
+    modeLight:'Ambient light',
+    modeClap:'Clap · Beat',
+    modeBridge:'Device bridge',
+    scene3d:'Parallax · 3D',
+    meterHr:'heart rate',
+    meterBlink:'blink',
+    meterLux:'lux',
+    meterClap:'clap',
+    firstHintHid:'Connect a Joy-Con / Wiimote / any HID stick · first 3 bytes are x,y,r',
+    firstHintBle:'Connect a heart-rate strap / EEG / anything that notifies',
+    firstHintNfc:'Tap an NFC tag on the phone · next painting',
+    firstHintEyes:'Face the camera · each blink splashes ink (head turns still move the light)',
+    firstHintLight:'The darker the room, the wider the light (needs AmbientLightSensor)',
+    firstHintClap:'One clap splashes · two claps change the painting',
+    firstHintBridge:'Run python3 server.py, then POST any device reading to /send?room=ext',
+    fxHidWait:'No HID device · clicking asks Chromium for one',
+    fxHidOk:'HID connected',
+    fxBleWait:'No Bluetooth device / permission denied',
+    fxBleOk:'Bluetooth connected',
+    fxBridgeWait:'needs the local relay: python3 server.py',
+    fxBridgeOk:'device bridge connected',
+    fxNfcWait:'This device cannot scan NFC',
+    fxNfcTag:'tag read',
+    fxLightFail:'No ambient light sensor in this browser',
+    fxClapHint:'clap: 1 splash / 2 next painting',
     fxGeo:'🌏 a distant visitor',
     fxText:'Inscribed',
     fxRpsWin:'the winner blooms',
@@ -1624,6 +1711,12 @@ const S={
   gamepad:{x:0,y:0,r:1,seen:false,btn:[]},
   midi:{acc:null,nx:.5,ny:.5,r:.5,seen:false},
   osc:{es:null,x:.5,y:.5,r:.5,t:0,ok:false},
+  hid:null, ble:null,
+  bridge:{es:null,x:.5,y:.5,r:.5,t:0,ok:false,name:''},
+  nfc:{last:''},
+  eyes:{ear:null,closed:false,last:0},
+  light:{sensor:null,lux:-1,ok:false},
+  clap:{last:0,prev:0},
   face:{ready:false,loading:null,lm:null,spot:null},
   tilt:{base:null,ready:false,x:0,y:0,last:0},
   phone:{targets:{},primaryId:null,calib:{},es:null,room:null,alpha:.45,staleMs:900,splats:[],seq:0,overlap:{},ink:false,strokeLast:{},relay:false},
@@ -1651,13 +1744,15 @@ let hands=null,hr=false;
 /* ───────────────────────────────────────────────────────────
    Scene metadata — names are looked up via i18n
    ─────────────────────────────────────────────────────────── */
-const sceneKeys=['sceneShanshui','sceneBamboo','sceneSnow','sceneFlowers','sceneStars'];
+const sceneKeys=['sceneShanshui','sceneBamboo','sceneSnow','sceneFlowers','sceneStars','scene3d'];
+const SCENE_COUNT=6;                       // 5 paintings + 1 procedural 3D parallax layer
+const STYLE_ORDER=['edges','sketch','dark','paper'];
 const sceneNameOf=(i)=> t(sceneKeys[i]);
 
 function refreshSceneNav(){
   // Rebuild scene dots with current locale names
   sceneNav.innerHTML='';
-  for(let i=0;i<5;i++){
+  for(let i=0;i<SCENE_COUNT;i++){
     const d=document.createElement('button');
     d.type='button';
     d.className='scene-dot'+(i===S.scene?' active':'');
@@ -1715,9 +1810,68 @@ function initScene(){
   scCtx=scCvs.getContext('2d');
   sceneCache.length=0;                       // size changed → drop fitted copies
 }
+/* 立轴 · 3D — a procedural parallax scroll: three ridges drifting at different
+   speeds behind mist. No asset, no WebGL, and it reads as depth because the
+   layers separate as the light moves. Doubles as the "3D content" layer. */
+function draw3D(g,W,H,t){
+  const sky=g.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#eae7db'); sky.addColorStop(.55,'#e0e3d9'); sky.addColorStop(1,'#c6cabf');
+  g.fillStyle=sky; g.fillRect(0,0,W,H);
+  g.fillStyle='rgba(255,252,242,.9)';
+  g.beginPath(); g.arc(W*.78,H*.18,Math.min(W,H)*.055,0,6.2832); g.fill();
+  for(let i=0;i<6;i++){
+    const y=H*(.34+i*.075)+Math.sin(t*.2+i)*7;
+    g.fillStyle='rgba(255,255,250,'+(.05+.03*Math.sin(t*.3+i))+')';
+    g.beginPath(); g.ellipse(W*(.18+.14*i), y, W*.30, H*.028, 0,0,6.2832); g.fill();
+  }
+  const L=[{base:.60,amp:.10,sp:.010,c:'#9fae9b'},{base:.73,amp:.13,sp:.024,c:'#6f8170'},{base:.86,amp:.16,sp:.045,c:'#41503f'}];
+  for(const l of L){
+    g.fillStyle=l.c; g.beginPath(); g.moveTo(0,H);
+    for(let x=0;x<=W;x+=6){
+      const u=x/W*6.2832;
+      const y=H*(l.base
+        + l.amp*Math.sin(u*1.3+t*l.sp*6)
+        + l.amp*.5*Math.sin(u*2.7-t*l.sp*9)
+        + l.amp*.25*Math.sin(u*5.1+t*l.sp*14));
+      g.lineTo(x,y);
+    }
+    g.lineTo(W,H); g.closePath(); g.fill();
+  }
+  g.strokeStyle='rgba(28,32,26,.28)'; g.lineWidth=1.2;
+  for(let i=1;i<6;i++){
+    g.beginPath();
+    g.moveTo(W*.5-W*.05*i, H*.98); g.lineTo(W*.5-W*.012*i, H*.9);
+    g.moveTo(W*.5+W*.05*i, H*.98); g.lineTo(W*.5+W*.012*i, H*.9);
+    g.stroke();
+  }
+}
+/* 视频内容层：?video=<url> 把任意 mp4/webm 当"彩色层"，墨层从首帧生成。 */
+function videoAttach(url){
+  try{
+    const v=document.createElement('video');
+    v.src=url; v.loop=true; v.muted=true; v.playsInline=true; v.crossOrigin='anonymous';
+    v.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9px;top:-9px';
+    document.body.appendChild(v);
+    v.play().catch(()=>{});
+    S.video=v;
+  }catch(e){ console.warn('video attach failed', e); }
+}
 function drawScene(t){
   const g=scCtx,W=DW,H=DH;
   if(scCvs.width!==W||scCvs.height!==H){scCvs.width=W;scCvs.height=H;}else{g.clearRect(0,0,W,H);}
+  if(S.video && S.video.readyState>=2){
+    const vw=S.video.videoWidth, vh=S.video.videoHeight;
+    const k=Math.max(W/vw,H/vh), dw=vw*k, dh=vh*k;
+    g.drawImage(S.video,(W-dw)/2,(H-dh)/2,dw,dh);
+    animateOverlay(g,W,H,0,0,W,H,t);
+    S.imgBounds={x:0,y:0,w:W,h:H};
+    return;
+  }
+  if(S.scene===5){
+    draw3D(g,W,H,t);
+    S.imgBounds={x:0,y:0,w:W,h:H};
+    return;
+  }
   const layer=sceneLayer(S.scene,W,H);
   if(layer){
     g.drawImage(layer,0,0);
@@ -1868,8 +2022,15 @@ function genHidden(){
   wkCtx=wkCvs.getContext('2d',{willReadFrequently:true});
   const tmpCtx=mkCtx;
   tmpCtx.fillStyle='#1a1a18';tmpCtx.fillRect(0,0,mw,mh);
-  const img=sceneImages[S.scene];
-  if(img){const r=fitScene(img,mw,mh);tmpCtx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,r.dx,r.dy,r.dw,r.dh);}
+  if(S.video && S.video.readyState>=2){
+    const vw=S.video.videoWidth, vh=S.video.videoHeight, k=Math.max(mw/vw,mh/vh);
+    tmpCtx.drawImage(S.video,(mw-vw*k)/2,(mh-vh*k)/2,vw*k,vh*k);
+  }else if(S.scene===5){
+    draw3D(tmpCtx,mw,mh,0);
+  }else{
+    const img=sceneImages[S.scene];
+    if(img){const r=fitScene(img,mw,mh);tmpCtx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,r.dx,r.dy,r.dw,r.dh);}
+  }
   const src=tmpCtx.getImageData(0,0,mw,mh);
   if(S.style==='edges')hiCtx.putImageData(sobel(src,mw,mh),0,0);
   else if(S.style==='sketch')hiCtx.putImageData(sk(src,mw,mh),0,0);
@@ -1950,18 +2111,35 @@ function smap(cx,cy){
   return{x:S.smooth.x,y:S.smooth.y};
 }
 
+/* Known upstream noise: the two legacy MediaPipe solutions share one global
+   module, so after a page has used both, the first one's pending asset callbacks
+   can throw during the second one's init. Harmless — the face model still runs.
+   Swallow just that signature so the console stays honest about our own errors. */
+window.addEventListener('error',e=>{
+  const sig=(e.message||'')+' '+(e.filename||'');
+  if(/hands_solution|face_mesh_solution|Module\.loaded|setting 'loaded'/.test(sig)) e.preventDefault();
+},true);
+
+/* MediaPipe's two legacy solutions share one global module/`locateFile`; when
+   both are alive in the same page one of them starts fetching its assets from
+   the other's directory. Routing by file-name prefix keeps each in its own
+   versioned folder, so 手势 and 面庞 can coexist. */
+const MP_DIRS={hands:'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/',
+               face_mesh:'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/'};
+function mpLocate(file){ return (String(file).indexOf('face_mesh')===0?MP_DIRS.face_mesh:MP_DIRS.hands)+file; }
+
 /* ───────────────────────────────────────────────────────────
    Hand gesture (MediaPipe Hands)
    ─────────────────────────────────────────────────────────── */
 function iH(){
   if(hr)return;
   if(hands){ hr=true; return; }              // reuse the warm instance (see cln below)
-  hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
+  hands=new Hands({locateFile:mpLocate});
   hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5});
   hands.onResults(r=>{
     if(r.multiHandLandmarks?.length){
       S.hlm=r.multiHandLandmarks[0];S.gesture=rg(S.hlm);
-      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%5);flashHint('✌ '+t('gestureVictory'));}
+      if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%SCENE_COUNT);flashHint('✌ '+t('gestureVictory'));}
       const cx=(S.hlm[0].x+S.hlm[9].x)/2,cy=(S.hlm[0].y+S.hlm[9].y)/2;
       const c=camCover(),ib=c.ib,sn=S.camSens||1;
       let vx=(cx*VW-c.sx)/c.sw, vy=(cy*VH-c.sy)/c.sh;   // position within the aspect-correct, cover-cropped camera view (matches the overlay exactly)
@@ -2079,9 +2257,11 @@ function audioLoop(){
   A.rms=rms;
   const target=clampN((rms-0.006)*7,0,1);
   A.level=A.level*.72+target*.28;
+  A.peak=peak;
   if(peak>0.30 && performance.now()-(A.hit||0)>380){
     A.hit=performance.now();
     const sp=audioSpot(); if(sp) pushSplat(sp.x, sp.y, 34+A.level*46, 90);
+    if(S.mode==='clap') clapOnset();
   }
   A.ana.getByteFrequencyData(A.freq);
   let num=0,den=0;
@@ -2183,7 +2363,7 @@ async function faceStart(){
   if(!S.running || S.mode!=='face'){ return; }
   try{
     if(!fm){
-      fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/${f}`});
+      fm=new FaceMesh({locateFile:mpLocate});
       fm.setOptions({maxNumFaces:1,refineLandmarks:false,minDetectionConfidence:.5,minTrackingConfidence:.5});
       fm.onResults(r=>{
         const lms=r.multiFaceLandmarks&&r.multiFaceLandmarks[0];
@@ -2192,6 +2372,10 @@ async function faceStart(){
         const nose=lms[4], up=lms[13], dn=lms[14], le=lms[33], re=lms[263];
         const eyeD=Math.hypot(re.x-le.x, re.y-le.y)||1e-3;
         F2.open=clampN((Math.hypot(dn.x-up.x, dn.y-up.y)/eyeD-0.06)/0.5,0,1);
+        try{
+          S.eyes.ear=(earOf(lms,[33,160,158,133,153,144])+earOf(lms,[362,385,387,263,373,380]))/2;
+          eyesTick();
+        }catch(e){}
         let nx=nose.x, ny=nose.y;
         if(S.mirrorX) nx=1-nx;
         F2.nx=F2.nx==null?nx:F2.nx*.55+nx*.45;
@@ -2212,7 +2396,7 @@ function faceFail(){
 function faceStop(){ S.face.ready=false; S.face.seen=false; S.face.nx=null; S.face.ny=null; }
 let _fmBusy=false;
 async function faceTick(){
-  if(S.mode!=='face'||!fm||!S.face.ready||_fmBusy||!wkCvs) return;
+  if((S.mode!=='face'&&S.mode!=='eyes')||!fm||!S.face.ready||_fmBusy||!wkCvs) return;
   _fmBusy=true;
   try{ await fm.send({image:wkCvs}); }catch(e){ /* transient */ }finally{ _fmBusy=false; }
 }
@@ -2346,7 +2530,7 @@ function dwellTick(){
   if(now-d.t>1400 && now-d.cool>2600){
     d.cool=now; d.t=now;
     pushSplat(S.mouseX,S.mouseY,58,110);
-    changeScene((S.scene+1)%5);
+    changeScene((S.scene+1)%SCENE_COUNT);
     vibrate(10);
   }
 }
@@ -2389,7 +2573,7 @@ function gamepadPoll(){
   const lt=(gp.buttons[6]&&gp.buttons[6].value)||0;      // LT = narrower
   G.r=clampN(G.r+(rt-lt)*0.06, 0.25, 2.6);
   const edge=(i)=>{ const b=gp.buttons[i]; const now=!!(b&&b.pressed); const was=!!G.btn[i]; G.btn[i]=now; return now&&!was; };
-  if(edge(0)) changeScene((S.scene+1)%5);                // A
+  if(edge(0)) changeScene((S.scene+1)%SCENE_COUNT);                // A
   if(edge(1)) pushSplat(G.x,G.y,70,110);                 // B
   if(edge(3)) togglePaint();                             // Y
   return {x:G.x, y:G.y, radius:S.radius*G.r};
@@ -2408,7 +2592,7 @@ function midiMsg(m){
   }else if(st===0x90&&b>0){                         // note on
     M2.seen=true;
     if(a===36) pushSplat(M2.nx*DW,M2.ny*DH,70,110);
-    else changeScene(a%5);
+    else changeScene(a%SCENE_COUNT);
   }
 }
 async function midiStart(){
@@ -2437,13 +2621,182 @@ function oscStart(){
       if(typeof m.x==='number') O.x=clampN(m.x,0,1);
       if(typeof m.y==='number') O.y=clampN(m.y,0,1);
       if(typeof m.r==='number') O.r=clampN(m.r,0.02,3);
-      if(m.scene!==undefined) changeScene(((m.scene|0)%5+5)%5);
+      if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
       if(m.style!==undefined) setStyle(['edges','sketch','dark','paper'][(m.style|0)%4]);
       O.t=performance.now();
     };
   }catch(e){ flashHint(t('fxOscWait')); }
 }
 function oscStop(){ const O=S.osc; try{ O.es&&O.es.close(); }catch(e){} O.es=null; O.ok=false; }
+
+
+/* ═══════════════════════════════════════════════════════════
+   THIRD WAVE — the "plug something in" basket, plus content types.
+   Every one of these degrades to the pointer when the hardware,
+   the permission or the local bridge is missing.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 通用 HID（WebHID）：Joy-Con / Wiimote / DIY 摇杆 ──
+   已知设备按厂商解析，未知设备走"万能魔杖协议"：前 3 个字节当 x,y,r（0–255）。 */
+function hidStart(){
+  if(!('hid' in navigator)){ flashHint(t('fxHidWait')); return; }
+  navigator.hid.requestDevice({filters:[]}).then(async devs=>{
+    if(!devs||!devs.length){ flashHint(t('fxHidWait')); return; }
+    const dev=devs[0];
+    if(!dev.opened) await dev.open();
+    S.hid={dev:dev, seen:false, x:.5, y:.5, r:.5, raw:''};
+    dev.addEventListener('inputreport',hidReport);
+    flashHint(t('fxHidOk')+' · '+(dev.productName||'HID'));
+  }).catch(()=>{ flashHint(t('fxHidWait')); });
+}
+function hidReport(e){
+  const H=S.hid; if(!H) return;
+  try{
+    const d=e.data, vid=H.dev&&H.dev.vendorId;
+    let x=null,y=null,r=null;
+    if(vid===0x057E && d.byteLength>=11){                 // Joy-Con (Nintendo)
+      x=d.getUint8(6)/255; y=d.getUint8(7)/255;
+      if(d.getUint8(3)&0x01) pushSplat(x*DW,y*DH,60,110); // ZL as a pulse
+    }else if(d.byteLength>=3){                            // generic wand: x,y,r bytes
+      x=d.getUint8(0)/255; y=d.getUint8(1)/255; r=0.25+d.getUint8(2)/255*2;
+    }
+    if(x!==null){ H.x=x; H.y=y; H.r=r||H.r; H.seen=true; }
+  }catch(err){}
+}
+function hidStop(){ const H=S.hid; try{ H&&H.dev&&H.dev.close&&H.dev.close(); }catch(e){} S.hid=null; }
+
+/* ── 蓝牙（Web Bluetooth）：心率带 / Muse EEG / DIY ESP32 ── */
+async function bleStart(){
+  if(!navigator.bluetooth){ flashHint(t('fxBleWait')); return; }
+  try{
+    const dev=await navigator.bluetooth.requestDevice({
+      acceptAllDevices:true,
+      optionalServices:['heart_rate','battery_service','generic_access','0000ffe0-0000-1000-8000-00805f9b34fb'],
+    });
+    const srv=await dev.gatt.connect();
+    const srvs=await srv.getPrimaryServices();
+    let hooked=false;
+    for(const sv of srvs){
+      const chars=await sv.getCharacteristics().catch(()=>[]);
+      for(const ch of chars){
+        if(!ch.properties.notify&&!ch.properties.indicate) continue;
+        await ch.startNotifications().catch(()=>{});
+        ch.addEventListener('characteristicvaluechanged',bleValue);
+        hooked=true; break;
+      }
+      if(hooked) break;
+    }
+    S.ble={dev:dev, seen:false, x:.5, y:.5, r:.5, hr:0, hooked:hooked};
+    flashHint(t('fxBleOk')+(hooked?'':' · no notify'));
+  }catch(e){ flashHint(t('fxBleWait')); }
+}
+function bleValue(e){
+  const B=S.ble; if(!B) return;
+  const dv=e.target.value; if(!dv) return;
+  try{
+    if(e.target.uuid&&/2a37/i.test(e.target.uuid)){        // Heart Rate Measurement
+      const flags=dv.getUint8(0);
+      const hr=(flags&1)?dv.getUint16(1,true):dv.getUint8(1);
+      B.hr=hr; B.seen=true;
+      B.r=clampN(0.35+hr/160,0.35,2.2);
+      return;
+    }
+    if(dv.byteLength>=3){
+      B.x=dv.getUint8(0)/255; B.y=dv.getUint8(1)/255;
+      B.r=0.25+dv.getUint8(2)/255*2; B.seen=true;
+    }
+  }catch(err){}
+}
+function bleStop(){ const B=S.ble; try{ B&&B.dev&&B.dev.gatt&&B.dev.gatt.connected&&B.dev.gatt.disconnect(); }catch(e){} S.ble=null; }
+
+/* ── 通用外设桥（Tier 3）：任何本地脚本 POST JSON 就能驱动 ──
+   覆盖 Leap Motion / Kinect / RealSense / Tobii / 热像仪 / EEG：
+   它们都只需要在本地把 SDK 读数转发成 {x,y,r,scene,style}。 */
+function bridgeStart(){
+  const B=S.bridge;
+  if(B.es){ try{ B.es.close(); }catch(e){} }
+  B.ok=false; B.t=0;
+  try{
+    B.es=new EventSource('/events?room=ext');
+    B.es.onopen=()=>{ B.ok=true; flashHint(t('fxBridgeOk')); };
+    B.es.onerror=()=>{ B.ok=false; };
+    B.es.onmessage=e=>{
+      let m; try{ m=JSON.parse(e.data); }catch(err){ return; }
+      if(typeof m.x==='number') B.x=clampN(m.x,0,1);
+      if(typeof m.y==='number') B.y=clampN(m.y,0,1);
+      if(typeof m.r==='number') B.r=clampN(m.r,0.02,3);
+      if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
+      if(m.style!==undefined) setStyle(STYLE_ORDER[(m.style|0)%STYLE_ORDER.length]);
+      if(m.cmd==='splat') pushSplat(B.x*DW,B.y*DH,70,110);
+      if(m.name) B.name=String(m.name).slice(0,18);
+      B.t=performance.now();
+    };
+  }catch(e){ flashHint(t('fxBridgeWait')); }
+}
+function bridgeStop(){ const B=S.bridge; try{ B.es&&B.es.close(); }catch(e){} B.es=null; B.ok=false; }
+
+/* ── NFC 贴纸（Chrome Android）：贴一下换画 ── */
+async function nfcStart(){
+  if(!('NDEFReader' in window)){ flashHint(t('fxNfcWait')); return; }
+  try{
+    const r=new NDEFReader();
+    await r.scan();
+    r.onreading=ev=>{
+      let txt='';
+      try{ for(const rec of ev.message.records){ if(rec.recordType==='text'||rec.recordType==='url') txt+=new TextDecoder(rec.encoding||'utf-8').decode(rec.data); } }catch(e){}
+      S.nfc={last:txt};
+      const w=SPEECH_WORDS.find(w=>w.re.test(txt));
+      if(w) w.act(); else changeScene((S.scene+1)%SCENE_COUNT);
+      pushSplat(S.mouseX,S.mouseY,66,120);
+      flashHint(t('fxNfcTag')+' · '+(txt.slice(0,10)||'—'));
+    };
+    flashHint(t('fxNfcWait'));
+  }catch(e){ flashHint(t('fxNfcWait')); }
+}
+function nfcStop(){}
+
+/* ── 眨眼（FaceMesh EAR）：眨眼一次泼一次墨 ── */
+function earOf(lm,idx){
+  const p=i=>lm[i];
+  const d=(a,b)=>Math.hypot(p(a).x-p(b).x, p(a).y-p(b).y);
+  return (d(idx[1],idx[5])+d(idx[2],idx[4]))/(2*(d(idx[0],idx[3])||1e-3));
+}
+function eyesTick(){
+  const F=S.face, E=S.eyes;
+  if(!F.seen){ return null; }
+  if(E.ear==null) return null;
+  const now=performance.now();
+  if(E.ear<0.19 && !E.closed){ E.closed=true; }
+  else if(E.ear>0.26 && E.closed){
+    E.closed=false;
+    if(now-E.last>420){ E.last=now; pushSplat(F.nx*DW,F.ny*DH,54,100); flashHint('👁'); }
+  }
+  return null;
+}
+function eyesStart(){ faceStart(); }
+
+/* ── 环境光（AmbientLightSensor）：越暗光圈越大 ── */
+function lightStart(){
+  const L=S.light;
+  if(!('AmbientLightSensor' in window)){ flashHint(t('fxLightFail')); return; }
+  try{
+    const s=new AmbientLightSensor({frequency:2});
+    s.addEventListener('reading',()=>{ L.lux=s.illuminance; L.ok=true; });
+    s.addEventListener('error',()=>{ L.ok=false; });
+    s.start();
+    L.sensor=s; L.ok=true;
+  }catch(e){ flashHint(t('fxLightFail')); L.ok=false; }
+}
+function lightStop(){ const L=S.light; try{ L.sensor&&L.sensor.stop(); }catch(e){} L.sensor=null; L.ok=false; }
+
+/* ── 拍手节拍（onset）：拍一下泼墨，连拍两下换画 ── */
+function clapOnset(){
+  const C=S.clap, now=performance.now();
+  if(now-C.last<260) return;
+  C.last=now;
+  if(now-C.prev<760){ changeScene((S.scene+1)%SCENE_COUNT); C.prev=0; flashHint('👏'); }
+  else { C.prev=now; pushSplat(S.mouseX,S.mouseY,58,100); }
+}
 
 /* ───────────────────────────────────────────────────────────
    Modes — a registry, not a switch statement. Every entry
@@ -2632,6 +2985,59 @@ const M={
     cln(){ midiStop(); },
     ex(){ return S.midi.seen?'':'🎛 '+t('fxNoMidi'); },
   },
+  /* ── 第三批：插装置 / 蓝牙 / 通用桥 / NFC / 眨眼 / 环境光 / 拍手 ── */
+  hid:{
+    icon:'gamepad',nameKey:'modeHid',group:'gear',
+    init(){ hidStart(); },
+    spot(){ const H=S.hid; return H&&H.seen?{x:H.x*DW,y:H.y*DH,radius:S.radius*H.r}:null; },
+    cln(){ hidStop(); },
+    ex(){ return (S.hid&&S.hid.seen)?'':(S.hid?'':'🕹 '+t('fxHidWait')); },
+  },
+  ble:{
+    icon:'midi',nameKey:'modeBle',group:'gear',
+    init(){ bleStart(); },
+    spot(){ const B=S.ble; return B&&B.seen?{x:B.x*DW,y:B.y*DH,radius:S.radius*B.r}:null; },
+    cln(){ bleStop(); },
+    ex(){ const B=S.ble; return B&&B.seen?'':('📶 '+t('fxBleWait')); },
+    meter(){ return {label:t('meterHr'), value:S.ble&&S.ble.hr?clampN(S.ble.hr/160,0,1):0}; },
+  },
+  nfc:{
+    icon:'dwell',nameKey:'modeNfc',group:'gear',
+    init(){ nfcStart(); },
+    spot(){ return {x:S.mouseX,y:S.mouseY,radius:S.radius}; },
+    cln(){ nfcStop(); },
+    ex(){ return '🏷 '+(S.nfc.last||t('fxNfcWait')); },
+  },
+  eyes:{
+    icon:'face',nameKey:'modeEyes',group:'cam',needCam:true,
+    init(){ eyesStart(); },
+    spot(){ const F=S.face;
+      if(!F.ready||!F.seen) return null;
+      return {x:clampN(F.nx,0,1)*DW, y:clampN(F.ny,0,1)*DH, radius:S.radius*(0.55+(F.open||0)*0.9)}; },
+    cln(){ faceStop(); },
+    ex(){ return S.face.seen?'':'🙂 '+t('faceNoFace'); },
+    meter(){ return {label:t('meterBlink'), value:clampN((S.eyes.ear||0)*3,0,1)}; },
+  },
+  light:{
+    icon:'osc',nameKey:'modeLight',group:'free',
+    init(){ lightStart(); },
+    spot(){ const L=S.light;
+      const lux=L.ok?Math.max(0,L.lux):200;
+      const want=clampN(1.6-Math.log10(Math.max(1,lux))/2.6,0.12,1);   // darker room → wider beam
+      S.lightR=S.lightR==null?want:S.lightR*0.9+want*0.1;
+      return {x:S.mouseX,y:S.mouseY,radius:S.radius*(0.35+1.5*S.lightR)}; },
+    cln(){ lightStop(); },
+    ex(){ return S.light.ok?('☀ '+Math.round(S.light.lux)+' lux'):('☀ '+t('fxLightFail')); },
+    meter(){ return {label:t('meterLux'), value:S.light.ok?clampN(S.light.lux/600,0,1):0}; },
+  },
+  clap:{
+    icon:'audio',nameKey:'modeClap',group:'free',needMic:true,
+    init(){ audioStart(); S.clap={last:0,prev:0}; },
+    spot(){ return {x:S.mouseX,y:S.mouseY,radius:S.radius}; },
+    cln(){ audioStop(); },
+    ex(){ return S.audio.on?('👏 '+t('fxClapHint')):('🎙 '+t('micWaiting')); },
+    meter(){ return {label:t('meterClap'), value:S.audio.peak||0}; },
+  },
   /* ── 需要本机跑一个小脚本：OSC / TouchDesigner ── */
   osc:{
     icon:'osc',nameKey:'modeOsc',group:'local',
@@ -2639,6 +3045,13 @@ const M={
     spot(){ const O=S.osc; return (O.t&&performance.now()-O.t<2200)?{x:O.x*DW,y:O.y*DH,radius:S.radius*O.r}:null; },
     cln(){ oscStop(); },
     ex(){ return S.osc.ok?'':'🔌 '+t('fxOscWait'); },
+  },
+  bridge:{
+    icon:'osc',nameKey:'modeBridge',group:'local',
+    init(){ S.bridge={es:S.bridge.es,x:.5,y:.5,r:.5,t:0,ok:false,name:''}; bridgeStart(); },
+    spot(){ const B=S.bridge; return (B.t&&performance.now()-B.t<2200)?{x:B.x*DW,y:B.y*DH,radius:S.radius*B.r}:null; },
+    cln(){ bridgeStop(); },
+    ex(){ return S.bridge.ok?('🔗 '+(S.bridge.name||t('fxBridgeOk'))):('🔗 '+t('fxBridgeWait')); },
   },
 };
 
@@ -2722,7 +3135,7 @@ function phoneIngest(raw){
     if(g==='fist'){ tg.frozen=!tg.frozen; refreshRoster(); }
     else if(g==='open'){ pushSplat(tg.smX,tg.smY,42,120); }
     else if(g==='point'){ tg.brush=((tg.brush||0)+1)%3; }
-    else if(g==='victory'){ changeScene((S.scene+1)%5); }
+    else if(g==='victory'){ changeScene((S.scene+1)%SCENE_COUNT); }
     return; }
   if(msg.type==='crowd'){ const ppl=msg.people||[]; for(let i=0;i<ppl.length&&i<8;i++) upsertPoseTarget(id+'#p'+i, ppl[i], hueFromId(id+'#p'+i), false); delete P.targets[id]; if(P.primaryId===id)P.primaryId=Object.keys(P.targets)[0]||null; return; }   // 众生执灯 多人各一灯 (no centre phantom: only per-person sub-lights)
   if(msg.type==='breath'){ S.breath=0.15*clampN(+msg.level||0,0,1)+0.85*(S.breath||0); return; }   // 吐纳
@@ -2739,7 +3152,7 @@ function phoneIngest(raw){
     if(P._twistPrimary!==id){ P._twistPrimary=id; tg.twistBase=msg.twist; }   // re-seed on (re)promotion so a handoff doesn't flick scene
     tg.twist=msg.twist;
     const d=tg.twist-(tg.twistBase||0);
-    if(Math.abs(d)>90){ changeScene((S.scene+(d>0?1:-1)+5)%5); tg.twistBase=tg.twist; }
+    if(Math.abs(d)>90){ changeScene((S.scene+(d>0?1:-1)+SCENE_COUNT)%SCENE_COUNT); tg.twistBase=tg.twist; }
   }
   const m=phoneMap(id,msg), a=P.alpha;
   const dx=m.x-tg.smX, dy=m.y-tg.smY, mv=Math.hypot(dx,dy);
@@ -3389,7 +3802,7 @@ function processFrame(){
   }else HUD.meter.classList.remove('show');
 
   if(S.mode==='hand'&&fc%4===0)setTimeout(pH,0);
-  if(S.mode==='face'&&fc%3===0)setTimeout(faceTick,0);
+  if((S.mode==='face'||S.mode==='eyes')&&fc%3===0)setTimeout(faceTick,0);
   }catch(e){console.error('Frame error:',e.message);}
   requestAnimationFrame(processFrame);
 }
@@ -3690,8 +4103,8 @@ function wireBar(){
   const bar=document.getElementById('bar');
   if(bar) bar.setAttribute('aria-label',t('barLabel'));
   on('b-mode',()=>{ const ks=Object.keys(M).filter(modeAvailable); const i=ks.indexOf(S.mode); wM(ks[(i+1)%ks.length]); },'','barMode');
-  on('b-prev',()=>{ changeScene((S.scene+4)%5); },'prev','barPrev');
-  on('b-next',()=>{ changeScene((S.scene+1)%5); },'next','barNext');
+  on('b-prev',()=>{ changeScene((S.scene+SCENE_COUNT-1)%SCENE_COUNT); },'prev','barPrev');
+  on('b-next',()=>{ changeScene((S.scene+1)%SCENE_COUNT); },'next','barNext');
   on('b-style',()=>{ const order=['edges','sketch','dark','paper']; setStyle(order[(order.indexOf(S.style)+1)%order.length]); },'style','barStyle');
   on('b-smaller',()=>bumpRadius(-12),'smaller','barSmaller');
   on('b-bigger',()=>bumpRadius(12),'bigger','barBigger');
@@ -3833,7 +4246,7 @@ function endPtr(e){
     if(had && (COARSE||e.pointerType==='touch') && e.type==='pointerup'){
       const now=performance.now();
       const moved=Math.hypot((e.clientX*S.dpr)-tapX,(e.clientY*S.dpr)-tapY);
-      if(now-lastTap<320 && moved<30*S.dpr){ changeScene((S.scene+1)%5); lastTap=0; }
+      if(now-lastTap<320 && moved<30*S.dpr){ changeScene((S.scene+1)%SCENE_COUNT); lastTap=0; }
       else { lastTap=now; tapX=e.clientX*S.dpr; tapY=e.clientY*S.dpr; }
     }
   }
@@ -3870,8 +4283,8 @@ document.addEventListener('keydown',e=>{
   switch(k){
     case'm':{const ks=Object.keys(M).filter(modeAvailable);wM(ks[(ks.indexOf(S.mode)+1)%ks.length]);break;}
     case'h':wM('hand');break;
-    case'arrowleft':case'pageup':changeScene((S.scene+4)%5);break;
-    case'arrowright':case'pagedown':case' ':e.preventDefault();changeScene((S.scene+1)%5);break;
+    case'arrowleft':case'pageup':changeScene((S.scene+SCENE_COUNT-1)%SCENE_COUNT);break;
+    case'arrowright':case'pagedown':case' ':e.preventDefault();changeScene((S.scene+1)%SCENE_COUNT);break;
     case'1':setStyle('edges');break;
     case'2':setStyle('sketch');break;
     case'3':setStyle('dark');break;
@@ -3920,10 +4333,10 @@ const mg=document.getElementById('mg');
 /* Grouped by hardware requirement, so nobody has to discover the hard way
    that "gaze" wants a printed marker. Order = easiest first. */
 const MODE_GROUPS=[
-  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','dwell','breath','audio','speech','tilt','shake']},
-  {label:'groupCam',   modes:['motion','hand','face','flashlight']},
-  {label:'groupGear',  modes:['gamepad','midi','gaze','phone','ir']},
-  {label:'groupLocal', modes:['osc']},
+  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','dwell','breath','audio','clap','speech','tilt','shake','light']},
+  {label:'groupCam',   modes:['motion','hand','face','eyes','flashlight']},
+  {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
+  {label:'groupLocal', modes:['osc','bridge']},
 ];
 function modeAvailable(k){
   if(!M[k]) return false;
@@ -3931,7 +4344,9 @@ function modeAvailable(k){
   if(k==='gamepad') return 'getGamepads' in navigator;
   if(k==='midi') return 'requestMIDIAccess' in navigator;  // Chrome/Edge, not iOS
   if(k==='speech') return !!(window.SpeechRecognition||window.webkitSpeechRecognition);
-  if(k==='osc') return 'EventSource' in window;
+  if(k==='hid') return 'hid' in navigator;
+  if(k==='ble'||k==='nfc') return 'bluetooth' in navigator || 'NDEFReader' in window;
+  if(k==='osc'||k==='bridge') return 'EventSource' in window;
   return true;
 }
 function modeReqKey(k){
@@ -4027,13 +4442,14 @@ function applyDeepLink(){
     if(md && M[md] && modeAvailable(md)) S.mode=md;
     else if(!md) S.mode=pickDefaultMode();      // phone → multi-touch, wall → attract, desk → pointer
     const sc=parseInt(q.get('scene'),10);
-    if(isFinite(sc)) S.scene=Math.max(0,Math.min(4,sc));
+    if(isFinite(sc)) S.scene=Math.max(0,Math.min(SCENE_COUNT-1,sc));
     const st=q.get('style');
     if(st && ['edges','sketch','dark','paper'].includes(st)) S.style=st;
     const lg=q.get('lang');
     if(lg && I18N[lg]) LANG=lg;
     if(q.get('debug')==='1') S.debug=true;
     if(q.get('effects')==='1'){ S.paint=true;S.glow=true;S.mirror=true;S.timeTint=true; }
+    const vid2=q.get('video'); if(vid2) videoAttach(vid2);
   }catch(e){}
 }
 

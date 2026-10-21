@@ -6,7 +6,7 @@
 [![Live](https://img.shields.io/badge/▶_在线玩-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
 [![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
-[![Tests](https://img.shields.io/badge/e2e-120%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
+[![Tests](https://img.shields.io/badge/e2e-137%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
 
 > 光照之处，墨色生辉
@@ -15,8 +15,8 @@
 
 一幅**墨色立轴**覆在一幅**彩色山水**之上。你手里那盏光落在哪里，哪里的墨就化开、显色、活过来。
 
-**21 种交互方式**，分三档：**11 种什么都不用**（机器自带的键盘/触摸/麦克风/摄像头/陀螺仪）、
-**7 种插个装置**（手柄、MIDI、手机、串口追踪器、打印标记）、**1 种本机跑个小脚本**（OSC）。
+**29 种交互方式**，分档：**13 种什么都不用**、**5 种只用摄像头**、**9 种插个装置**（手柄/MIDI/HID 摇杆/蓝牙/NFC/手机/串口/打印标记）、
+**2 种本机跑个小脚本**（OSC、外设桥）。
 
 ---
 
@@ -37,6 +37,8 @@
 | **吐纳 · 呼吸** | 只取麦克风的**低频包络**：吸气光圈张开、呼气收拢（不看音高，嘈杂环境更稳） |
 | **语音 · 题字** | 说「山水 / 竹林 / 雪 / 花鸟 / 星空」换画，说「大 / 小 / 留痕 / 泼墨」调画 |
 | **摇一摇** | 摇手机 → 泼墨 + 振动（手机自带加速度计，不需要摄像头） |
+| **拍手 · 节拍** | 拍一下手泼墨、连拍两下换画（只要麦克风） |
+| **环境光** | 房间越暗，光圈越大（`AmbientLightSensor`，桌面 Chrome 少见） |
 
 ### 📷 只用摄像头
 
@@ -45,6 +47,7 @@
 | **动影 · 皮影** | **零模型、零下载**：靠帧差，**身影掠过绢面**就显出颜色——皮影戏 |
 | **手势 · 空手** | MediaPipe Hands：手心移动移光，食指收成细光束，握拳收光，✌️ 换场景 |
 | **面庞 · 头姿** | MediaPipe FaceMesh：**转头移光**，**张嘴放大**。不需要打印任何标记 |
+| **眨眼 · 眼睛** | 同一个 FaceMesh：**每眨一次眼泼一次墨**（EAR 眼宽高比，阈值 0.19/0.26） |
 | **手电筒** | 手机闪光灯对准摄像头，最亮点即光圈 |
 
 ### 🔧 需要一点准备
@@ -56,12 +59,24 @@
 | **IR · 追踪器** | OpenMV / Pixy2 + WebSerial（桌面 Chromium） |
 | **手柄** | 任意标准手柄（Xbox / PS / Switch Pro）：左摇杆移光，RT/LT 改光圈，A 换场景、B 泼墨、Y 留痕 |
 | **MIDI** | 任意 MIDI 控制器：CC1/CC2 移光，CC7 改光圈，音符换场景，鼓垫泼墨 |
+| **HID** | WebHID：Joy-Con / Wiimote / 任意 DIY 摇杆。任天堂设备按报告解析，其他走"前 3 字节 = x,y,r"万能协议 |
+| **蓝牙** | Web Bluetooth：心率带 / Muse EEG / ESP32。心率直接驱动光圈，任意 notify 特征按 x,y,r 解析 |
+| **NFC** | Web NFC（Chrome Android）：把贴纸靠近手机换画 |
 
 ### 🖥 本机装个小脚本（最省事的专业接入）
 
 | 模式 | 需要 |
 |---|---|
 | **OSC · 本地** | `python3 server.py`（零依赖，自带 UDP 9000 的 OSC 入口）→ TouchDesigner / Max / Pure Data / python-osc 直接发 `/spot` |
+| **外设桥 · 本地** | 任意本地脚本（Leap / Kinect / RealSense / Tobii / 热像仪 / EEG）`POST /send?room=ext` 就能驱动 —— 外设 SDK 只要会发 HTTP |
+
+## 🖼 内容层
+
+| 内容 | 说明 |
+|---|---|
+| 5 张水墨画 | `web/scenes/*.jpg`，`cover` 全幅出血 + 预缩放缓存 |
+| **3D 视差立轴** | 第 6 张是**程序化**的三层山脊视差 + 雾带：不依赖素材就有景深，随光移动分层错开 |
+| **视频层** | `?video=<url>` 把任意 mp4/webm 当彩色层，墨层从当前帧生成 |
 
 ### 🎨 除此之外
 
@@ -167,7 +182,7 @@ ink_scroll/
 │   ├── HARDWARE-TODO.md# 需要外设的方向（给想动手的人）
 │   ├── TEST-REPORT.md  # 审核与测试报告
 │   └── SELF-IMPROVEMENT.md # 评测器与自我改进循环
-├── tools/test.js       # 120 条端到端断言（Playwright，真实浏览器）
+├── tools/test.js       # 137 条端到端断言（Playwright，真实浏览器）
 └── archive/            # 旧版 Python + OpenCV 原型
 ```
 
@@ -198,7 +213,7 @@ node tools/test.js
 - 触屏手势、无障碍（role / aria-live / 焦点陷阱 / reduced-motion）、深链、性能预算
 - 退出必须释放摄像头
 
-最近一次：**120 / 120 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
+最近一次：**137 / 137 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
 
 ## 📐 设计系统
 

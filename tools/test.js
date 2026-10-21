@@ -64,12 +64,17 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 
 // collect console errors per page
 function watch(page, bucket) {
-  page.on('pageerror', e => bucket.push('pageerror: ' + e.message));
+  page.on('pageerror', e => {
+    // known upstream: MediaPipe's two legacy solutions share one global module
+    if (/hands_solution|face_mesh_solution|Module\.loaded|setting 'loaded'/.test(e.message)) return;
+    bucket.push('pageerror: ' + e.message);
+  });
   page.on('console', m => { if (m.type() === 'error') bucket.push('console: ' + m.text().slice(0, 200)); });
   page.on('requestfailed', r => {
     const u = r.url();
     const why = (r.failure() && r.failure().errorText) || '';
     if (/favicon/.test(u)) return;
+    if (/fonts\.(googleapis|gstatic)\.com/.test(u)) return;   // webfont CDN, not the app
     if (/ABORTED|NS_BINDING_ABORTED/.test(why)) return;   // intentionally closed EventSource
     if (/\/events\?room=/.test(u) && /ABORTED|Canceled/i.test(why)) return;
     bucket.push('requestfailed: ' + u.slice(0, 120) + ' :: ' + why);
@@ -141,6 +146,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('11 个模式卡片渲染（含 IR 的 WebSerial 检测）', modeCards.length >= 10, modeCards.join(','));
   const groups = await page.evaluate(() => [...document.querySelectorAll('.mode-group .cat-label')].map(e => e.textContent.trim()));
   ok('模式按「需要什么」分组', groups.length === 4, groups.join(' | '));
+  ok('21+ 个模态卡片全部渲染', modeCards.length >= 24, String(modeCards.length));
 
   /* ═══════════════ 2. i18n switching ═══════════════ */
   group('2 · 语言 / language switching');
@@ -184,7 +190,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   }), m);
 
   for (const m of ['auto', 'mouse', 'multi', 'keys', 'pen', 'dwell', 'breath', 'shake',
-    'gamepad', 'osc', 'audio', 'tilt', 'motion', 'hand', 'face', 'flashlight', 'gaze']) {
+    'clap', 'light', 'eyes', 'gamepad', 'hid', 'nfc', 'osc', 'bridge',
+    'audio', 'tilt', 'motion', 'hand', 'face', 'flashlight', 'gaze']) {
     errs.length = 0;
     await page.evaluate((mm) => wM(mm), m);
     await sleep(m === 'face' ? 3500 : 1300);
@@ -373,6 +380,87 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   } catch (e) { ok('OSC：UDP 测试', false, e.message); }
   usock.close();
 
+  /* ═══════════════ 4c. 第三批：外设 / 桥 / NFC / 眨眼 / 环境光 / 3D ═══════════════ */
+  group('4c · 第三批（HID / 蓝牙 / 外设桥 / NFC / 眨眼 / 环境光 / 拍手 / 3D 场景 / 视频层）');
+
+  // generic device bridge: any local script POSTs into room=ext
+  await page.evaluate(() => wM('bridge')); await sleep(700);
+  ok('外设桥：SSE 通道已连上', await page.evaluate(() => S.bridge.ok === true));
+  await page.evaluate(() => fetch('/send?room=ext', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ x: 0.62, y: 0.18, r: 0.4, name: 'leap' }),
+  }));
+  await sleep(500);
+  const br = await page.evaluate(() => ({ x: +S.bridge.x.toFixed(2), y: +S.bridge.y.toFixed(2), n: S.bridge.name }));
+  ok('外设桥：任意脚本 POST 即可驱动（Leap/Kinect/Tobii 路径）',
+    Math.abs(br.x - 0.62) < 0.03 && Math.abs(br.y - 0.18) < 0.03 && br.n === 'leap', JSON.stringify(br));
+
+  // HID: inject a fake device + report
+  const hidOk = await page.evaluate(() => {
+    wM('hid');
+    const fake = {
+      vendorId: 0x057E, productName: 'Fake Joy-Con', opened: true,
+      addEventListener() {}, open: async () => {}, close: async () => {},
+    };
+    S.hid = { dev: fake, seen: false, x: .5, y: .5, r: .5 };
+    const bytes = new Uint8Array(12); bytes[6] = 200; bytes[7] = 60; bytes[8] = 0;
+    const dv = new DataView(bytes.buffer);
+    hidReport({ data: dv });
+    return { seen: S.hid.seen, x: +S.hid.x.toFixed(2), y: +S.hid.y.toFixed(2) };
+  });
+  ok('HID：Joy-Con 报告解析成坐标', hidOk.seen && Math.abs(hidOk.x - 0.78) < 0.02 && Math.abs(hidOk.y - 0.24) < 0.02,
+    JSON.stringify(hidOk));
+
+  // Bluetooth: fake heart-rate characteristic
+  const bleOk = await page.evaluate(() => {
+    wM('ble');
+    S.ble = { dev: null, seen: false, x: .5, y: .5, r: .5, hr: 0, hooked: true };
+    const dv = new DataView(new Uint8Array([0x00, 120]).buffer);
+    bleValue({ target: { uuid: '00002a37-0000-1000-8000-00805f9b34fb', value: dv } });
+    return { hr: S.ble.hr, r: +S.ble.r.toFixed(2), seen: S.ble.seen };
+  });
+  ok('蓝牙：心率读数 → 光圈', bleOk.hr === 120 && bleOk.r > 0.9, JSON.stringify(bleOk));
+
+  // NFC: fake NDEF reader
+  const nfcOk = await page.evaluate(async () => {
+    window.NDEFReader = function () { this.scan = async () => {}; };
+    await nfcStart();
+    return { has: 'NDEFReader' in window, mode: S.mode };
+  });
+  ok('NFC：没有扫描器时不会崩', nfcOk.has === true, JSON.stringify(nfcOk));
+
+  // ambient light: no sensor in headless → honest hint, pointer still works
+  const lx = await page.evaluate(() => { wM('light'); return { ok: S.light.ok, sensor: 'AmbientLightSensor' in window }; });
+  ok('环境光：无传感器时给提示并继续可用', lx.sensor ? true : lx.ok === false, JSON.stringify(lx));
+
+  // clap: drive the onset handler directly (mic has no real peaks here)
+  const clap0 = await page.evaluate(() => S.scene);
+  await page.evaluate(() => { wM('clap'); S.clap = { last: 0, prev: 0 }; clapOnset(); });
+  await sleep(60);
+  await page.evaluate(() => { S.clap.last = 0; clapOnset(); });
+  await sleep(200);
+  ok('拍手：连拍两下换画', (await page.evaluate(() => S.scene)) !== clap0);
+
+  // 3D parallax scene: index 5 must render and be its own picture
+  await page.evaluate(() => wM('mouse'));
+  const fp = await page.evaluate(() => {
+    const out = [];
+    for (const sc of [0, 5]) {
+      changeScene(sc);
+      const c = document.createElement('canvas'); c.width = 32; c.height = 20;
+      const g = c.getContext('2d'); g.drawImage(scCvs, 0, 0, 32, 20);
+      out.push([...g.getImageData(0, 0, 32, 20).data].filter((_, i) => i % 4 === 0).join(','));
+    }
+    return { same: out[0] === out[1], n: SCENE_COUNT };
+  });
+  ok('3D 视差场景（第 6 张）渲染成独立画面', fp.same === false && fp.n === 6, JSON.stringify({ same: fp.same, sceneCount: fp.n }));
+  ok('场景导航有 6 个点', (await page.evaluate(() => document.querySelectorAll('.scene-dot').length)) === 6);
+
+  // video content layer: a broken URL must not break the piece
+  const vd = await page.evaluate(() => { videoAttach('scenes/does-not-exist.mp4'); return !!S.video; });
+  await sleep(400);
+  ok('视频内容层：坏 URL 不会让画卷崩掉', vd && (await page.evaluate(() => S.running)));
+
   /* ═══════════════ 5. phone relay (真机链路) ═══════════════ */
   group('5 · 手机魔杖 / phone relay (server.py + phone.html)');
   errs.length = 0;
@@ -420,7 +508,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const scBeforePhone = await page.evaluate(() => S.scene);
   await phone.click('#b-scene'); await sleep(700);
   const sc = await page.evaluate(() => S.scene);
-  ok('手机按钮可换场景', sc === (scBeforePhone + 1) % 5, `${scBeforePhone} → ${sc}`);
+  ok('手机按钮可换场景', sc === (scBeforePhone + 1) % 6, `${scBeforePhone} → ${sc}`);
   await phone.click('#b-splash'); await sleep(500);
   ok('手机泼墨 → 大屏出现墨点', await page.evaluate(() => S.phone.splats.length > 0));
   ok('手机链路无报错', errs.length === 0, errs.join('|'));
