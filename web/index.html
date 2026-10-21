@@ -1886,7 +1886,13 @@ function drawCloud(g,W,H,t,mono){
   if(!C) return;
   const pts=C.pts, n=pts.length;
   const zl=(S.bridge&&typeof S.bridge.z==='number')?S.bridge.z:0.5;
-  const dolly=(zl-0.5)*1.1;                       // 外部推来的 z → 推轨
+  let dolly=(zl-0.5)*1.1;                         // 外部推来的 z → 推轨
+  // 头部视差：相机跟着人头走（只在真的跟到脸时生效，避免无脸时画面乱飘）
+  const headOn=(S.mode==='face'||S.mode==='eyes') && S.face.seen;
+  if(headOn){
+    dolly += clampN(-(S.face.z||0)*2.2,-0.6,0.6);
+    dolly += ((S.face.nx!=null?S.face.nx:0.5)-0.5)*0.5;
+  }
   const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22 + dolly*0.55;
   const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30;
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
@@ -2446,6 +2452,7 @@ async function faceStart(){
         const nose=lms[4], up=lms[13], dn=lms[14], le=lms[33], re=lms[263];
         const eyeD=Math.hypot(re.x-le.x, re.y-le.y)||1e-3;
         F2.open=clampN((Math.hypot(dn.x-up.x, dn.y-up.y)/eyeD-0.06)/0.5,0,1);
+        F2.z=nose.z||0;                       // 鼻尖深度：头往前凑 → 更负
         try{
           S.eyes.ear=(earOf(lms,[33,160,158,133,153,144])+earOf(lms,[362,385,387,263,373,380]))/2;
           eyesTick();

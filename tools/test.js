@@ -508,6 +508,21 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     return Math.abs(S.bridge.z - 0.25) < 1e-6;
   }));
 
+  const head = await page.evaluate(async () => {
+    const mk = () => { const c = document.createElement('canvas'); c.width = 240; c.height = 150;
+      return { c, g: c.getContext('2d') }; };
+    S.mode = 'face'; S.face = { ready: true, seen: true, nx: 0.5, ny: 0.5, z: 0, open: 0 };
+    const a = mk(); drawCloud(a.g, 240, 150, 1.0, false);
+    S.face.z = -0.28; S.face.nx = 0.72;
+    const b = mk(); drawCloud(b.g, 240, 150, 1.0, false);
+    const da = a.g.getImageData(0, 0, 240, 150).data, db = b.g.getImageData(0, 0, 240, 150).data;
+    let diff = 0;
+    for (let i = 0; i < da.length; i += 4) if (Math.abs(da[i] - db[i]) > 6) diff++;
+    return { diff, total: 240 * 150 };
+  });
+  ok('头部视差：人头前进/侧移会改变点云视角', head.diff > head.total * 0.05,
+    `${head.diff}/${head.total} 像素不同`);
+
   ok('点云立轴：没有引入新的 CDN 依赖（静态脚本仍 ≤4）', staticDeps.length <= 4,
     staticDeps.length + ' → ' + staticDeps.map(u => u.split('/')[2]).join(','));
 
@@ -544,11 +559,14 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ok('真识别 · 手势：手张开 → 光圈跟随', hand.out.gesture === 'open' && hand.out.spot === 1, JSON.stringify(hand.out));
 
     const face = await recog('facecam.y4m', 'face', () => ({
-      seen: !!S.face.seen, nx: +(S.face.nx || 0).toFixed(2), ear: +(S.eyes.ear || 0).toFixed(2),
+      seen: !!S.face.seen, nx: +(S.face.nx || 0).toFixed(2), ear: +(S.eyes.ear || 0).toFixed(2), z: S.face.z,
       spot: M.face.spot() ? 1 : 0,
     }));
     ok('真识别 · 面庞：真实人脸被检出并给出坐标', face.out.seen === true && face.out.spot === 1, JSON.stringify(face.out));
     ok('真识别 · 眨眼：EAR 在睁眼范围内（0.2–0.6）', face.out.ear > 0.2 && face.out.ear < 0.6, 'ear=' + face.out.ear);
+    ok('真识别 · 面庞：拿到鼻尖深度 z（头部视差的前提）',
+      typeof face.out.z === 'number' && Number.isFinite(face.out.z) && Math.abs(face.out.z) < 2,
+      'z=' + face.out.z);
   }
 
   /* ═══════════════ 4e. 创作软件接入 ═══════════════ */
