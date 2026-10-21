@@ -165,6 +165,30 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.click('.lang-switch button[data-lang="en"]');
   await sleep(120);
 
+  /* ═══════════════ 2b. 标题页可见性（42 个模态也不能把 CTA 挤出屏幕） ═══════════════ */
+  group('2b · 标题页：全部模态可达 + CTA 常驻');
+  for (const [w, h] of [[1440, 900], [1280, 720]]) {
+    await page.setViewportSize({ width: w, height: h });
+    await sleep(250);
+    const lay = await page.evaluate(() => {
+      const ss = document.getElementById('start-screen');
+      const cards = [...document.querySelectorAll('.mode-card')];
+      const cta = document.getElementById('btn-start').getBoundingClientRect();
+      const first = cards[0].getBoundingClientRect();
+      ss.scrollTop = ss.scrollHeight;
+      const last = cards[cards.length - 1].getBoundingClientRect();
+      ss.scrollTop = 0;
+      return { n: cards.length, firstTop: Math.round(first.top),
+        ctaVisible: cta.top >= 0 && cta.bottom <= innerHeight,
+        lastReachable: last.bottom <= ss.clientHeight + 2 };
+    });
+    ok(`${w}×${h}：首张卡片没有被裁到视口上方`, lay.firstTop >= 0, `firstTop=${lay.firstTop}`);
+    ok(`${w}×${h}：「展开画卷」不需要滚动就能看见`, lay.ctaVisible === true, JSON.stringify(lay));
+    ok(`${w}×${h}：最后一张卡片滚动后可达`, lay.lastReachable === true, `last.bottom`);
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await sleep(200);
+
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
   await page.click('#btn-start');
