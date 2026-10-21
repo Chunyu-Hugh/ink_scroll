@@ -195,5 +195,44 @@
         "why": "148/150 assertions"
       }
     ]
+  },
+  {
+    "at": "2026-10-21T15:45:02.545Z",
+    "sha": "5936577",
+    "fitness": 0.924,
+    "weak": [
+      {
+        "dim": "singleFile",
+        "v": 0.5,
+        "why": "6 个 CDN 库（静态 2，含懒加载） — 超出 ≤4 规则，欠债, 209 KB, no build step"
+      },
+      {
+        "dim": "docsCoverage",
+        "v": 0.903,
+        "why": "31 modes, 3 undocumented (blow,scroll,battery)"
+      },
+      {
+        "dim": "e2e",
+        "v": 0.987,
+        "why": "148/150 assertions"
+      }
+    ]
+  },
+  {
+    "at": "2026-10-21T15:45:29.133Z",
+    "sha": "5936577",
+    "fitness": 0.936,
+    "weak": [
+      {
+        "dim": "singleFile",
+        "v": 0.5,
+        "why": "6 个 CDN 库（静态 2，含懒加载） — 超出 ≤4 规则，欠债, 209 KB, no build step"
+      },
+      {
+        "dim": "e2e",
+        "v": 0.987,
+        "why": "148/150 assertions"
+      }
+    ]
   }
 ]

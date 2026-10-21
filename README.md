@@ -6,7 +6,7 @@
 [![Live](https://img.shields.io/badge/▶_在线玩-hunao1995.github.io%2Fink__scroll-c96442?labelColor=141413)](https://hunao1995.github.io/ink_scroll/)
 [![e2e](https://github.com/hunao1995/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/hunao1995/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
-[![Tests](https://img.shields.io/badge/e2e-166%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
+[![Tests](https://img.shields.io/badge/e2e-green-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
 
 > 光照之处，墨色生辉
@@ -229,7 +229,7 @@ node tools/test.js
 - 触屏手势、无障碍（role / aria-live / 焦点陷阱 / reduced-motion）、深链、性能预算
 - 退出必须释放摄像头
 
-最近一次：**166 / 166 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
+最近一次：**全部通过 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
 
 ## 📐 设计系统
 
