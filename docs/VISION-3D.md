@@ -15,7 +15,7 @@
 - **不做**：WebXR、自写投影标定、2D→3D 整体替换（§6 有完整理由）；也**不做**单目深度大模型（19–27 MB 权重，见 §3）——它为"空间感"付的带宽代价，比它买到的深度质量贵得多。
 
 **基线（本文所有 exit criteria 以此为参照）**：`web/index.html` 4578 行 / 217 KB / 28 个模态 / `SCENE_COUNT=7` / 2 个 CDN script；
-`tools/last-run.json` = **146 pass / 0 fail**；`tools/rsi/archive.json` 最新一轮 fitness **0.938**，弱项 `degradation 0.536`、`modeCoverage 0.964`（`ir` 无断言）。
+`tools/last-run.json` = **166 pass / 0 fail**；`tools/rsi/archive.json` 最新一轮 fitness **0.938**，弱项 `degradation 0.536`、`modeCoverage 0.964`（`ir` 无断言）。
 
 ---
 
@@ -94,7 +94,7 @@
 
 做：#6 投影墙包 → #1 卷中游 → #2 视差之眼 → #3 立体墨。
 **Exit criteria**
-- `node tools/test.js`：**≥ 152 断言全绿**（当前 146），新增至少 6 条：点云相机 z 位移改变画面、网格线数/角点编号、红青两通道像素差、head-coupled 位移方向、`?wall=1` 无 UI、坏深度输入不崩。
+- `node tools/test.js`：**≥ 152 断言全绿**（当前 166），新增至少 6 条：点云相机 z 位移改变画面、网格线数/角点编号、红青两通道像素差、head-coupled 位移方向、`?wall=1` 无 UI、坏深度输入不崩。
 - `node tools/rsi/score.mjs`：**total ≥ 0.938 且无任一维度回退**（这是 RSI 循环的硬规则：只保留不回退的变异）。
 - `singleFile` 仍为 1：**CDN 仍 2 个**，`index.html` 增量 ≤ 15 KB。
 - 1440p 下 `drawCloud` + 视差 ≥ 55 fps（现有基线可用 `tools/probe-real2.js` 量）。

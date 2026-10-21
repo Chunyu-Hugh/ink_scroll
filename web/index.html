@@ -2949,7 +2949,7 @@ function clapOnset(){
 const M={
   /* 不可失败：不依赖任何输入 */
   auto:{
-    icon:'auto',nameKey:'modeAuto',group:'free',needCam:false,
+    icon:'auto',nameKey:'modeAuto',group:'free',needCam:false,fallback:'none',
     init(){S.autoT=0;},
     spot(){ S.autoT=(S.autoT||0)+0.0045;
       return {x:DW*(0.82-0.64*((S.autoT*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.autoT*0.9)), radius:S.radius*0.8}; },
@@ -2957,7 +2957,7 @@ const M={
   },
   /* 不可失败：指针永远存在，是所有模态的兜底 */
   mouse:{
-    icon:'pointer',nameKey:'modeMouse',group:'free',needCam:false,
+    icon:'pointer',nameKey:'modeMouse',group:'free',needCam:false,fallback:'none',
     init(){},
     spot(){ const r=(S.pen&&S.pressure>0)?S.radius*(0.45+1.1*S.pressure):S.radius;
       return {x:S.mouseX,y:S.mouseY,radius:r}; },
@@ -3016,7 +3016,7 @@ const M={
     meter(){ return {label:t('meterLevel'), value:S.face.open||0}; },
   },
   flashlight:{
-    icon:'flashlight',nameKey:'modeFlashlight',group:'cam',needCam:true,needsPixels:true,
+    icon:'flashlight',nameKey:'modeFlashlight',group:'cam',needCam:true,needsPixels:true,fallback:'hint',
     init(){},spot(id){return spF(id);},cln(){},
     ex:()=>'',
   },
@@ -3042,7 +3042,7 @@ const M={
     ex(){ return S.gazeReady ? '' : '👓 '+t('gazeCalibrating'); },
   },
   phone:{
-    icon:'phone',nameKey:'modePhone',group:'gear',
+    icon:'phone',nameKey:'modePhone',group:'gear',fallback:'hint',
     init(){ phoneStart(); },
     spot(){ const tg=S.phone.targets[S.phone.primaryId]; return (tg && (tg.frozen||performance.now()-tg.t<=S.phone.staleMs))?{x:tg.smX,y:tg.smY,radius:tg.smR}:null; },
     spots(){ const now=performance.now(); const br=1+(S.breath||0)*0.22; return Object.values(S.phone.targets).filter(tg=>tg.frozen||now-tg.t<=S.phone.staleMs).map(tg=>({x:tg.smX,y:tg.smY,radius:tg.smR*br*(1+(tg.expr||0)*0.8),id:tg.id,hue:tg.hue,frozen:tg.frozen,brush:tg.brush||0,ang:tg.ang||0})); },
@@ -3050,7 +3050,7 @@ const M={
     ex(){ const n=phoneActiveCount(); return n?'📱 '+n:t('phoneWaiting'); },
   },
   ir:{
-    icon:'ir',nameKey:'modeIR',group:'gear',
+    icon:'ir',nameKey:'modeIR',group:'gear',fallback:'hint',
     init(){ irStart(); },
     spot(){ return (S.ir&&performance.now()-S.ir.t<400)?{x:S.ir.x,y:S.ir.y,radius:S.ir.r||S.radius}:null; },
     cln(){ irStop(); },

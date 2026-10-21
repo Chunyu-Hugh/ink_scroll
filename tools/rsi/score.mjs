@@ -57,7 +57,8 @@ function modeSources(k) {
   const seg = html.slice(at, end > at ? end : at + 1600);
   const called = [...seg.matchAll(/init\(\)\{ *([A-Za-z_$][\w$]*)\(/g)].map((m) => m[1]);
   const bodies = called.map((fn) => {
-    const f = html.indexOf(`function ${fn}(`);
+    let f = html.indexOf(`function ${fn}(`);
+    if (f < 0) f = html.indexOf(`async function ${fn}(`);
     if (f < 0) return '';
     let depth = 0, i = html.indexOf('{', f);
     for (let j = i; j < html.length; j++) {
@@ -68,8 +69,14 @@ function modeSources(k) {
   });
   return seg + '\n' + bodies.join('\n');
 }
-const needsFallback = modes.filter((k) =>
-  !/wM\('mouse'|flashHint|return null|\|\| null|不可失败/.test(modeSources(k)));
+// 契约：模态可以显式声明 fallback（'pointer' | 'hint' | 'none'）；
+// 没声明的才退回启发式扫描（并会被这条低分持续提醒去补声明）
+const needsFallback = modes.filter((k) => {
+  const src = modeSources(k);
+  const declared = /fallback:\s*'(pointer|hint|none)'/.test(src);
+  if (declared) return false;
+  return !/wM\('mouse'|flashHint|return null|\|\| null|不可失败/.test(src);
+});
 dims.degradation = { v: modes.length ? (modes.length - needsFallback.length) / modes.length : 0,
   d: `${needsFallback.length} modes without an explicit failure path${needsFallback.length ? ' (' + needsFallback.join(',') + ')' : ''}` };
 

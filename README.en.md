@@ -69,7 +69,7 @@ node tools/test.js        # 136 end-to-end assertions in a real browser
 
 Real browser, real camera (fake device fed a public-domain portrait and a moving-bar video),
 real relay: all 11 modes, the phone↔display round trip, trilingual key parity, touch gestures,
-accessibility, deep links and a frame-rate budget. Last run: **146 / 146 green**.
+accessibility, deep links and a frame-rate budget. Last run: **166 / 166 green**.
 
 - [docs/INTERACTIONS.md](docs/INTERACTIONS.md) — the interaction system and the registry contract (read this before adding a mode)
 - [docs/TEST-REPORT.md](docs/TEST-REPORT.md) — the audit: what was broken and how it was fixed

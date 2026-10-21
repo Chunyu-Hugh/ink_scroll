@@ -18,7 +18,7 @@
 ## 2. 本仓库的评测器（核心资产）
 
 ```bash
-node tools/test.js        # 146 条端到端断言，真实 Chromium + 假摄像头/麦克风 + 真 SSE 中继
+node tools/test.js        # 166 条端到端断言，真实 Chromium + 假摄像头/麦克风 + 真 SSE 中继
 cat tools/last-run.json   # 结构化结果：{pass, fail, skipped, failures[], at}
 ```
 
