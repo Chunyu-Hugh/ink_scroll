@@ -4398,7 +4398,9 @@ function changeScene(n){
   const oldImg=document.createElement('canvas');oldImg.width=DW;oldImg.height=DH;
   oldImg.getContext('2d').drawImage(scCvs,0,0);
   S.scene=n;
-  if(paintCtx)paintCtx.clearRect(0,0,paintCvs.width,paintCvs.height);   // 留痕/运笔 mask wipes on scene change
+  // 累积：换画不擦留痕 —— 你写过的地方，换一幅画依然透出来（Ondák 式"被写过的纸"）
+  // 想回到旧行为：?accrete=0
+  if(S.accrete===false && paintCtx) paintCtx.clearRect(0,0,paintCvs.width,paintCvs.height);
   if(glowCtx)glowCtx.clearRect(0,0,glowCvs.width,glowCvs.height);       // 长曝 buffer wipes too
   S.phone.ink=false; S.phone.strokeLast={};
   drawScene(performance.now()/1000);target=scCvs;genHidden();
@@ -5333,6 +5335,7 @@ function applyDeepLink(){
     const q=new URLSearchParams(location.search||'');
     if(q.get('wall')==='1'){ document.body.classList.add('wall'); S.wall=true; S.grid=(q.get('grid')!=='0'); }
     if(q.get('grid')==='1'){ S.grid=true; }
+    if(q.get('accrete')==='0'){ S.accrete=false; }
     const pre=q.get('preset'); if(pre) applyPreset(pre);
     const st2=q.get('stereo');
     if(st2==='anaglyph'||st2==='sbs'){ S.stereo=st2; }

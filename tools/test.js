@@ -215,6 +215,37 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.evaluate(async () => { stop(); await new Promise(r => setTimeout(r, 400)); document.body.classList.remove('wall'); S.wall = false; S.grid = false; });
   await sleep(300);
 
+  /* ═══════════════ 2d. 累积（换画不擦留痕） ═══════════════ */
+  group('2d · 累积：换画之后，写过的痕还在');
+  const acc = await page.evaluate(async () => {
+    ensurePaint();
+    paintCtx.fillStyle = 'rgba(255,255,255,1)';
+    paintCtx.fillRect(20, 20, 60, 60);
+    const before = (() => { const c = document.createElement('canvas'); c.width = 40; c.height = 40;
+      const g = c.getContext('2d'); g.drawImage(paintCvs, 20, 20, 60, 60, 0, 0, 40, 40);
+      const d = g.getImageData(0, 0, 40, 40).data; let a = 0; for (let i = 3; i < d.length; i += 4) a += d[i]; return a; })();
+    changeScene((S.scene + 1) % SCENE_COUNT);
+    await new Promise(r => setTimeout(r, 200));
+    const after = (() => { const c = document.createElement('canvas'); c.width = 40; c.height = 40;
+      const g = c.getContext('2d'); g.drawImage(paintCvs, 20, 20, 60, 60, 0, 0, 40, 40);
+      const d = g.getImageData(0, 0, 40, 40).data; let a = 0; for (let i = 3; i < d.length; i += 4) a += d[i]; return a; })();
+    return { before, after, accrete: S.accrete };
+  });
+  ok('累积：换画后留痕 mask 仍在（同一卷纸）', acc.before > 0 && acc.after >= acc.before * 0.9,
+    `before=${acc.before} after=${acc.after}`);
+
+  const accOff = await page.evaluate(async () => {
+    S.accrete = false;
+    changeScene((S.scene + 1) % SCENE_COUNT);
+    await new Promise(r => setTimeout(r, 200));
+    const c = document.createElement('canvas'); c.width = 40; c.height = 40;
+    const g = c.getContext('2d'); g.drawImage(paintCvs, 20, 20, 60, 60, 0, 0, 40, 40);
+    const d = g.getImageData(0, 0, 40, 40).data; let a = 0; for (let i = 3; i < d.length; i += 4) a += d[i];
+    S.accrete = true;
+    return a;
+  });
+  ok('累积：?accrete=0 时退回旧行为（会擦）', accOff === 0, `alpha=${accOff}`);
+
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
   await page.click('#btn-start');

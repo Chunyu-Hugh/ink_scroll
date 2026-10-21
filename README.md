@@ -247,6 +247,7 @@ node tools/test.js
 | 文档 | 内容 |
 |---|---|
 | [docs/ABOUT.md](docs/ABOUT.md) | 一页式介绍 |
+| [docs/FORMS.md](docs/FORMS.md) | 交互**形式**谱系（30 种形式 + 12 条可迁移 + 可断言验证） |
 | [docs/ART-SURVEY.md](docs/ART-SURVEY.md) | 数字媒体艺术的交互谱系 + 25 件可核实作品 + 追赶路线 |
 | [docs/MODALITY-ATLAS.md](docs/MODALITY-ATLAS.md) | 125 条交互模态的工程图谱 |
 | [docs/INTERACTIONS.md](docs/INTERACTIONS.md) | 交互契约（加模态看这里） |
