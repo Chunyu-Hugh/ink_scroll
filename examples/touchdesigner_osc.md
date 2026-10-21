@@ -43,7 +43,33 @@ POST http://127.0.0.1:8888/send?room=ext
 Max/MSP / Pure Data / vvvv / Unreal（OSC 插件）/ Unity（extOSC）/
 Ableton（Connection Kit）/ ossia score / Chataigne / TouchOSC。
 
-## 4. 为什么走 OSC 而不是 WebSocket
+## 4. 已验证（不是纸上谈兵）
+
+没有 TouchDesigner 也能复验 —— 仓库里有 `examples/osc_probe.py`，它按 OSC Out CHOP
+的**真实报文形状**（每条样本一个独立 UDP 包、float32 参数）打一遍：
+
+```
+$ python3 server.py 8895 &
+$ python3 examples/osc_probe.py 8895 9000
+  ✓ /spot [0.25, 0.75] → {'x': 0.25, 'y': 0.75}
+  ✓ /spot [0.6, 0.2, 1.6] → {'x': 0.6, 'y': 0.2, 'r': 1.6}
+  ✓ /spot/x [0.9] → {'x': 0.9}
+  ✓ /spot/y [0.1] → {'y': 0.1}
+  ✓ /spot/r [0.4] → {'r': 0.4}
+  ✓ /scene [3] → {'scene': 3}
+  ✓ /style [2] → {'style': 2}
+
+  7/7 形状正确 · 收到 127 条（含 120 条 60fps 突发）
+  ✓ 坏包没有让服务端崩掉
+```
+
+60 fps 的突发（120 条连发）全部收到、顺序不乱；空包和乱码包不会让中继挂掉。
+
+**TouchDesigner 本体跑不了这台机器**（官方只有 Windows / macOS 版本，没有 Linux 构建）。
+所以我能证明的是**协议面完全对齐**：TD 的 OSC Out CHOP 发出去的就是这些包，
+服务端逐条正确解析并广播给页面；浏览器侧那条 SSE 通路另有断言覆盖。
+
+## 5. 为什么走 OSC 而不是 WebSocket
 
 OSC 是这块领域的通用语言，几乎所有演出/装置软件都内置；
 浏览器侧我用 SSE 接住，等于「OSC 输入 → HTTP 广播 → 页面」，**零第三方依赖**。
