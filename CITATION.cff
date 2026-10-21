@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "Ink Scroll (墨卷)"
+message: "若在展览、论文或课程中使用，请引用本项目。"
+type: software
+authors:
+  - family-names: "Hunao"
+    given-names: ""
+    alias: "hunao1995"
+    website: "https://hunao1995.github.io/ink_scroll/"
+repository-code: "https://github.com/hunao1995/ink_scroll"
+url: "https://hunao1995.github.io/ink_scroll/"
+license: MIT
+keywords:
+  - interactive art
+  - ink painting
+  - computer vision
+  - OSC
+  - TouchDesigner
+  - installation
+abstract: >-
+  A browser-based interactive ink-painting installation: a monochrome scroll hides a
+  colour animated painting; 29 interaction modalities (no-device, camera-only, external
+  devices, local scripts) move a spotlight that reveals the colour underneath.
+version: "0.2.0"
+date-released: "2026-10-21"

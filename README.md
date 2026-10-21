@@ -15,6 +15,8 @@
 
 一幅**墨色立轴**覆在一幅**彩色山水**之上。你手里那盏光落在哪里，哪里的墨就化开、显色、活过来。
 
+**30 秒上手**：<https://hunao1995.github.io/ink_scroll/> —— 打开、选一种玩法、点「展开画卷」。想深入了解看 **[docs/ABOUT.md](docs/ABOUT.md)**；想用 Blender / TouchDesigner 驱动它看 **[docs/CREATIVE-TOOLS.md](docs/CREATIVE-TOOLS.md)**。
+
 **29 种交互方式**，分档：**13 种什么都不用**、**5 种只用摄像头**、**9 种插个装置**（手柄/MIDI/HID 摇杆/蓝牙/NFC/手机/串口/打印标记）、
 **2 种本机跑个小脚本**（OSC、外设桥）。
 
