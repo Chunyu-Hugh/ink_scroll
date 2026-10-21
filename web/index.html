@@ -1769,7 +1769,7 @@ const S={
   midi:{acc:null,nx:.5,ny:.5,r:.5,seen:false},
   osc:{es:null,x:.5,y:.5,z:.5,r:.5,t:0,ok:false},
   hid:null, ble:null,
-  bridge:{es:null,x:.5,y:.5,z:.5,r:.5,t:0,ok:false,name:''},
+  bridge:{es:null,x:.5,y:.5,z:.5,r:.5,t:0,ok:false,name:'',presence:1,state:{},id:null},
   nfc:{last:''},
   eyes:{ear:null,closed:false,last:0},
   light:{sensor:null,lux:-1,ok:false},
@@ -2911,6 +2911,9 @@ function extIngest(m){
   if(typeof m.x==='number') B.x=clampN(m.x,0,1);
   if(typeof m.y==='number') B.y=clampN(m.y,0,1);
   if(typeof m.z==='number') B.z=clampN(m.z,0,1);        // 0 = 贴近画纸, 1 = 深处
+  if(m.presence!=null) B.presence=clampN(+m.presence,0,1);
+  if(m.state&&typeof m.state==='object') B.state=m.state;
+  if(m.id!=null) B.id=String(m.id).slice(0,64);
   if(typeof m.r==='number') B.r=clampN(m.r,0.02,3);
   if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
   if(m.style!==undefined) setStyle(STYLE_ORDER[(m.style|0)%STYLE_ORDER.length]);
@@ -3055,6 +3058,29 @@ function clapOnset(){
   C.last=now;
   if(now-C.prev<760){ changeScene((S.scene+1)%SCENE_COUNT); C.prev=0; flashHint('👏'); }
   else { C.prev=now; pushSplat(S.mouseX,S.mouseY,58,100); }
+}
+
+/* ───────────────────────────────────────────────────────────
+   契约归一化 — 所有模态的输出都必须过这一关。
+
+   Spot = { x, y, radius, id, presence, state, hue?, brush?, ang?, frozen? }
+     · id        谁（多灯/多人时区分身份；单灯也有默认值）
+     · presence  在场强度 0..1（低 → 光圈更小更淡，用于"有人靠近/离开"）
+     · state     该模态自己的连续状态袋（呼吸值、抓握、深度…），渲染层不懂也无妨
+   这样加第 34 个模态时，不需要再往 x/y 里硬塞信息。
+   ─────────────────────────────────────────────────────────── */
+function normSpot(s,i){
+  if(!s) return null;
+  const pr = s.presence==null ? 1 : clampN(+s.presence,0,1);
+  return {
+    x: clampN(+s.x||0, 0, DW),
+    y: clampN(+s.y||0, 0, DH),
+    radius: clampRadius((s.radius==null?S.radius:+s.radius))*(0.55+0.45*pr),
+    id: s.id!=null ? String(s.id) : ('sp'+(i||0)),
+    presence: pr,
+    state: (s.state&&typeof s.state==='object') ? s.state : {},
+    hue: s.hue, brush: s.brush|0, ang: +s.ang||0, frozen: !!s.frozen,
+  };
 }
 
 /* ───────────────────────────────────────────────────────────
@@ -3340,7 +3366,8 @@ const M={
   bridge:{
     icon:'osc',nameKey:'modeBridge',group:'local',fallback:'hint',
     init(){ S.bridge.t=0; bridgeStart(); },   // 不复位 x/y/r：外部刚推来的坐标不能被清掉
-    spot(){ const B=S.bridge; return (B.t&&performance.now()-B.t<2200)?{x:B.x*DW,y:B.y*DH,radius:S.radius*B.r}:null; },
+    spot(){ const B=S.bridge; return (B.t&&performance.now()-B.t<2200)
+      ?{x:B.x*DW,y:B.y*DH,radius:S.radius*B.r,id:B.id||'ext',presence:B.presence,state:B.state}:null; },
     cln(){ bridgeStop(); },
     ex(){ return S.bridge.ok?('🔗 '+(S.bridge.name||t('fxBridgeOk'))):('🔗 '+t('fxBridgeWait')); },
   },
@@ -3935,6 +3962,7 @@ function processFrame(){
   // …but NOT when a hand is present in hand-mode making a fist (收光 = deliberately dark); only attract when truly idle (no hand)
   if(spots.length===0 && S.running && !(S.mode==='hand' && S.gesture!=='none')){ S.attract=(S.attract||0)+0.0045;
     spots=[{x:DW*(0.82-0.64*((S.attract*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.attract*0.9)), radius:S.radius*0.8}]; }
+  spots = spots.map(normSpot).filter(Boolean);      // 契约归一化（id/presence/state 在这里补全）
   // 留白守卫 — don't let a crowd floodlight the whole scroll; shrink radii once total revealed area passes ~38% of the painting
   if(S.imgBounds && spots.length>2){ const ib=S.imgBounds, maxA=ib.w*ib.h*0.38; let area=0; for(const s of spots){const r=s.radius||S.radius;area+=Math.PI*r*r;}
     if(area>maxA){ const k=Math.sqrt(maxA/area); for(const s of spots)s.radius=(s.radius||S.radius)*k; } }

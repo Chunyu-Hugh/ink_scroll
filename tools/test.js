@@ -725,6 +725,32 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('Blender 脚本走的是 /send?room=ext 且坐标归一化',
     /send\?room=ext/.test(bl) && /BOUND/.test(bl) && /max\(0\.0, min\(1\.0/.test(bl));
 
+  /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
+  group('4f · 契约升级：id / presence / state');
+  const ctr = await page.evaluate(() => {
+    const a = normSpot({ x: -50, y: 99999, radius: 120 });
+    const b = normSpot({ x: 10, y: 20, radius: 120, presence: 0 });
+    const c = normSpot({ x: 10, y: 20, radius: 120, presence: 1, id: 'phone#3', state: { breath: 0.7 } });
+    const d = normSpot({ x: 10, y: 20, radius: 120 }, 4);
+    return { a: [Math.round(a.x), Math.round(a.y), Math.round(a.radius), a.id, a.presence],
+             bR: Math.round(b.radius), cR: Math.round(c.radius), cid: c.id, cst: c.state.breath, did: d.id };
+  });
+  ok('契约：坐标被夹紧到画布内', ctr.a[0] === 0 && ctr.a[1] === DH, JSON.stringify(ctr.a));
+  ok('契约：缺省补 id、presence=1', ctr.a[3] === 'sp0' && ctr.a[4] === 1, JSON.stringify(ctr.a));
+  ok('契约：presence 低 → 光圈更小（0.55× 底）', ctr.bR < ctr.cR * 0.7, `${ctr.bR} vs ${ctr.cR}`);
+  ok('契约：id / state 原样透传（模态可带自己的状态袋）',
+    ctr.cid === 'phone#3' && ctr.cst === 0.7, JSON.stringify(ctr));
+  ok('契约：按序号生成 id（多灯时天然不冲突）', ctr.did === 'sp4', ctr.did);
+
+  const ext = await page.evaluate(async () => {
+    window.postMessage({ type: 'ink', x: 0.4, y: 0.6, presence: 0.25, id: 'td-osc', state: { warp: 3 } }, '*');
+    await new Promise(r => setTimeout(r, 90));
+    const sp = M.bridge.spot();
+    return { id: sp && sp.id, presence: sp && sp.presence, warp: sp && sp.state && sp.state.warp };
+  });
+  ok('契约：外部（OSC/HTTP/postMessage）也能带 presence/state/id',
+    ext.id === 'td-osc' && Math.abs(ext.presence - 0.25) < 1e-6 && ext.warp === 3, JSON.stringify(ext));
+
   /* ═══════════════ 5. phone relay (真机链路) ═══════════════ */
   group('5 · 手机魔杖 / phone relay (server.py + phone.html)');
   errs.length = 0;
