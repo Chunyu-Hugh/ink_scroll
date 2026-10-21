@@ -19,6 +19,31 @@
 `r` 是半径倍率（0.02–3），`scene` 0–5，`style` 0–3，`cmd` 支持 `splat` / `paint`。
 只发 `x,y` 也够用。
 
+## 一条命令自检（真的跑，不是文档）
+
+```bash
+python3 tools/check_integrations.py
+```
+
+它自己起中继，然后：
+
+```
+TouchDesigner / OSC（udp 9001）
+  ✓ OSC 报文被中继接收 — 5 条到达 SSE
+  ✓ OSC /spot/x 单轴生效
+  ✓ OSC /scene 生效
+
+Blender（真无头跑一次）
+  ✓ Blender 真的发出去了 — INK_POST 200
+  ✓ 物体坐标被正确归一化 — INK_PAYLOAD {"x": 0.35, "y": 0.4, ...}
+
+  5 passed   0 failed   0 skipped
+```
+
+- **CI 里会自动跑 OSC 那段**（`.github/workflows/e2e.yml`），所以 TouchDesigner 那条路径每次提交都被验证
+- Blender 找不到时**明确 skip**（不是假装通过）
+- 两种软件共用同一个载荷契约，所以这条检查同时覆盖 Resolume / Max / PD / Unreal 等所有 OSC 客户端
+
 ## 逐个软件
 
 ### Blender —— 已附脚本
