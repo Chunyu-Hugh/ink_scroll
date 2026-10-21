@@ -61,6 +61,8 @@ const M = {
 | **吐纳** `breath` | 麦克风**低频包络** | 位置 → 光标；**呼吸 → 半径** | — | 气息电平条 | 拒绝麦克风 → 指针；不看音高，嘈杂环境更稳 |
 | **语音** `speech` | 内置麦克风 + Web Speech | 位置 → 光标 | 「山水/竹林/雪/花鸟/星空」换场景；「大/小/留痕/泼墨」 | 识别到的字显示在 HUD | 无 API / 拒绝 → 指针（CI 上走这条） |
 | **摇一摇** `shake` | 加速度计 | 位置 → 光标 | **|a| > 16 m/s²** → 泼墨 + 振动 | 晃动电平条 | 无加速度计 → 提示后继续用指针 |
+| **拍手** `clap` | 麦克风瞬态 | 位置 → 光标 | **1 下泼墨 / 2 下换画**（760 ms 内） | 峰值电平条 | 拒绝麦克风 → 提示；嘈杂环境靠 260 ms 去抖 |
+| **环境光** `light` | `AmbientLightSensor` | 位置 → 光标；**照度 → 半径**（越暗越大） | — | lux 电平条 | 无传感器（多数桌面）→ 提示并固定半径 |
 
 ### 2.2 只用摄像头 · camera only
 
@@ -70,6 +72,7 @@ const M = {
 | **手势 · 空手** `hand` | MediaPipe Hands（0.4，锁定版本） | 手心 → x,y；食指 → 细光束 | 握拳 = 收光；✌️ = 换场景 | 右侧手势图例实时高亮 | 无手 → 吸引循环；模型加载失败 → 保持吸引 |
 | **面庞 · 头姿** `face` | MediaPipe FaceMesh | 鼻尖 → x,y；**张嘴幅度 → 半径** | — | HUD 电平条 = 张口度 | 无脸 → 「把脸放进画面」；加载失败 → 指针 |
 | **手电筒** `flashlight` | 摄像头亮点 | 亮度直方图加权质心（O(n)） | — | 光圈 | 无光点 → 吸引循环 |
+| **眨眼 · 眼睛** `eyes` | FaceMesh + **EAR**（眼宽高比） | 头姿 → x,y；张嘴 → 半径 | **每眨一次眼泼一次墨** | 眨眼电平条 | 无脸 → 提示；与 `face` 共用一份模型 |
 
 ### 2.3 需要插一个装置 · tier 2 — plug something in
 
@@ -80,12 +83,24 @@ const M = {
 | **IR · 追踪器** `ir` | OpenMV/Pixy2 + WebSerial（桌面 Chromium） | 串口每行 `x,y[,area]`，同一 Spot 契约 |
 | **手柄** `gamepad` | 任意标准手柄（Gamepad API） | 左摇杆 → 速度；RT/LT → 半径；A 换场景、B 泼墨、Y 留痕 |
 | **MIDI** `midi` | 任意 MIDI 控制器（Web MIDI，桌面 Chrome/Edge） | CC1/CC2 → x,y；CC7 → 半径；Note → 场景；36 号鼓垫 → 泼墨 |
+| **HID** `hid` | WebHID：Joy-Con / Wiimote / 任意 DIY 摇杆 | 已知厂商（任天堂）按报告解析，未知设备走"万能协议"：前 3 字节 = x,y,r；ZL 泼墨 |
+| **蓝牙** `ble` | Web Bluetooth：心率带 / Muse / ESP32 | 主服务第一个 notify 特征：≥3 字节 = x,y,r；心率服务（0x2A37）→ 心率直接驱动半径 |
+| **NFC** `nfc` | Web NFC（Chrome Android） | 贴纸里的文字走同一套关键词表（山水/竹林/雪/花鸟/星空）→ 换画 + 泼墨 |
 
 ### 2.4 需要本机跑一个小脚本 · tier 3 — small local script
 
 | 模态 | 需要 | 说明 |
 |---|---|---|
+| **外设桥** `bridge` | `python3 server.py` + 任意本地脚本（Leap / Kinect / RealSense / Tobii / 热像仪 / EEG） | 订阅 `room=ext`；脚本 `POST /send?room=ext` 发 `{x,y,r,scene,style,cmd:'splat',name}` 即可，**外设 SDK 只要会发 HTTP** |
 | **OSC** `osc` | `python3 server.py`（零依赖）+ TouchDesigner / Max / Pure Data / python-osc | 页面订阅 `room=osc`；UDP **9000** 收 OSC：`/spot f,f[,f]`、`/spot/x|y|r f`、`/scene i`、`/style i`。也可以直接 `POST /send?room=osc` 或 `POST /osc` 发 JSON。TouchDesigner 用 CHOP → OSC Out（Network Port 9000）即可 |
+
+### 2.5 内容层 · content
+
+| 内容 | 说明 |
+|---|---|
+| 5 张水墨画 | `web/scenes/*.jpg`，`cover` 全幅出血 + 预缩放缓存 |
+| **3D 视差立轴**（第 6 张） | 程序化三层山脊，以不同速度漂移 + 雾带 —— 不依赖任何素材就有景深 |
+| **视频层** | `?video=<url>` 把任意 mp4/webm 当彩色层，墨层从当前帧生成（跨域视频需 CORS） |
 
 ## 3. 通用层 · Universal layer（与模态无关）
 
