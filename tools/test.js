@@ -824,6 +824,50 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('投影墙链路无报错', werr.length === 0, werr.join('|'));
   await wall.close();
 
+  /* ═══════════════ 8c. 立体输出 / stereo ═══════════════ */
+  group('8c · 立体输出（红蓝 / 左右分屏）');
+  const st3 = await browser.newPage({ viewport: { width: 1000, height: 620 } });
+  const sterr = []; watch(st3, sterr);
+  await st3.goto(`${BASE}/index.html?mode=mouse&scene=6&stereo=anaglyph`);
+  await st3.waitForFunction(() => S.running === true, { timeout: 20000 }).catch(() => {});
+  await sleep(1200);
+  const ana = await st3.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 200;
+    const g = c.getContext('2d'); g.drawImage(D, 0, 0, 320, 200);
+    const d = g.getImageData(0, 0, 320, 200).data;
+    let red = 0, cyan = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] - d[i + 2] > 22) red++;
+      if (d[i + 2] - d[i] > 22) cyan++;
+    }
+    return { stereo: S.stereo, red, cyan, total: 320 * 200 };
+  });
+  ok('红蓝立体：?stereo=anaglyph 生效', ana.stereo === 'anaglyph', JSON.stringify({ s: ana.stereo }));
+  ok('红蓝立体：画面里同时存在红通道与青通道像素',
+    ana.red > 30 && ana.cyan > 30, `red=${ana.red} cyan=${ana.cyan}`);
+  await st3.close();
+
+  const sbs = await browser.newPage({ viewport: { width: 1000, height: 620 } });
+  await sbs.goto(`${BASE}/index.html?mode=mouse&scene=6&stereo=sbs`);
+  await sbs.waitForFunction(() => S.running === true, { timeout: 20000 }).catch(() => {});
+  await sleep(1200);
+  const halves = await sbs.evaluate(() => {
+    const c = document.createElement('canvas'); c.width = 200; c.height = 100;
+    const g = c.getContext('2d'); g.drawImage(D, 0, 0, 200, 100);
+    const d = g.getImageData(0, 0, 200, 100).data;
+    let l = 0, r = 0;
+    for (let y = 0; y < 100; y++) for (let x = 0; x < 200; x++) {
+      const i = (y * 200 + x) * 4;
+      if (x < 99) l += d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
+      else if (x > 100) r += d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
+    }
+    return { stereo: S.stereo, l: +(l / 9900).toFixed(2), r: +(r / 9900).toFixed(2) };
+  });
+  ok('左右立体：?stereo=sbs 生效且两半不同', halves.stereo === 'sbs' && Math.abs(halves.l - halves.r) > 0.5,
+    `L=${halves.l} R=${halves.r}`);
+  ok('立体输出链路无报错', sterr.length === 0, sterr.join('|'));
+  await sbs.close();
+
   /* ═══════════════ 9. deep links & resize ═══════════════ */
   group('9 · 深链 / 尺寸变化');
   const dl = await browser.newPage({ viewport: { width: 1000, height: 700 } });
