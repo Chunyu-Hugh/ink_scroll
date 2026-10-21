@@ -299,6 +299,8 @@ node tools/test.js
 | 翻译到其他语言 | 开 issue 提议（三语字典在 `web/index.html` 的 `I18N`） |
 | 写代码 | Fork → PR。**核心规则只有一条**：单文件、零构建、零框架 |
 
+身体数据与伦理：[docs/ETHICS.md](docs/ETHICS.md)
+
 行为准则：[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · 安全问题：[SECURITY.md](SECURITY.md)
 
 ## 📄 License

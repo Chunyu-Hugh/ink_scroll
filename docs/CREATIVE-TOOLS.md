@@ -44,6 +44,19 @@ Blender（真无头跑一次）
 - Blender 找不到时**明确 skip**（不是假装通过）
 - 两种软件共用同一个载荷契约，所以这条检查同时覆盖 Resolume / Max / PD / Unreal 等所有 OSC 客户端
 
+## MQTT（IoT 按钮 / ESP32 / Home Assistant）
+
+```bash
+pip install paho-mqtt
+MQTT_HOST=192.168.1.10 MQTT_TOPIC=studio/spot python3 tools/mqtt_bridge.py
+```
+
+桥把 MQTT 消息转成 HTTP 广播给页面（`room=ext`），payload 支持：
+`{"x":0.4,"y":0.6,"r":1.2}`、`0.4,0.6`、`[x,y,r]`、`{"scene":2}`、`{"cmd":"splat"}`。
+
+> **诚实标注**：这个脚本没有在真实 broker 上验证过（这台机器装不了 mosquitto）。
+> 已验证的是它的 payload 解析（6 组用例，含空包与非法输入）以及它依赖的 HTTP 路径。
+
 ## 灯光 / 舞台（Art-Net）
 
 页面状态 → **Art-Net DMX**，真灯跟着光圈走：
