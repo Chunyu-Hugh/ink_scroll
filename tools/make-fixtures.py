@@ -16,6 +16,11 @@ import os, sys, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fixtures")
 SRC = "https://upload.wikimedia.org/wikipedia/commons/5/55/Mae_Carol_Jemison.jpg"
+# a real pair of open hands (so the hand model is exercised with a real subject)
+SRC_HANDS = ("https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/"
+             "Human-Hands-Front-Back.jpg/960px-Human-Hands-Front-Back.jpg")
+# fixtures stay local (gitignored); sources: NASA (public domain) and
+# Evan-Amos / Wikimedia Commons (CC BY-SA 3.0)
 W, H, FPS = 640, 480, 15
 
 
@@ -40,6 +45,12 @@ def y4m(path, frames, draw=None, blend=0.0):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
+    hands = os.path.join(OUT, "hand.jpg")
+    if not os.path.exists(hands):
+        print("  downloading a real hands photo…")
+        req = urllib.request.Request(SRC_HANDS, headers={"User-Agent": "ink-scroll-tests/1.0"})
+        with urllib.request.urlopen(req, timeout=60) as r, open(hands, "wb") as f:
+            f.write(r.read())
     jpg = os.path.join(OUT, "face.jpg")
     if not os.path.exists(jpg):
         print("  downloading a public-domain NASA portrait…")
@@ -52,6 +63,20 @@ def main():
         cx = int(W * 0.15 + W * 0.7 * n / total)
         d.rectangle([cx - 45, H // 2 - 120, cx + 45, H // 2 + 120], fill=(245, 245, 240))
     y4m(os.path.join(OUT, "moving.y4m"), frames=240, draw=bar, blend=0.55)
+    # same still frame, two extra camera feeds used to prove real recognition
+    def still(src, out):
+        from PIL import Image, ImageDraw
+        im = Image.open(src).convert("RGB").resize((W, H), Image.LANCZOS)
+        with open(out, "wb") as f:
+            f.write(f"YUV4MPEG2 W{W} H{H} F{FPS}:1 Ip A1:1 C420jpeg\n".encode())
+            for _ in range(240):
+                y, cb, cr = im.convert("YCbCr").split()
+                f.write(b"FRAME\n"); f.write(y.tobytes())
+                f.write(cb.resize((W // 2, H // 2), Image.BILINEAR).tobytes())
+                f.write(cr.resize((W // 2, H // 2), Image.BILINEAR).tobytes())
+    still(os.path.join(OUT, "face.jpg"), os.path.join(OUT, "facecam.y4m"))
+    still(hands, os.path.join(OUT, "hand.y4m"))
+    print("  wrote hand.y4m / facecam.y4m (real recognition fixtures)")
     print("  done — now run: node tools/test.js")
 
 

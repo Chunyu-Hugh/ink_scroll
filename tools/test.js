@@ -461,6 +461,41 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await sleep(400);
   ok('视频内容层：坏 URL 不会让画卷崩掉', vd && (await page.evaluate(() => S.running)));
 
+  /* ═══════════════ 4d. 真·识别（用真实照片喂摄像头） ═══════════════ */
+  group('4d · 真识别：用真实照片证明 MediaPipe 认出东西了');
+  if (!CAMERA) { skip('真识别', 'no fixtures'); }
+  else {
+    const recog = async (fixture, mode, read) => {
+      const b2 = await chromium.launch({
+        executablePath: CHROME, headless: !HEADED,
+        args: ['--no-sandbox', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
+          '--use-file-for-fake-video-capture=' + path.join(__dirname, 'fixtures', fixture),
+          '--autoplay-policy=no-user-gesture-required'],
+      });
+      const p2 = await b2.newPage({ viewport: { width: 900, height: 600 } });
+      const e2 = []; watch(p2, e2);
+      await p2.goto(`${BASE}/index.html?mode=${mode}`);
+      await p2.waitForFunction(() => S.running === true, { timeout: 20000 }).catch(() => {});
+      for (let i = 0; i < 12; i++) await sleep(500);      // let the model load + one pass
+      const out = await p2.evaluate(read);
+      await b2.close();
+      return { out, errs: e2 };
+    };
+    const hand = await recog('hand.y4m', 'hand', () => ({
+      landmarks: S.hlm ? S.hlm.length : 0, gesture: S.gesture,
+      spot: M.hand.spot(null) ? 1 : 0,
+    }));
+    ok('真识别 · 手势：真实手部照片认出 21 个关键点', hand.out.landmarks === 21, JSON.stringify(hand.out));
+    ok('真识别 · 手势：手张开 → 光圈跟随', hand.out.gesture === 'open' && hand.out.spot === 1, JSON.stringify(hand.out));
+
+    const face = await recog('facecam.y4m', 'face', () => ({
+      seen: !!S.face.seen, nx: +(S.face.nx || 0).toFixed(2), ear: +(S.eyes.ear || 0).toFixed(2),
+      spot: M.face.spot() ? 1 : 0,
+    }));
+    ok('真识别 · 面庞：真实人脸被检出并给出坐标', face.out.seen === true && face.out.spot === 1, JSON.stringify(face.out));
+    ok('真识别 · 眨眼：EAR 在睁眼范围内（0.2–0.6）', face.out.ear > 0.2 && face.out.ear < 0.6, 'ear=' + face.out.ear);
+  }
+
   /* ═══════════════ 5. phone relay (真机链路) ═══════════════ */
   group('5 · 手机魔杖 / phone relay (server.py + phone.html)');
   errs.length = 0;
