@@ -1713,9 +1713,9 @@ const S={
   shake:{last:0,mag:0},
   gamepad:{x:0,y:0,r:1,seen:false,btn:[]},
   midi:{acc:null,nx:.5,ny:.5,r:.5,seen:false},
-  osc:{es:null,x:.5,y:.5,r:.5,t:0,ok:false},
+  osc:{es:null,x:.5,y:.5,z:.5,r:.5,t:0,ok:false},
   hid:null, ble:null,
-  bridge:{es:null,x:.5,y:.5,r:.5,t:0,ok:false,name:''},
+  bridge:{es:null,x:.5,y:.5,z:.5,r:.5,t:0,ok:false,name:''},
   nfc:{last:''},
   eyes:{ear:null,closed:false,last:0},
   light:{sensor:null,lux:-1,ok:false},
@@ -1876,10 +1876,12 @@ function drawCloud(g,W,H,t,mono){
   g.fillRect(0,0,W,H);
   if(!C) return;
   const pts=C.pts, n=pts.length;
-  const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22;
+  const zl=(S.bridge&&typeof S.bridge.z==='number')?S.bridge.z:0.5;
+  const dolly=(zl-0.5)*1.1;                       // 外部推来的 z → 推轨
+  const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22 + dolly*0.55;
   const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30;
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
-  const f=1.55, sc=Math.min(W,H)*0.62;
+  const f=1.55, sc=Math.min(W,H)*0.62*(1+dolly*0.45);
   for(let i=0;i<n;i++){
     const p=pts[i];
     const X=p.x, Y=p.y, Z=-p.z*1.15;
@@ -2683,6 +2685,7 @@ function oscStart(){
       let m; try{ m=JSON.parse(e.data); }catch(err){ return; }
       if(typeof m.x==='number') O.x=clampN(m.x,0,1);
       if(typeof m.y==='number') O.y=clampN(m.y,0,1);
+      if(typeof m.z==='number') O.z=clampN(m.z,0,1);
       if(typeof m.r==='number') O.r=clampN(m.r,0.02,3);
       if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
       if(m.style!==undefined) setStyle(['edges','sketch','dark','paper'][(m.style|0)%4]);
@@ -2787,6 +2790,7 @@ function bridgeStart(){
       let m; try{ m=JSON.parse(e.data); }catch(err){ return; }
       if(typeof m.x==='number') B.x=clampN(m.x,0,1);
       if(typeof m.y==='number') B.y=clampN(m.y,0,1);
+      if(typeof m.z==='number') B.z=clampN(m.z,0,1);
       if(typeof m.r==='number') B.r=clampN(m.r,0.02,3);
       if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
       if(m.style!==undefined) setStyle(STYLE_ORDER[(m.style|0)%STYLE_ORDER.length]);
@@ -2809,6 +2813,7 @@ function extIngest(m){
   const B=S.bridge;
   if(typeof m.x==='number') B.x=clampN(m.x,0,1);
   if(typeof m.y==='number') B.y=clampN(m.y,0,1);
+  if(typeof m.z==='number') B.z=clampN(m.z,0,1);        // 0 = 贴近画纸, 1 = 深处
   if(typeof m.r==='number') B.r=clampN(m.r,0.02,3);
   if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
   if(m.style!==undefined) setStyle(STYLE_ORDER[(m.style|0)%STYLE_ORDER.length]);

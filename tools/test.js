@@ -485,6 +485,26 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     `${cloud.a.mean}/${cloud.a.nz} vs ${cloud.b.mean}/${cloud.b.nz}`);
   const staticDeps = [...fs.readFileSync(path.join(ROOT, 'web/index.html'), 'utf8')
     .matchAll(/<script src="(https?:[^"]+)"/g)].map(m => m[1]);
+  // 深度进契约：外部推 z → 点云推轨（画面必须变）
+  const depth = await page.evaluate(async () => {
+    changeScene(6); await new Promise(r => setTimeout(r, 350));
+    const snap = () => { const c = document.createElement('canvas'); c.width = 48; c.height = 30;
+      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 48, 30);
+      const d = g.getImageData(0, 0, 48, 30).data; let s2 = 0;
+      for (let i = 0; i < d.length; i += 4) s2 += d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
+      return +(s2 / (48 * 30)).toFixed(1); };
+    S.bridge.z = 0.0; await new Promise(r => setTimeout(r, 280)); const near = snap();
+    S.bridge.z = 1.0; await new Promise(r => setTimeout(r, 280)); const far = snap();
+    return { near, far, got: +S.bridge.z.toFixed(1) };
+  });
+  ok('深度 z 进契约：推 z 会改变点云视角/推轨', depth.near !== depth.far,
+    `z=0 → ${depth.near}, z=1 → ${depth.far}`);
+  ok('postMessage 携带 z 会被接收', await page.evaluate(async () => {
+    window.postMessage({ type: 'ink', x: 0.5, y: 0.5, z: 0.25 }, '*');
+    await new Promise(r => setTimeout(r, 90));
+    return Math.abs(S.bridge.z - 0.25) < 1e-6;
+  }));
+
   ok('点云立轴：没有引入新的 CDN 依赖（静态脚本仍 ≤4）', staticDeps.length <= 4,
     staticDeps.length + ' → ' + staticDeps.map(u => u.split('/')[2]).join(','));
 

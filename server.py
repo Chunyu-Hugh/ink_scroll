@@ -24,9 +24,10 @@ Ink Scroll — tiny SSE relay + static file server (stdlib only, no dependencies
     GET  /*                     → web/ 静态文件
 
 OSC → 光圈 的约定（地址 → 字段）
-    /spot   f,f[,f]   → x, y, radius   (0..1, 0..1, 0.02..3)
+    /spot   f,f[,f[,f]] → x, y [,z] [,radius]  (z = 0 贴近画纸 … 1 深处)
     /spot/x f         → x
     /spot/y f         → y
+    /spot/z f         → 深度（只在点云场景有视觉意义）
     /spot/r f         → radius
     /scene  i         → 0..4
     /style  i         → 0=墨线 1=素描 2=暗调 3=纸本
@@ -108,12 +109,14 @@ def parse_osc(data):
     msg = {}
     if address.startswith("/spot"):
         tail = address[5:].lstrip("/")
-        if tail in ("x", "y", "r") and args:
+        if tail in ("x", "y", "z", "r") and args:
             msg[tail] = float(args[0])
         elif len(args) >= 2:
             msg["x"] = float(args[0]); msg["y"] = float(args[1])
             if len(args) >= 3:
-                msg["r"] = float(args[2])
+                msg["z" if len(args) >= 4 else "r"] = float(args[2])
+            if len(args) >= 4:
+                msg["r"] = float(args[3])
     elif address.rstrip("/") == "/scene" and args:
         msg["scene"] = int(args[0])
     elif address.rstrip("/") == "/style" and args:
