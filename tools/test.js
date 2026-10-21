@@ -774,6 +774,38 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await reduced.screenshot({ path: path.join(SHOTS, 'reduced-motion.png') });
   await reduced.close();
 
+  /* ═══════════════ 8b. 投影墙 / wall mode ═══════════════ */
+  group('8b · 投影墙（?wall=1 + 校准网格）');
+  const wall = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  const werr = []; watch(wall, werr);
+  await wall.goto(`${BASE}/index.html?wall=1&mode=auto`);
+  await wall.waitForFunction(() => S.running === true, { timeout: 20000 }).catch(() => {});
+  await sleep(900);
+  const w = await wall.evaluate(() => {
+    const vis = (id) => { const e = document.getElementById(id); if (!e) return 'missing';
+      const cs = getComputedStyle(e); return cs.display === 'none' ? 'hidden' : 'shown'; };
+    return { cls: document.body.className, grid: S.grid, wall: S.wall,
+      ui: vis('ui'), bar: vis('bar'), hint: vis('first-hint'), nav: vis('scene-nav') };
+  });
+  ok('?wall=1 进入投影墙模式并自动开卷', w.wall === true && w.cls.includes('wall'), JSON.stringify(w));
+  ok('投影墙：HUD / 控制栏 / 提示 / 场景点全部隐藏',
+    w.ui === 'hidden' && w.bar === 'hidden' && w.hint === 'hidden' && w.nav === 'hidden', JSON.stringify(w));
+  const gridPix = await wall.evaluate(async () => {
+    const grab = () => { const c = document.createElement('canvas'); c.width = 320; c.height = 200;
+      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 320, 200);
+      return g.getImageData(0, 0, 320, 200).data; };
+    S.paused = true;
+    S.grid = false; await new Promise(r => setTimeout(r, 300)); const off = grab();
+    S.grid = true;  await new Promise(r => setTimeout(r, 300)); const on = grab();
+    let diff = 0;
+    for (let i = 0; i < off.length; i += 4) if (Math.abs(off[i] - on[i]) > 8) diff++;
+    return { diff, total: 320 * 200 };
+  });
+  ok('投影墙：校准网格会真的画出来（像素有差）', gridPix.diff > gridPix.total * 0.004,
+    `${gridPix.diff}/${gridPix.total} 像素被网格改变`);
+  ok('投影墙链路无报错', werr.length === 0, werr.join('|'));
+  await wall.close();
+
   /* ═══════════════ 9. deep links & resize ═══════════════ */
   group('9 · 深链 / 尺寸变化');
   const dl = await browser.newPage({ viewport: { width: 1000, height: 700 } });
