@@ -791,17 +791,18 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('投影墙：HUD / 控制栏 / 提示 / 场景点全部隐藏',
     w.ui === 'hidden' && w.bar === 'hidden' && w.hint === 'hidden' && w.nav === 'hidden', JSON.stringify(w));
   const gridPix = await wall.evaluate(async () => {
-    const snap = () => { const c = document.createElement('canvas'); c.width = 96; c.height = 60;
-      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 96, 60);
-      const d = g.getImageData(0, 0, 96, 60).data; let s2 = 0;
-      for (let i = 0; i < d.length; i += 4) s2 += d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114;
-      return +(s2 / (96 * 60)).toFixed(2); };
-    S.grid = false; S.paused = true; await new Promise(r => setTimeout(r, 350)); const off = snap();
-    S.grid = true;  await new Promise(r => setTimeout(r, 350)); const on = snap();
-    return { off, on };
+    const grab = () => { const c = document.createElement('canvas'); c.width = 320; c.height = 200;
+      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 320, 200);
+      return g.getImageData(0, 0, 320, 200).data; };
+    S.paused = true;
+    S.grid = false; await new Promise(r => setTimeout(r, 300)); const off = grab();
+    S.grid = true;  await new Promise(r => setTimeout(r, 300)); const on = grab();
+    let diff = 0;
+    for (let i = 0; i < off.length; i += 4) if (Math.abs(off[i] - on[i]) > 8) diff++;
+    return { diff, total: 320 * 200 };
   });
-  ok('投影墙：校准网格会真的画出来（像素有差）', Math.abs(gridPix.on - gridPix.off) > 0.4,
-    `grid off ${gridPix.off} → on ${gridPix.on}`);
+  ok('投影墙：校准网格会真的画出来（像素有差）', gridPix.diff > gridPix.total * 0.004,
+    `${gridPix.diff}/${gridPix.total} 像素被网格改变`);
   ok('投影墙链路无报错', werr.length === 0, werr.join('|'));
   await wall.close();
 
