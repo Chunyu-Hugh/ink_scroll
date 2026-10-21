@@ -528,16 +528,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('头部视差：人头前进/侧移会改变点云视角', head.diff > head.total * 0.05,
     `${head.diff}/${head.total} 像素不同`);
 
-  // 视角三件套：滚轮推拉、双击定住、Shift+拖绕轴
-  const view = await page.evaluate(async () => {
-    changeScene(6); await new Promise(r => setTimeout(r, 300));
-    const snap = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
-      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 200, 120);
-      return g.getImageData(0, 0, 200, 120).data; };
-    const zoomOut = snap();
-    await page.mouseWheel(0, 120);   // will throw in evaluate... replaced below
-    return 0;
-  }).catch(() => 0);
+  // 视角三件套：滚轮推拉、双击定住、Shift+拖绕轴（确定性渲染对比）
   // wheel zoom: drive the state directly, then compare render
   const zoomPix = await page.evaluate(() => {
     const mk = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
