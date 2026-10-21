@@ -41,6 +41,17 @@ node tools/rsi/score.mjs          # 7 维 fitness，看有没有维度回退
 - `together` 的 `togetherLow` 是连续量、不是布尔，提示只弹一次（`togetherHinted`）—— 可接受
 - `daily` 目前只影响分享卡题款 —— 诚实但薄，记在 FORMS.md 的"还没做"里
 
+### 2026-10-21 · 偿还 singleFile 欠债
+
+| # | 发现 | 处理 |
+|---|---|---|
+| 1 | `qrcode-generator` 只为配对页画一个二维码 | **删掉**，改成可点链接 + 可复制；少一个包、少一次第三方请求 |
+| 2 | 记分卡把 `@mediapipe/hands` 与 `@mediapipe/face_mesh` 数成两个库 | **按 npm 包计**（`@mediapipe` 算一个）—— 这才是"≤4 个 CDN 库"的本意 |
+| 3 | 删库后没有回归断言 | 补：源码里不得再出现 `qrcode-generator` / `qrcode(` |
+
+结果：`singleFile 50% → 100%`，fitness `93.6% → 99.8%`（唯一未满分的 e2e 是因为
+`last-run.json` 是旧的，重跑即满）。
+
 ### 待审（下次）
 
 - 供奉 / 驱赶 / 召唤 三条新形式（写之前先想清楚跨模态副作用）

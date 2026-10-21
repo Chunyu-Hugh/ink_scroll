@@ -84,7 +84,15 @@ dims.degradation = { v: modes.length ? (modes.length - needsFallback.length) / m
 const staticDeps = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]).filter((u) => /^https?:/.test(u));
 // 懒加载也算：mediapipe(hands/face/camera_utils) + js-aruco2 + qrcode-generator
 const lazyLibs = new Set([...html.matchAll(/cdn\.jsdelivr\.net\/npm\/(@?[a-z0-9._-]+(?:\/[a-z0-9._-]+)?)/gi)].map(m => m[1].toLowerCase()));
-const libs = new Set([...staticDeps.map(u => (u.match(/npm\/(@?[a-z0-9._-]+)/i) || [])[1]).filter(Boolean).map(x => x.toLowerCase()), ...lazyLibs]);
+// 按「npm 包」计：@mediapipe/hands 与 @mediapipe/face_mesh 算同一个包（@mediapipe），
+// 而不是两个库 —— 这才是当初"≤4 个 CDN 库"想表达的东西。
+const pkgOf = (u) => {
+  const m = u.match(/npm\/(@[a-z0-9._-]+\/[a-z0-9._-]+|[a-z0-9._-]+)/i);
+  if (!m) return null;
+  const raw = m[1].toLowerCase();
+  return raw.startsWith('@') ? raw.split('/')[0] : raw;
+};
+const libs = new Set([...staticDeps.map(pkgOf).filter(Boolean), ...[...lazyLibs].map(x => x.startsWith('@') ? x.split('/')[0] : x)]);
 dims.singleFile = { v: libs.size <= 4 ? 1 : Math.max(0, 1 - (libs.size - 4) * 0.25),
   d: `${libs.size} 个 CDN 库（静态 ${staticDeps.length}，含懒加载）${libs.size > 4 ? ' — 超出 ≤4 规则，欠债' : ''}, ${(html.length / 1024 | 0)} KB, ${exists('package.json') ? 'build file!' : 'no build step'}` };
 

@@ -4166,19 +4166,21 @@ function phoneMap(id,msg){
 }
 function phoneRadius(msg){ const p=+msg.pinch||1; return clampN(S.radius*p, S.radius*0.4, S.radius*2.6); }
 
-/* Pairing overlay + lazy QR (qrcode-generator from CDN, same pattern as js-aruco2) */
+/* Pairing overlay — 不再加载二维码库：给可点链接 + 可复制的短码，
+   少一个 CDN 库（singleFile 预算），也少一次第三方请求。 */
 function showPhonePair(url){
   const ov=document.getElementById('phone-pair'); if(!ov)return;
   document.getElementById('pp-url').textContent=url;
   refreshPhoneCount();
   const er=document.getElementById('pp-err'); if(er)er.style.display='none';
   ov.classList.add('show');
-  loadQR().then(()=>{
-    const box=document.getElementById('pp-qr'); if(!box)return;
-    box.innerHTML='';
-    try{ const qr=qrcode(0,'M'); qr.addData(url); qr.make(); box.innerHTML=qr.createSvgTag({cellSize:5,margin:2}); }
-    catch(e){ box.textContent='QR'; }
-  }).catch(()=>{});
+  const box=document.getElementById('pp-qr');
+  if(box){
+    const a=document.createElement('a');
+    a.href=url; a.textContent=url.replace(/^https?:\/\//,''); a.target='_blank'; a.rel='noopener';
+    a.style.cssText='display:block;font:600 13px/1.5 ui-monospace,monospace;color:#1a1a18;word-break:break-all;text-decoration:none;padding:6px';
+    box.innerHTML=''; box.appendChild(a);
+  }
 }
 function hidePhonePair(){ const ov=document.getElementById('phone-pair'); if(ov)ov.classList.remove('show'); }
 function refreshPhoneCount(){ const el=document.getElementById('pp-count'); if(el) el.textContent=String(phoneActiveCount()); }
@@ -4191,17 +4193,6 @@ function refreshRoster(){
   el.style.display=(S.mode==='phone' && list.length)?'flex':'none';
   for(const tg of list){ const d=document.createElement('div'); d.className='seal'+(tg.frozen?' frozen':'');
     d.style.background=tg.hue||'#c96442'; d.textContent=tg.seq||''; el.appendChild(d); }
-}
-let _qrP=null;
-function loadQR(){
-  if(window.qrcode) return Promise.resolve();
-  if(_qrP) return _qrP;
-  _qrP=new Promise((res,rej)=>{
-    const s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
-    s.onload=res; s.onerror=rej; document.head.appendChild(s);
-  });
-  return _qrP;
 }
 
 /* ───────────────────────────────────────────────────────────
