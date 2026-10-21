@@ -190,6 +190,31 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.setViewportSize({ width: 1440, height: 900 });
   await sleep(200);
 
+  /* ═══════════════ 2c. 首页是否"展示完整"（预设 + 输出开关都有 UI） ═══════════════ */
+  group('2c · 首页展示完整性：预设一排 + 帮助面板的输出开关');
+  const ui = await page.evaluate(() => {
+    const presets = [...document.querySelectorAll('#presets button')].map(b => b.dataset.preset);
+    buildHelpModes();
+    const outs = [...document.querySelectorAll('#help-output .help-mode')].map(b => b.textContent.trim());
+    return { presets, outs, helpModes: document.querySelectorAll('#help-modes .help-mode').length,
+             cards: document.querySelectorAll('.mode-card').length };
+  });
+  ok('首页有 4 个预设按钮（不再只能靠 URL 参数）',
+    ui.presets.length === 4 && ui.presets.join(',') === 'gallery,kiosk,stereo,lab', ui.presets.join(','));
+  ok('帮助面板有 4 个输出开关（墙/网格/立体/点云）', ui.outs.length === 4, ui.outs.join(' | '));
+  ok('帮助面板同时列出 42 个模态', ui.helpModes === 42, String(ui.helpModes));
+
+  const clicked = await page.evaluate(async () => {
+    const b = document.querySelector('#presets button[data-preset="kiosk"]');
+    b.click();
+    await new Promise(r => setTimeout(r, 1200));
+    return { wall: S.wall, grid: S.grid, cls: document.body.classList.contains('wall'), running: S.running };
+  });
+  ok('点一下「展厅」预设 → 进入投影墙 + 网格并开卷',
+    clicked.wall === true && clicked.grid === true && clicked.cls === true, JSON.stringify(clicked));
+  await page.evaluate(async () => { stop(); await new Promise(r => setTimeout(r, 400)); document.body.classList.remove('wall'); S.wall = false; S.grid = false; });
+  await sleep(300);
+
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
   await page.click('#btn-start');

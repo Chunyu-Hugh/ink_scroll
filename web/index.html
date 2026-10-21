@@ -676,6 +676,18 @@ body.wall .credit,body.wall #roster,body.wall #gh,body.wall #glegend,
 body.wall .lang-switch{display:none !important}
 body.wall{cursor:none}
 
+/* 预设一排：4 个一键配置（此前只有 ?preset= 能触发） */
+.preset-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:2px 0 18px}
+.preset-row button{
+  font-family:var(--serif);font-size:.7rem;letter-spacing:.12em;
+  padding:7px 14px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--cream-border);background:var(--ivory);color:var(--stone);
+  transition:border-color .2s,color .2s,background-color .2s;
+}
+.preset-row button:hover{border-color:var(--clay);color:var(--clay)}
+.preset-row button b{color:var(--ink);font-weight:600}
+.preset-row button.on{background:#fbf2ec;border-color:var(--clay);color:var(--clay)}
+
 /* ══════════════════════════════════════════════════════════
    MODE GROUPS — the start screen now explains *what a mode
    needs* before you commit: no device / just a camera /
@@ -863,6 +875,7 @@ html[lang^="zh"] .overlay .sheet .sect-h{letter-spacing:.3em;text-transform:none
   <div class="tagline" data-i18n="tagline">光照之处，墨色生辉</div>
 
   <div class="mode-groups" id="mg"></div>
+  <div class="preset-row" id="presets" role="group" aria-label="Presets"></div>
 
   <button id="btn-start" data-i18n="btnStart">展开画卷</button>
 
@@ -951,6 +964,10 @@ html[lang^="zh"] .overlay .sheet .sect-h{letter-spacing:.3em;text-transform:none
     <div class="sect">
       <div class="sect-h"><span data-i18n="helpModes">换一种揭示方式</span></div>
       <div class="help-modes" id="help-modes"></div>
+    </div>
+    <div class="sect">
+      <div class="sect-h"><span data-i18n="helpOutput">输出</span></div>
+      <div class="help-modes" id="help-output"></div>
     </div>
     <div class="sect" id="help-keys-sect">
       <div class="sect-h"><span data-i18n="helpKeys">键盘</span></div>
@@ -1330,6 +1347,11 @@ const I18N = {
     helpTitle:'如何游玩',
     helpSub:'画卷外面是墨，里面是色。让光落在哪里，哪里就活过来。',
     helpModes:'换一种揭示方式',
+    helpOutput:'输出',
+    outWall:'投影墙',
+    outGrid:'校准网格',
+    outStereo:'立体输出',
+    outScene3D:'点云场景',
     helpKeys:'键盘',
     helpNote:'手电筒、手势、面庞、动影需要摄像头；眼动需要一张打印的 ArUco 标记；手机众光需要中继服务器。',
     helpBack:'返回标题',
@@ -1571,6 +1593,11 @@ const I18N = {
     helpTitle:'如何遊玩',
     helpSub:'畫卷外面是墨，裡面是色。讓光落在哪裡，哪裡就活過來。',
     helpModes:'換一種揭示方式',
+    helpOutput:'輸出',
+    outWall:'投影牆',
+    outGrid:'校準網格',
+    outStereo:'立體輸出',
+    outScene3D:'點雲場景',
     helpKeys:'鍵盤',
     helpNote:'手電筒、手勢、面龐、動影需要攝像頭；眼動需要一張列印的 ArUco 標記；手機眾光需要中繼伺服器。',
     helpBack:'返回標題',
@@ -1812,6 +1839,11 @@ const I18N = {
     helpTitle:'How to play',
     helpSub:'Ink outside, colour inside. Wherever the light falls, the scroll comes alive.',
     helpModes:'Choose another way to reveal',
+    helpOutput:'Output',
+    outWall:'Projection wall',
+    outGrid:'Calibration grid',
+    outStereo:'Stereo output',
+    outScene3D:'Point-cloud scene',
     helpKeys:'Keyboard',
     helpNote:'Flashlight, hand, face and shadow need a camera; gaze needs a printed ArUco marker; many-lights needs a relay server.',
     helpBack:'Back to title',
@@ -1872,6 +1904,8 @@ function applyTranslations(){
   });
   // Refresh mode cards
   rebuildModeCards();
+  if(typeof buildPresets==='function') buildPresets();
+  if(typeof buildHelpModes==='function') buildHelpModes();
   // Refresh scene nav tooltips
   refreshSceneNav();
   // Refresh HUD scene name (HUD mode/style/radius refresh per frame in processFrame)
@@ -4881,6 +4915,33 @@ function syncBar(){
   if(bf){ const fs=!!(document.fullscreenElement||document.webkitFullscreenElement); bf.classList.toggle('on',fs); bf.setAttribute('aria-pressed',fs?'true':'false'); }
   rebuildModeCards();
 }
+const PRESET_LABEL={
+  gallery:{zh:'日常',en:'daily'}, kiosk:{zh:'展厅',en:'kiosk'},
+  stereo:{zh:'立体',en:'stereo'}, lab:{zh:'调参',en:'lab'},
+};
+function buildPresets(){
+  const host=document.getElementById('presets'); if(!host) return;
+  host.innerHTML='';
+  for(const name of Object.keys(PRESETS)){
+    const b=document.createElement('button');
+    b.type='button'; b.dataset.preset=name;
+    const lab=LANG==='en'?PRESET_LABEL[name].en:PRESET_LABEL[name].zh;
+    b.innerHTML=`<b>${lab}</b> · preset=${name}`;
+    b.setAttribute('aria-label',`preset ${name}`);
+    b.addEventListener('click',()=>{
+      applyPreset(name);
+      [...host.children].forEach(c=>c.classList.toggle('on',c.dataset.preset===name));
+      reboot();
+    });
+    host.appendChild(b);
+  }
+}
+/* 预设改了之后要按新配置重启一次画面 */
+async function reboot(){
+  if(S.running) stop();
+  await new Promise(r=>setTimeout(r,320));
+  start();
+}
 function wireBar(){
   const on=(id,fn,icon,label)=>{ const b=document.getElementById(id); if(!b)return;
     if(icon) b.innerHTML=barIcon(icon);
@@ -4924,6 +4985,21 @@ function buildHelpModes(){
   if(keys){
     const rows=[['M','kMode'],['← →','kScene'],['1 2 3 4','kStyle'],['+/− · wheel','kRadius'],['[ ]','kSens'],['X','kMirror'],['I','kPaint'],['G','kGlow'],['S','kSave'],['F','kFull'],['?','kHelp'],['Q','kQuit']];
     keys.innerHTML=rows.map(([k,key])=>`<kbd>${k}</kbd><span class="kd">${t(key)}</span>`).join('');
+  }
+  const out=document.getElementById('help-output');
+  if(out){
+    out.innerHTML='';
+    const mk=(label,on,fn)=>{
+      const b=document.createElement('button'); b.type='button';
+      b.className='help-mode'+(on?' on':'');
+      b.innerHTML=`<span class="hm-ico">${barIcon(on?'full':'style')}</span><span class="hm-name">${label}</span>`;
+      b.addEventListener('click',()=>{ fn(); hideHelp(); });
+      out.appendChild(b);
+    };
+    mk(t('outWall')+' · '+(S.wall?'on':'off'), S.wall, ()=>{ S.wall=!S.wall; document.body.classList.toggle('wall',S.wall); });
+    mk(t('outGrid')+' · '+(S.grid?'on':'off'), S.grid, ()=>{ S.grid=!S.grid; });
+    mk(t('outStereo')+' · '+(S.stereo||'off'), !!S.stereo, ()=>{ S.stereo=S.stereo?null:(S.scene===6?'sbs':'anaglyph'); });
+    mk(t('outScene3D')+' · '+(S.scene===6?'on':'off'), S.scene===6, ()=>{ changeScene(S.scene===6?0:6); });
   }
   const note=document.getElementById('help-note');
   if(note) note.innerHTML = `<b>${t(MODE_GROUPS[1].label)}</b> · ${t('helpNote')}<br>${t('helpTouch')}`;
@@ -5281,6 +5357,7 @@ applyDeepLink();
 applyTranslations();
 rebuildModeCards();
 buildHelpModes();
+buildPresets();
 wireBar();
 preloadImages().then(()=>{
   // Hide loading, reveal start screen
