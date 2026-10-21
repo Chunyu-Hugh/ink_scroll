@@ -1,0 +1,76 @@
+# 创作软件接入 · Creative-tool integrations
+
+这一页回答一件事：**如果你已经在用某个设计/演出软件，怎么让它驱动墨卷。**
+
+三条通道，全部零第三方依赖：
+
+| 通道 | 谁用 | 入口 |
+|---|---|---|
+| **OSC**（UDP 9000） | TouchDesigner、Resolume、VDMX、MadMapper、Max/MSP、Pure Data、vvvv、ossia score、Chataigne、TouchOSC、Unreal、Unity(extOSC)、Ableton(Connection Kit) | `python3 server.py` → 页面选「OSC · 本地」 |
+| **HTTP POST** | Blender（内置 Python）、Processing、openFrameworks、任何脚本 | `POST /send?room=ext`，载荷见下 |
+| **postMessage / `window.InkScroll`** | p5.js、Hydra、three.js、任何网页/iframe/Electron | `examples/p5_drive.html` |
+
+统一载荷（x/y 归一化 0..1）：
+
+```json
+{ "x": 0.42, "y": 0.61, "r": 1.0, "scene": 2, "style": 3, "cmd": "splat", "name": "blender" }
+```
+
+`r` 是半径倍率（0.02–3），`scene` 0–5，`style` 0–3，`cmd` 支持 `splat` / `paint`。
+只发 `x,y` 也够用。
+
+## 逐个软件
+
+### Blender —— 已附脚本
+`examples/blender_ink_spot.py`
+
+- **零插件**：Blender ▸ Scripting ▸ 打开 → Run Script → 移动选中物体，光圈跟着走（每 3 帧 POST 一次）
+- **自检**：`python3 examples/blender_ink_spot.py --dry`（不需要装 Blender）
+- **走 OSC**：装 [NodeOSC](https://blenderartists.org/t/nodeosc-for-controlling-nodes-opensoundcontrol/1202179) 插件，
+  OSC Out → `127.0.0.1:9000`，地址 `/spot`。适合把 Blender 的几何节点/驱动器接到光圈上
+- 也可以反过来：用 `bpy` 读画面里的 `scene["ink_scene"]` 自定义属性来切画
+
+### TouchDesigner —— 已附配方
+`examples/touchdesigner_osc.md`：`CHOP → OSC Out CHOP → 127.0.0.1:9000 → /spot`。
+官方 OSC 文档见 [docs.derivative.ca/OSC](https://docs.derivative.ca/OSC)。
+
+| 地址 | 参数 | 作用 |
+|---|---|---|
+| `/spot` | `f f [f]` | x, y, 可选半径 |
+| `/spot/x` `/spot/y` `/spot/r` | `f` | 单轴（接一个推子/滑杆） |
+| `/scene` `/style` | `i` | 换画 / 换风格 |
+
+### p5.js / Hydra / 任何网页 —— 已附示例
+`examples/p5_drive.html`：iframe 里放画卷，父页面 `postMessage({type:'ink',x,y,r})`。
+同源页面更直接：
+
+```js
+window.InkScroll.spot(0.4, 0.6);      // 移光
+window.InkScroll.scene(2);            // 换画
+window.InkScroll.style(3);            // 纸本
+window.InkScroll.splat();             // 泼墨
+window.InkScroll.state;               // 读回当前状态
+```
+
+任何软件只要能把数据变成 HTTP/OSC/一次 postMessage，就能接进来 —— 这是这套设计的边界。
+
+### 其他演出/装置软件（同一 OSC 通道）
+
+| 软件 | 接法 | 备注 |
+|---|---|---|
+| Resolume Arena | OSC Out → 9000 → `/spot` | 与视频混合同步最直观 |
+| VDMX / MadMapper | 同上 | 投影贴图场景里做"光区"很自然 |
+| Max/MSP / Pure Data | `udpsend` / `netsend` → 9000 | 音频分析驱动光圈 |
+| vvvv | `OSCEncoder` | 生成式视觉 |
+| Unreal（OSC 插件）/ Unity（extOSC） | 9000 → `/spot` | 3D 场景里的光 |
+| ossia score | 内置 OSC | 时间线式演出编排 |
+| Chataigne | OSC 模块 | 不需要写代码的编排 |
+| TouchOSC / Lemur | 9000 → `/spot` | 平板当调光台 |
+| Processing / openFrameworks | `POST /send?room=ext` | 两行 HTTP 就行 |
+| After Effects | 导出关键帧 → 脚本 POST | 预演式演出 |
+
+## 为什么不直接上 WebSocket
+
+因为**这些软件说的都是 OSC**。我在中继里把 OSC/HTTP 收下来，用 SSE 推给浏览器，
+等价于「任何软件的输出 → 一个不需要插件的网页」，而且 `server.py` 只依赖标准库。
+真要 WebSocket，`/events` 那条 SSE 换成 WS 也只是 20 行的事。

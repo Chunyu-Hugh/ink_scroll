@@ -1,0 +1,14 @@
+[
+  {
+    "at": "2026-10-21T02:15:23.757Z",
+    "sha": "6ac70e7",
+    "fitness": 0.929,
+    "weak": [
+      {
+        "dim": "degradation",
+        "v": 0.5,
+        "why": "14 modes without an explicit failure path (phone,ir,keys,multi,pen,dwell,breath,speech,shake,gamepad,light,clap,osc,bridge)"
+      }
+    ]
+  }
+]

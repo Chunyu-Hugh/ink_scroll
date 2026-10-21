@@ -6,7 +6,7 @@
 [![Live](https://img.shields.io/badge/▶_在线玩-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
 [![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
-[![Tests](https://img.shields.io/badge/e2e-141%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
+[![Tests](https://img.shields.io/badge/e2e-146%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
 
 > 光照之处，墨色生辉
@@ -132,6 +132,20 @@ tailscale serve --bg 8888
 光圈大小、控制栏、HUD 都按视口与 DPR 换算（`radiusBounds()`、`computeDPR()`），
 横竖屏切换、投影、4K 墙都只是同一个公式的不同取值。
 
+## 🎨 用创作软件驱动它
+
+| 软件 | 通道 | 现成的 |
+|---|---|---|
+| **Blender** | 内置 Python → `POST /send?room=ext`；或 NodeOSC → UDP 9000 | `examples/blender_ink_spot.py`（移动物体即移光，含 `--dry` 自检） |
+| **TouchDesigner** | `OSC Out CHOP` → 9000 → `/spot` | `examples/touchdesigner_osc.md` |
+| **p5.js / Hydra / 任何网页** | `postMessage` 或 `window.InkScroll.*` | `examples/p5_drive.html` |
+| Resolume / VDMX / MadMapper / Max / Pure Data / vvvv / Unreal / Unity / ossia / Chataigne / TouchOSC | 同一个 OSC 通道 | 见 **[docs/CREATIVE-TOOLS.md](docs/CREATIVE-TOOLS.md)** |
+
+```js
+window.InkScroll.spot(0.4, 0.6);   // 同源页面一行就能接管
+window.InkScroll.scene(2);
+```
+
 ## 🎛 OSC / TouchDesigner 接入
 
 ```bash
@@ -182,7 +196,7 @@ ink_scroll/
 │   ├── HARDWARE-TODO.md# 需要外设的方向（给想动手的人）
 │   ├── TEST-REPORT.md  # 审核与测试报告
 │   └── SELF-IMPROVEMENT.md # 评测器与自我改进循环
-├── tools/test.js       # 141 条端到端断言（Playwright，真实浏览器）
+├── tools/test.js       # 146 条端到端断言（Playwright，真实浏览器）
 └── archive/            # 旧版 Python + OpenCV 原型
 ```
 
@@ -213,7 +227,7 @@ node tools/test.js
 - 触屏手势、无障碍（role / aria-live / 焦点陷阱 / reduced-motion）、深链、性能预算
 - 退出必须释放摄像头
 
-最近一次：**141 / 141 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
+最近一次：**146 / 146 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
 
 ## 📐 设计系统
 

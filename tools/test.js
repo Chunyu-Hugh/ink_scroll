@@ -496,6 +496,43 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ok('真识别 · 眨眼：EAR 在睁眼范围内（0.2–0.6）', face.out.ear > 0.2 && face.out.ear < 0.6, 'ear=' + face.out.ear);
   }
 
+  /* ═══════════════ 4e. 创作软件接入 ═══════════════ */
+  group('4e · 创作软件接入（Blender / TouchDesigner / p5.js）');
+  await page.evaluate(() => wM('mouse'));
+  const pm = await page.evaluate(async () => {
+    window.postMessage({ type: 'ink', x: 0.31, y: 0.72, r: 1.4, name: 'p5' }, '*');
+    await new Promise(r => setTimeout(r, 90));
+    return { mode: S.mode, x: +S.bridge.x.toFixed(2), y: +S.bridge.y.toFixed(2), r: +S.bridge.r.toFixed(2), name: S.bridge.name };
+  });
+  ok('postMessage：任何网页都能驱动（p5 / Hydra / iframe）',
+    pm.x === 0.31 && pm.y === 0.72 && pm.mode === 'bridge' && pm.name === 'p5', JSON.stringify(pm));
+
+  const api = await page.evaluate(() => {
+    window.InkScroll.spot(0.15, 0.85, 0.6);
+    window.InkScroll.scene(5);
+    return { has: !!window.InkScroll, x: S.bridge.x, y: S.bridge.y, scene: S.scene, st: window.InkScroll.state };
+  });
+  ok('window.InkScroll.* 公共 API（spot/scene/state）',
+    api.has && Math.abs(api.x - 0.15) < 1e-6 && api.scene === 5 && api.st.mode === 'bridge', JSON.stringify(api));
+
+  const blender = await page.evaluate(async () => {
+    const r = await fetch('/send?room=ext', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ x: 0.375, y: 0.35, r: 1.0, name: 'blender-demo' }),
+    });
+    return r.ok;
+  });
+  await sleep(450);
+  ok('Blender 适配器的载荷被中继接受',
+    blender && Math.abs(await page.evaluate(() => S.bridge.x) - 0.375) < 0.03);
+
+  const files = ['examples/blender_ink_spot.py', 'examples/p5_drive.html',
+    'examples/touchdesigner_osc.md', 'docs/CREATIVE-TOOLS.md'];
+  ok('三套接入示例与文档都在仓库里', files.every(f => fs.existsSync(path.join(ROOT, f))), files.join(', '));
+  const bl = fs.readFileSync(path.join(ROOT, 'examples/blender_ink_spot.py'), 'utf8');
+  ok('Blender 脚本走的是 /send?room=ext 且坐标归一化',
+    /send\?room=ext/.test(bl) && /BOUND/.test(bl) && /max\(0\.0, min\(1\.0/.test(bl));
+
   /* ═══════════════ 5. phone relay (真机链路) ═══════════════ */
   group('5 · 手机魔杖 / phone relay (server.py + phone.html)');
   errs.length = 0;
