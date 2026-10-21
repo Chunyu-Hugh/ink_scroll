@@ -241,7 +241,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   // gaze: calibration overlay, then honest fallback
   await page.evaluate(() => wM('gaze'));
-  await sleep(2500);
+  await page.waitForFunction(() => document.querySelectorAll('.calib-dot').length === 5,
+    { timeout: 25000 }).catch(() => {});
+  await sleep(300);
   const gz = await page.evaluate(() => ({
     calib: document.getElementById('calib').classList.contains('show'),
     dots: document.querySelectorAll('.calib-dot').length,
@@ -453,8 +455,38 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     }
     return { same: out[0] === out[1], n: SCENE_COUNT };
   });
-  ok('3D 视差场景（第 6 张）渲染成独立画面', fp.same === false && fp.n === 6, JSON.stringify({ same: fp.same, sceneCount: fp.n }));
-  ok('场景导航有 6 个点', (await page.evaluate(() => document.querySelectorAll('.scene-dot').length)) === 6);
+  ok('3D 视差场景（第 6 张）渲染成独立画面', fp.same === false && fp.n === 7, JSON.stringify({ same: fp.same, sceneCount: fp.n }));
+  ok('场景导航有 7 个点', (await page.evaluate(() => document.querySelectorAll('.scene-dot').length)) === 7);
+
+  // ── 点云立轴（第 7 张）：能渲染、且「光的位置」真的改变视角 ──
+  const cloud = await page.evaluate(async () => {
+    changeScene(6);
+    await new Promise(r => setTimeout(r, 400));
+    const snap = () => {
+      const c = document.createElement('canvas'); c.width = 48; c.height = 30;
+      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 48, 30);
+      const d = g.getImageData(0, 0, 48, 30).data;
+      let sum = 0, nz = 0;
+      for (let i = 0; i < d.length; i += 4) { const l = d[i] * .299 + d[i + 1] * .587 + d[i + 2] * .114; sum += l; if (l > 40) nz++; }
+      return { mean: +(sum / (48 * 30)).toFixed(1), nz, pts: (window._cloud || null) };
+    };
+    S.mouseX = DW * 0.12; S.mouseY = DH * 0.5;
+    await new Promise(r => setTimeout(r, 260));
+    const a = snap();
+    S.mouseX = DW * 0.88;
+    await new Promise(r => setTimeout(r, 260));
+    const b = snap();
+    return { a, b, count: (buildCloud() || {}).pts ? buildCloud().pts.length : 0, sceneCount: SCENE_COUNT };
+  });
+  ok('点云立轴：生成了点云（>1000 点）', cloud.count > 1000, 'pts=' + cloud.count);
+  ok('点云立轴：画面不是空白', cloud.a.nz > 50 && cloud.a.mean > 2, JSON.stringify(cloud.a));
+  ok('点云立轴：移动光的位置会改变视角（真 3D 交互）',
+    cloud.a.nz !== cloud.b.nz || cloud.a.mean !== cloud.b.mean,
+    `${cloud.a.mean}/${cloud.a.nz} vs ${cloud.b.mean}/${cloud.b.nz}`);
+  const staticDeps = [...fs.readFileSync(path.join(ROOT, 'web/index.html'), 'utf8')
+    .matchAll(/<script src="(https?:[^"]+)"/g)].map(m => m[1]);
+  ok('点云立轴：没有引入新的 CDN 依赖（静态脚本仍 ≤4）', staticDeps.length <= 4,
+    staticDeps.length + ' → ' + staticDeps.map(u => u.split('/')[2]).join(','));
 
   // video content layer: a broken URL must not break the piece
   const vd = await page.evaluate(() => { videoAttach('scenes/does-not-exist.mp4'); return !!S.video; });
@@ -580,7 +612,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const scBeforePhone = await page.evaluate(() => S.scene);
   await phone.click('#b-scene'); await sleep(700);
   const sc = await page.evaluate(() => S.scene);
-  ok('手机按钮可换场景', sc === (scBeforePhone + 1) % 6, `${scBeforePhone} → ${sc}`);
+  ok('手机按钮可换场景', sc === (scBeforePhone + 1) % 7, `${scBeforePhone} → ${sc}`);
   await phone.click('#b-splash'); await sleep(500);
   ok('手机泼墨 → 大屏出现墨点', await page.evaluate(() => S.phone.splats.length > 0));
   ok('手机链路无报错', errs.length === 0, errs.join('|'));
@@ -598,7 +630,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const p0 = await pix();
   const scBefore2 = await page.evaluate(() => S.scene);
   await page.keyboard.press('ArrowRight'); await sleep(800);
-  ok('→ 切场景并更新 HUD', await page.evaluate((b) => S.scene === (b + 1) % 5 && document.getElementById('hsc').textContent.length > 0, scBefore2));
+  ok('→ 切场景并更新 HUD', await page.evaluate((b) => S.scene === (b + 1) % SCENE_COUNT && document.getElementById('hsc').textContent.length > 0, scBefore2));
   ok('切场景后画面像素变化', (await pix()) !== p0);
 
   for (const [k, st] of [['1', 'edges'], ['2', 'sketch'], ['3', 'dark'], ['4', 'paper']]) {

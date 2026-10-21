@@ -1128,6 +1128,7 @@ const I18N = {
     modeClap:'拍手 · 节拍',
     modeBridge:'外设桥 · 本地',
     scene3d:'立轴 · 3D',
+    sceneCloud:'立轴 · 点云',
     meterHr:'心率',
     meterBlink:'眨眼',
     meterLux:'照度',
@@ -1352,6 +1353,7 @@ const I18N = {
     modeClap:'拍手 · 節拍',
     modeBridge:'外設橋 · 本機',
     scene3d:'立軸 · 3D',
+    sceneCloud:'立軸 · 點雲',
     meterHr:'心率',
     meterBlink:'眨眼',
     meterLux:'照度',
@@ -1575,6 +1577,7 @@ const I18N = {
     modeClap:'Clap · Beat',
     modeBridge:'Device bridge',
     scene3d:'Parallax · 3D',
+    sceneCloud:'Point cloud',
     meterHr:'heart rate',
     meterBlink:'blink',
     meterLux:'lux',
@@ -1744,8 +1747,8 @@ let hands=null,hr=false;
 /* ───────────────────────────────────────────────────────────
    Scene metadata — names are looked up via i18n
    ─────────────────────────────────────────────────────────── */
-const sceneKeys=['sceneShanshui','sceneBamboo','sceneSnow','sceneFlowers','sceneStars','scene3d'];
-const SCENE_COUNT=6;                       // 5 paintings + 1 procedural 3D parallax layer
+const sceneKeys=['sceneShanshui','sceneBamboo','sceneSnow','sceneFlowers','sceneStars','scene3d','sceneCloud'];
+const SCENE_COUNT=7;                       // 5 paintings + 1 procedural 3D parallax layer
 const STYLE_ORDER=['edges','sketch','dark','paper'];
 const sceneNameOf=(i)=> t(sceneKeys[i]);
 
@@ -1845,6 +1848,57 @@ function draw3D(g,W,H,t){
     g.stroke();
   }
 }
+/* 点云立轴 · 第 7 张 —— 把一幅水墨画变成点云：
+   亮度当深度（墨重处"高"），用 canvas 2D 自己做投影 + 雾化，不引 three.js。
+   任何模态给出的 {x,y,radius} 都会改变视角 → 光在"转动画卷"。 */
+let _cloud=null;
+function buildCloud(){
+  if(_cloud) return _cloud;
+  const img=sceneImages[0]; if(!img) return null;
+  const sw=110, sh=Math.max(8,Math.round(110*img.naturalHeight/img.naturalWidth));
+  const c=document.createElement('canvas'); c.width=sw; c.height=sh;
+  const cx=c.getContext('2d');
+  cx.drawImage(img,0,0,sw,sh);
+  const d=cx.getImageData(0,0,sw,sh).data, pts=[];
+  for(let j=0;j<sh;j++)for(let i=0;i<sw;i++){
+    const k=(j*sw+i)*4, r=d[k], g=d[k+1], b=d[k+2];
+    const l=(r*.299+g*.587+b*.114)/255;
+    if(l>0.965) continue;                       // 留白：跳过纸面
+    pts.push({x:(i/sw-0.5), y:(j/sh-0.5), z:(1-l)*0.95, r:r, g:g, b:b});
+  }
+  _cloud={pts:pts, sw:sw, sh:sh};
+  return _cloud;
+}
+function drawCloud(g,W,H,t,mono){
+  const C=buildCloud();
+  if(mono){ g.fillStyle='#f5f4ed'; }
+  else { g.fillStyle='#11120e'; }
+  g.fillRect(0,0,W,H);
+  if(!C) return;
+  const pts=C.pts, n=pts.length;
+  const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22;
+  const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30;
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const f=1.55, sc=Math.min(W,H)*0.62;
+  for(let i=0;i<n;i++){
+    const p=pts[i];
+    const X=p.x, Y=p.y, Z=-p.z*1.15;
+    const x1=X*cy - Z*sy, z1=X*sy + Z*cy;
+    const y1=Y*cp - z1*sp, z2=Y*sp + z1*cp;
+    const persp=f/(f+z2+0.9);
+    const px=W*0.5 + x1*sc*persp, py=H*0.5 + y1*sc*persp;
+    if(px<-20||px>W+20||py<-20||py>H+20) continue;
+    const fog=Math.max(0.12, Math.min(1, 0.95 - (z2+0.6)*0.55));
+    const size=Math.max(1.1, 3.1*persp);
+    if(mono){
+      g.fillStyle='rgba(26,26,24,'+(0.30+0.55*fog).toFixed(3)+')';
+    }else{
+      g.fillStyle='rgba('+p.r+','+p.g+','+p.b+','+(0.35+0.6*fog).toFixed(3)+')';
+    }
+    g.fillRect(px, py, size, size);
+  }
+}
+
 /* 视频内容层：?video=<url> 把任意 mp4/webm 当"彩色层"，墨层从首帧生成。 */
 function videoAttach(url){
   try{
@@ -1869,6 +1923,12 @@ function drawScene(t){
   }
   if(S.scene===5){
     draw3D(g,W,H,t);
+    S.imgBounds={x:0,y:0,w:W,h:H};
+    return;
+  }
+  if(S.scene===6){
+    if(!S.mouseX) { S.mouseX=W/2; S.mouseY=H/2; }
+    drawCloud(g,W,H,t,false);
     S.imgBounds={x:0,y:0,w:W,h:H};
     return;
   }
@@ -2027,11 +2087,14 @@ function genHidden(){
     tmpCtx.drawImage(S.video,(mw-vw*k)/2,(mh-vh*k)/2,vw*k,vh*k);
   }else if(S.scene===5){
     draw3D(tmpCtx,mw,mh,0);
+  }else if(S.scene===6){
+    drawCloud(tmpCtx,mw,mh,0,true);
   }else{
     const img=sceneImages[S.scene];
     if(img){const r=fitScene(img,mw,mh);tmpCtx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,r.dx,r.dy,r.dw,r.dh);}
   }
   const src=tmpCtx.getImageData(0,0,mw,mh);
+  if(S.scene===6&&!S.video){ hiCtx.putImageData(src,0,0); return; }   // 点云：点阵本身就是墨层
   if(S.style==='edges')hiCtx.putImageData(sobel(src,mw,mh),0,0);
   else if(S.style==='sketch')hiCtx.putImageData(sk(src,mw,mh),0,0);
   else if(S.style==='paper')hiCtx.putImageData(pap(src,mw,mh),0,0);
