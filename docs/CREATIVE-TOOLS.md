@@ -29,6 +29,17 @@
 - **走 OSC**：装 [NodeOSC](https://blenderartists.org/t/nodeosc-for-controlling-nodes-opensoundcontrol/1202179) 插件，
   OSC Out → `127.0.0.1:9000`，地址 `/spot`。适合把 Blender 的几何节点/驱动器接到光圈上
 - 也可以反过来：用 `bpy` 读画面里的 `scene["ink_scene"]` 自定义属性来切画
+- **已用真实 Blender 4.2.3 无头验证过**（`examples/blender_smoke.py`）：
+
+```
+$ blender -b --python-exit-code 3 -P examples/blender_smoke.py
+INK_PAYLOAD {"x": 0.35, "y": 0.4, "r": 1.0, "name": "Cube.001"}
+INK_POST 200
+$ curl -N /events?room=ext
+data: {"x": 0.35, "y": 0.4, "r": 1.0, "name": "Cube.001"}      ← 中继真的广播了
+```
+
+  一个在 (3, 0, -2) 的立方体 → 归一化 (0.35, 0.4)。
 
 ### TouchDesigner —— 已附配方
 `examples/touchdesigner_osc.md`：`CHOP → OSC Out CHOP → 127.0.0.1:9000 → /spot`。

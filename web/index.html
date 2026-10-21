@@ -2844,6 +2844,7 @@ function clapOnset(){
    Adding a modality = adding one entry here + one I18N key.
    ─────────────────────────────────────────────────────────── */
 const M={
+  /* 不可失败：不依赖任何输入 */
   auto:{
     icon:'auto',nameKey:'modeAuto',group:'free',needCam:false,
     init(){S.autoT=0;},
@@ -2851,6 +2852,7 @@ const M={
       return {x:DW*(0.82-0.64*((S.autoT*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.autoT*0.9)), radius:S.radius*0.8}; },
     cln(){}, ex:()=>'',
   },
+  /* 不可失败：指针永远存在，是所有模态的兜底 */
   mouse:{
     icon:'pointer',nameKey:'modeMouse',group:'free',needCam:false,
     init(){},
