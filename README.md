@@ -17,7 +17,7 @@
 
 **30 秒上手**：<https://hunao1995.github.io/ink_scroll/> —— 打开、选一种玩法、点「展开画卷」。想深入了解看 **[docs/ABOUT.md](docs/ABOUT.md)**；想用 Blender / TouchDesigner 驱动它看 **[docs/CREATIVE-TOOLS.md](docs/CREATIVE-TOOLS.md)**。
 
-**30 种交互方式**，分档：**14 种什么都不用**、**5 种只用摄像头**、**9 种插个装置**（手柄/MIDI/HID 摇杆/蓝牙/NFC/手机/串口/打印标记）、
+**42 种交互方式**，分档：**14 种什么都不用**、**5 种只用摄像头**、**9 种插个装置**（手柄/MIDI/HID 摇杆/蓝牙/NFC/手机/串口/打印标记）、
 **2 种本机跑个小脚本**（OSC、外设桥）。
 
 ---
@@ -241,6 +241,20 @@ node tools/test.js
 - 退出必须释放摄像头
 
 最近一次：**全部通过 通过**。详见 [docs/TEST-REPORT.md](docs/TEST-REPORT.md)。
+
+## 📚 文档索引
+
+| 文档 | 内容 |
+|---|---|
+| [docs/ABOUT.md](docs/ABOUT.md) | 一页式介绍 |
+| [docs/ART-SURVEY.md](docs/ART-SURVEY.md) | 数字媒体艺术的交互谱系 + 25 件可核实作品 + 追赶路线 |
+| [docs/MODALITY-ATLAS.md](docs/MODALITY-ATLAS.md) | 125 条交互模态的工程图谱 |
+| [docs/INTERACTIONS.md](docs/INTERACTIONS.md) | 交互契约（加模态看这里） |
+| [docs/CREATIVE-TOOLS.md](docs/CREATIVE-TOOLS.md) | Blender / TouchDesigner / MQTT / Art-Net 接入 |
+| [docs/PRESETS.md](docs/PRESETS.md) | 一键预设与 URL 参数 |
+| [docs/ETHICS.md](docs/ETHICS.md) | 身体数据与伦理底线 |
+| [docs/VISION-3D.md](docs/VISION-3D.md) | 3D 路线 |
+| [docs/TEST-REPORT.md](docs/TEST-REPORT.md) | 审核与测试报告 |
 
 ## 📐 设计系统
 

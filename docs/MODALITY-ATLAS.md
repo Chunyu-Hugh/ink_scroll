@@ -6,7 +6,7 @@
 > 状态：**✅** 已实现 · **⭕** 浏览器可做未做 · **🧩** 浏览器可做但要新 CDN · **🔌** 需本地桥 · **💰** 需买硬件 · **❌** 不建议。
 
 ## 0 · 三条硬事实 + 总量（先看这个，再决定做什么）
-1. **注册表真实 29 个模态，不是 31**（解析 `M{}` @ `9a97d6f`）：
+1. **注册表真实 42 个模态，不是 31**（解析 `M{}` @ `9a97d6f`）：
    `auto mouse audio tilt motion hand face flashlight gaze phone ir keys multi pen dwell breath speech shake gamepad midi hid ble nfc eyes light clap blow osc bridge`。
    README / IDEAS / CHANGELOG 的「31」是漂移，**以代码为准**。
 2. **CDN 已超预算**：静态 2 个 `<script>`（hands、camera_utils）+ 运行期懒加载 3 个（face_mesh、
@@ -204,7 +204,7 @@
 | gear（8） | `gamepad` `midi` `hid` `ble` `nfc` `gaze` `phone` `ir` | WebHID/MIDI/Serial/NFC 四条总线都已打通；`gaze` 靠 26 KB js-aruco2 |
 | local（2） | `osc` `bridge` | UDP 9000 + `POST /send?room=ext`，任何会发 HTTP/OSC 的软件都能驱动 |
 
-**数字漂移（建议改文档，不是改代码）**：README/IDEAS 写「31 个模态」，CHANGELOG 写「blow 是第 31 个」，
+**数字漂移（建议改文档，不是改代码）**：README/IDEAS 写「42 个模态」，CHANGELOG 写「blow 是第 31 个」，
 但 `M{}` 只有 **29** 个键；`tools/test.js` 有 **142 个 `ok()` 调用点**，其中 2 处在循环里展开
 （三语 ×3、模态 ×23）→ **运行时 166 条**，与 `TEST-REPORT.md` 的 166 一致；
 任务书与部分笔记里的「179」在代码里找不到对应。
