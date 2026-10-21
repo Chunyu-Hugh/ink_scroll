@@ -1135,6 +1135,7 @@ const I18N = {
     modeEyes:'眨眼 · 眼睛',
     modeLight:'环境光',
     modeClap:'拍手 · 节拍',
+    modeBlow:'吹墨 · 散尘',
     modeBridge:'外设桥 · 本地',
     scene3d:'立轴 · 3D',
     sceneCloud:'立轴 · 点云',
@@ -1147,6 +1148,15 @@ const I18N = {
     firstHintNfc:'把 NFC 贴纸靠近手机 · 换画',
     firstHintEyes:'正对摄像头 · 眨一下眼泼一次墨（转头也能移光）',
     firstHintLight:'环境越暗光圈越大（需要 AmbientLightSensor）',
+    firstHintBlow:'对着麦克风吹气 · 墨层像灰尘一样散开，露出彩色',
+    meterBlow:'气息',
+    fxBlowHint:'吹气 = 散墨',
+    firstHintBlow:'對著麥克風吹氣 · 墨層像灰塵一樣散開，露出彩色',
+    meterBlow:'氣息',
+    fxBlowHint:'吹氣 = 散墨',
+    firstHintBlow:'Blow into the mic — the ink scatters like dust and reveals colour',
+    meterBlow:'breath',
+    fxBlowHint:'blow = clear ink',
     firstHintClap:'拍一下手泼墨 · 连拍两下换画',
     firstHintBridge:'本机跑 python3 server.py，然后把任意外设读数 POST 到 /send?room=ext',
     fxHidWait:'没有 HID 设备 · 点一下会弹选择框（Chromium）',
@@ -1362,6 +1372,7 @@ const I18N = {
     modeEyes:'眨眼 · 眼睛',
     modeLight:'環境光',
     modeClap:'拍手 · 節拍',
+    modeBlow:'吹墨 · 散塵',
     modeBridge:'外設橋 · 本機',
     scene3d:'立軸 · 3D',
     sceneCloud:'立軸 · 點雲',
@@ -1588,6 +1599,7 @@ const I18N = {
     modeEyes:'Blink · Eyes',
     modeLight:'Ambient light',
     modeClap:'Clap · Beat',
+    modeBlow:'Blow · Dust',
     modeBridge:'Device bridge',
     scene3d:'Parallax · 3D',
     sceneCloud:'Point cloud',
@@ -1735,6 +1747,7 @@ const S={
   eyes:{ear:null,closed:false,last:0},
   light:{sensor:null,lux:-1,ok:false},
   clap:{last:0,prev:0},
+  dust:{cvs:null,ctx:null,brush:null,level:0},
   face:{ready:false,loading:null,lm:null,spot:null},
   tilt:{base:null,ready:false,x:0,y:0,last:0},
   phone:{targets:{},primaryId:null,calib:{},es:null,room:null,alpha:.45,staleMs:900,splats:[],seq:0,overlap:{},ink:false,strokeLast:{},relay:false},
@@ -2937,6 +2950,39 @@ function lightStart(){
 }
 function lightStop(){ const L=S.light; try{ L.sensor&&L.sensor.stop(); }catch(e){} L.sensor=null; L.ok=false; }
 
+/* ── 吹墨：对着麦克风吹气，墨层像灰尘一样被吹散，露出下面的彩色 ──
+   用一个 alpha 蒙版积累"被吹过"的区域，停下来会慢慢回墨。 */
+function ensureDust(){
+  if(!S.dust.cvs || S.dust.cvs.width!==DW || S.dust.cvs.height!==DH){
+    const c=document.createElement('canvas'); c.width=DW; c.height=DH;
+    S.dust.cvs=c; S.dust.ctx=c.getContext('2d');
+    const b=document.createElement('canvas'); b.width=b.height=256;
+    const bx=b.getContext('2d');
+    const g=bx.createRadialGradient(128,128,0,128,128,128);
+    g.addColorStop(0,'rgba(255,255,255,.95)');
+    g.addColorStop(.55,'rgba(255,255,255,.55)');
+    g.addColorStop(1,'rgba(255,255,255,0)');
+    bx.fillStyle=g; bx.fillRect(0,0,256,256);
+    S.dust.brush=b;
+  }
+}
+function dustTick(sp,lv){
+  ensureDust();
+  const D=S.dust, g=D.ctx, r=(sp.radius||S.radius)*(0.9+lv*0.8);
+  if(lv>0.14){                                   // 正在吹
+    g.globalAlpha=Math.min(0.42, 0.12+lv*0.5);
+    g.drawImage(D.brush, sp.x-r, sp.y-r, r*2, r*2);
+    g.globalAlpha=1;
+    D.level=Math.min(1,(D.level||0)+0.05);
+  }else{
+    g.globalCompositeOperation='destination-out'; // 回墨（慢慢落回去）
+    g.globalAlpha=0.012; g.fillRect(0,0,DW,DH);
+    g.globalAlpha=1; g.globalCompositeOperation='source-over';
+    D.level=Math.max(0,(D.level||0)-0.02);
+  }
+  D.t=performance.now();
+}
+
 /* ── 拍手节拍（onset）：拍一下泼墨，连拍两下换画 ── */
 function clapOnset(){
   const C=S.clap, now=performance.now();
@@ -3187,6 +3233,19 @@ const M={
     cln(){ audioStop(); },
     ex(){ return S.audio.on?('👏 '+t('fxClapHint')):('🎙 '+t('micWaiting')); },
     meter(){ return {label:t('meterClap'), value:S.audio.peak||0}; },
+  },
+  blow:{
+    icon:'breath',nameKey:'modeBlow',group:'free',needMic:true,fallback:'hint',
+    init(){ audioStart(); },
+    spot(){
+      const lv=S.audio.on?(S.audio.level||0):0;
+      const sp={x:S.mouseX, y:S.mouseY, radius:S.radius*(0.55+lv*1.1)};
+      dustTick(sp,lv);
+      return sp;
+    },
+    cln(){ audioStop(); S.dust.level=0; if(S.dust.ctx) S.dust.ctx.clearRect(0,0,DW,DH); },
+    ex(){ return S.audio.on?('💨 '+t('fxBlowHint')):('🎙 '+t('micWaiting')); },
+    meter(){ return {label:t('meterBlow'), value:S.audio.level||0}; },
   },
   /* ── 需要本机跑一个小脚本：OSC / TouchDesigner ── */
   osc:{
@@ -3811,6 +3870,16 @@ function processFrame(){
     ctx.restore();
   }
   ctx.drawImage(hiCvs,0,0,DW,DH);
+  if(S.dust.cvs && S.dust.level>0.01){                 // 吹散的灰尘 → 露出彩色
+    ensurePaint();
+    paintSctx.clearRect(0,0,DW,DH);
+    paintSctx.globalCompositeOperation='source-over';
+    paintSctx.drawImage(scCvs,0,0,DW,DH);
+    paintSctx.globalCompositeOperation='destination-in';
+    paintSctx.drawImage(S.dust.cvs,0,0,DW,DH);
+    paintSctx.globalCompositeOperation='source-over';
+    withBounds(()=>ctx.drawImage(paintScratch,0,0,DW,DH));
+  }
   // 留痕 — persistent paint-on reveal (mode toggle 'i'): spots paint into a lasting mask; scene shows through it
   if(S.paint || S.phone.ink){
     ensurePaint();
@@ -4524,7 +4593,7 @@ const mg=document.getElementById('mg');
 /* Grouped by hardware requirement, so nobody has to discover the hard way
    that "gaze" wants a printed marker. Order = easiest first. */
 const MODE_GROUPS=[
-  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','dwell','breath','audio','clap','speech','tilt','shake','light']},
+  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
   {label:'groupCam',   modes:['motion','hand','face','eyes','flashlight']},
   {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
   {label:'groupLocal', modes:['osc','bridge']},

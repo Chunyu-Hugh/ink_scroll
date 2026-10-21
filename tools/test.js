@@ -617,6 +617,31 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
       'z=' + face.out.z);
   }
 
+  /* ═══════════════ 4d2. 吹墨（麦克风 → 灰尘散去 → 彩色） ═══════════════ */
+  group('4d2 · 吹墨：吹气把墨层吹散，露出彩色');
+  const blow = await page.evaluate(async () => {
+    wM('blow');
+    await new Promise(r => setTimeout(r, 400));
+    // 模拟麦克风读数：直接驱动 level，避免依赖真实环境噪声
+    S.audio.on = true; S.audio.level = 0;
+    S.mouseX = DW * 0.5; S.mouseY = DH * 0.5;
+    for (let i = 0; i < 6; i++) { S.audio.level = 0.75; M.blow.spot(); await new Promise(r => setTimeout(r, 60)); }
+    const mask = (() => {
+      const c = document.createElement('canvas'); c.width = 80; c.height = 50;
+      const g = c.getContext('2d'); g.drawImage(S.dust.cvs, 0, 0, 80, 50);
+      const d = g.getImageData(0, 0, 80, 50).data; let a = 0;
+      for (let i = 3; i < d.length; i += 4) a += d[i];
+      return { alpha: Math.round(a / (80 * 50)), level: Math.round((S.dust.level || 0) * 100) };
+    })();
+    // 停吹：蒙版应该慢慢回墨
+    for (let i = 0; i < 30; i++) { S.audio.level = 0; M.blow.spot(); }
+    const after = Math.round((S.dust.level || 0) * 100);
+    return { ...mask, after, mode: S.mode };
+  });
+  ok('吹墨：进入模式并建立蒙版', blow.mode === 'blow' && blow.alpha > 8, JSON.stringify(blow));
+  ok('吹墨：吹气让蒙版累积（灰尘真的被吹开）', blow.level > 20, `level=${blow.level}%`);
+  ok('吹墨：停止吹气后会回墨', blow.after < blow.level, `${blow.level}% → ${blow.after}%`);
+
   /* ═══════════════ 4e. 创作软件接入 ═══════════════ */
   group('4e · 创作软件接入（Blender / TouchDesigner / p5.js）');
   await page.evaluate(() => wM('mouse'));
