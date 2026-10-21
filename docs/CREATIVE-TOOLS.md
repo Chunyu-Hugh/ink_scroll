@@ -41,7 +41,12 @@ data: {"x": 0.35, "y": 0.4, "r": 1.0, "name": "Cube.001"}      ← 中继真的�
 
   一个在 (3, 0, -2) 的立方体 → 归一化 (0.35, 0.4)。
 
-### TouchDesigner —— 已附配方
+### TouchDesigner —— 协议面已验证（TD 本体仅 Win/macOS）
+
+> 这台机器装不了 TouchDesigner（官方没有 Linux 构建），但 OSC 报文形状已逐条验证：
+> `python3 examples/osc_probe.py` → **7/7 形状正确**，含 120 条 60fps 突发，坏包不崩。
+
+**配方**
 `examples/touchdesigner_osc.md`：`CHOP → OSC Out CHOP → 127.0.0.1:9000 → /spot`。
 官方 OSC 文档见 [docs.derivative.ca/OSC](https://docs.derivative.ca/OSC)。
 
