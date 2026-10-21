@@ -836,6 +836,26 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ok(`环境模态 ${m} 可进入`, st.mode === m, st.mode);
   }
 
+  /* ═══════════════ 4g. 闭环回传（页面 → 脚本） ═══════════════ */
+  group('4g · 闭环回传：页面把状态 POST 出去，脚本能收到');
+  const loop = await page.evaluate(async () => {
+    const got = [];
+    const es = new EventSource('/events?room=ext-state');
+    es.onmessage = (e) => { try { got.push(JSON.parse(e.data)); } catch (err) {} };
+    await new Promise(r => setTimeout(r, 500));
+    wM('bridge');                          // 进入 bridge 模式 → 触发 pushState
+    window.InkScroll.spot(0.42, 0.61);
+    await new Promise(r => setTimeout(r, 1400));
+    es.close();
+    const last = got[got.length - 1] || null;
+    return { n: got.length, last };
+  });
+  ok('回传：脚本订阅 room=ext-state 能收到页面状态', loop.n > 0, `收到 ${loop.n} 条`);
+  ok('回传：状态里带 mode/scene/style 与光位',
+    !!loop.last && loop.last.type === 'state' && loop.last.mode === 'bridge'
+      && typeof loop.last.x === 'number' && typeof loop.last.scene === 'number',
+    JSON.stringify(loop.last));
+
   /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
   group('4f · 契约升级：id / presence / state');
   const ctr = await page.evaluate(() => {

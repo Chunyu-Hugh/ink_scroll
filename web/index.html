@@ -3020,6 +3020,23 @@ function bridgeStart(){
     };
   }catch(e){ flashHint(t('fxBridgeWait')); }
 }
+/* ── 闭环回传：页面 → 本地脚本（灯光跟随 / 触觉 / 闭环校准都用这条） ──
+   之前只有"脚本 → 页面"（SSE 下行）+ 手机→页面（POST），缺"页面 → 脚本"。
+   现在页面每 500ms 把当前状态 POST 到 room=ext-state，任何脚本订阅 /events 即可收到。 */
+let _stateT=0;
+function pushState(force){
+  const now=performance.now();
+  if(!force && now-_stateT<500) return;
+  _stateT=now;
+  const B=S.bridge||{};
+  const body={type:'state', mode:S.mode, scene:S.scene, style:S.style,
+    x:+(B.x||0).toFixed(4), y:+(B.y||0).toFixed(4), r:+(B.r||1).toFixed(3),
+    z:+(B.z||0.5).toFixed(3), presence:+(B.presence==null?1:B.presence).toFixed(2),
+    bpm:(S.beat2&&S.beat2.bpm)||0, screens:(S.screens&&S.screens.n)||1,
+    t:Date.now()};
+  try{ fetch('/send?room=ext-state',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body),keepalive:false}).catch(()=>{}); }catch(e){}
+}
 function bridgeStop(){ const B=S.bridge; try{ B.es&&B.es.close(); }catch(e){} B.es=null; B.ok=false; }
 
 /* ── 外部创作软件驱动 API ──
@@ -4304,7 +4321,8 @@ function processFrame(){
   // …but NOT when a hand is present in hand-mode making a fist (收光 = deliberately dark); only attract when truly idle (no hand)
   if(spots.length===0 && S.running && !(S.mode==='hand' && S.gesture!=='none')){ S.attract=(S.attract||0)+0.0045;
     spots=[{x:DW*(0.82-0.64*((S.attract*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.attract*0.9)), radius:S.radius*0.8}]; }
-  spots = spots.map(normSpot).filter(Boolean);      // 契约归一化（id/presence/state 在这里补全）
+  spots = spots.map(normSpot).filter(Boolean);
+  if(S.mode==='bridge'||S.mode==='osc') pushState(false);   // 闭环回传（节流 500ms）      // 契约归一化（id/presence/state 在这里补全）
   // 留白守卫 — don't let a crowd floodlight the whole scroll; shrink radii once total revealed area passes ~38% of the painting
   if(S.imgBounds && spots.length>2){ const ib=S.imgBounds, maxA=ib.w*ib.h*0.38; let area=0; for(const s of spots){const r=s.radius||S.radius;area+=Math.PI*r*r;}
     if(area>maxA){ const k=Math.sqrt(maxA/area); for(const s of spots)s.radius=(s.radius||S.radius)*k; } }
