@@ -1136,6 +1136,10 @@ const I18N = {
     modeLight:'环境光',
     modeClap:'拍手 · 节拍',
     modeBlow:'吹墨 · 散尘',
+    modePresence:'在场 · 人在',
+    modeScreens:'多屏 · 铺开',
+    modeKiosk:'展厅 · 锁键',
+    modeLoad:'负载 · 机器状态',
     modeHours:'时间 · 天时',
     modeClip:'剪贴板 · 题字',
     modeInkpick:'取色 · 入画',
@@ -1156,6 +1160,18 @@ const I18N = {
     firstHintNfc:'把 NFC 贴纸靠近手机 · 换画',
     firstHintEyes:'正对摄像头 · 眨一下眼泼一次墨（转头也能移光）',
     firstHintLight:'环境越暗光圈越大（需要 AmbientLightSensor）',
+    firstHintPresence:'人一走开，光圈自己收小 · 回来又张开（IdleDetector）',
+    firstHintScreens:'接上第二块屏 · 光会落到另一块上（getScreenDetails）',
+    firstHintKiosk:'锁住 Esc / Tab / F11 · 展厅里观众跑不掉',
+    firstHintLoad:'机器越忙，光圈越小 · 它诚实地反映自己的状态',
+    fxPresenceOk:'在场感应已接入',
+    fxPresenceNo:'此浏览器没有 IdleDetector',
+    fxScreensOk:'已识别屏幕',
+    fxScreensNo:'拿不到多屏信息',
+    fxKioskOn:'已锁键（Esc 已拦截）',
+    fxKioskNo:'此浏览器不支持 Keyboard.lock',
+    fxLoadOk:'压力观察已接入',
+    fxLoadNo:'此浏览器没有 PressureObserver',
     firstHintHours:'太阳走到哪，光就落在哪 · 正午最高、深夜最暗',
     firstHintClip:'复制一段文字再进来 · 里面出现「雪/竹/花」就换画',
     firstHintInkpick:'用取色器点屏幕上任意颜色 · 最近的画会亮起来',
@@ -1179,6 +1195,18 @@ const I18N = {
     fxScrollHint:'滚轮 = 移动光',
     fxBattNo:'此浏览器不支持电池 API',
     fxBattOk:'🔋 电量已接入',
+    firstHintPresence:'人一走開，光圈自己收小 · 回來又張開（IdleDetector）',
+    firstHintScreens:'接上第二塊螢幕 · 光會落到另一塊上（getScreenDetails）',
+    firstHintKiosk:'鎖住 Esc / Tab / F11 · 展廳裡觀眾跑不掉',
+    firstHintLoad:'機器越忙，光圈越小 · 它誠實地反映自己的狀態',
+    fxPresenceOk:'在場感應已接入',
+    fxPresenceNo:'此瀏覽器沒有 IdleDetector',
+    fxScreensOk:'已識別螢幕',
+    fxScreensNo:'拿不到多螢幕資訊',
+    fxKioskOn:'已鎖鍵（Esc 已攔截）',
+    fxKioskNo:'此瀏覽器不支援 Keyboard.lock',
+    fxLoadOk:'壓力觀察已接入',
+    fxLoadNo:'此瀏覽器沒有 PressureObserver',
     firstHintHours:'太陽走到哪，光就落在哪 · 正午最高、深夜最暗',
     firstHintClip:'複製一段文字再進來 · 裡面出現「雪/竹/花」就換畫',
     firstHintInkpick:'用取色器點螢幕上任意顏色 · 最近的畫會亮起來',
@@ -1202,6 +1230,18 @@ const I18N = {
     fxScrollHint:'滾輪 = 移動光',
     fxBattNo:'此瀏覽器不支援電池 API',
     fxBattOk:'🔋 電量已接入',
+    firstHintPresence:'Step away and the light shrinks · come back and it opens (IdleDetector)',
+    firstHintScreens:'Plug in a second display · the light lands on it (getScreenDetails)',
+    firstHintKiosk:'Swallow Esc / Tab / F11 — visitors cannot escape the kiosk',
+    firstHintLoad:'The busier the machine, the smaller the light — it reports honestly',
+    fxPresenceOk:'presence sensor connected',
+    fxPresenceNo:'no IdleDetector in this browser',
+    fxScreensOk:'screens detected',
+    fxScreensNo:'cannot read multi-screen info',
+    fxKioskOn:'keys locked (Esc intercepted)',
+    fxKioskNo:'Keyboard.lock unsupported',
+    fxLoadOk:'pressure observer connected',
+    fxLoadNo:'no PressureObserver in this browser',
     firstHintHours:'The sun position picks where the light falls — noon highest, night dimmest',
     firstHintClip:'Copy some text first — if it mentions snow/bamboo/blossom, the painting changes',
     firstHintInkpick:'Use the eyedropper on any colour — the nearest painting lights up',
@@ -1450,6 +1490,10 @@ const I18N = {
     modeLight:'環境光',
     modeClap:'拍手 · 節拍',
     modeBlow:'吹墨 · 散塵',
+    modePresence:'在場 · 人在',
+    modeScreens:'多屏 · 鋪開',
+    modeKiosk:'展廳 · 鎖鍵',
+    modeLoad:'負載 · 機器狀態',
     modeHours:'時間 · 天時',
     modeClip:'剪貼簿 · 題字',
     modeInkpick:'取色 · 入畫',
@@ -1685,6 +1729,10 @@ const I18N = {
     modeLight:'Ambient light',
     modeClap:'Clap · Beat',
     modeBlow:'Blow · Dust',
+    modePresence:'Presence · idle',
+    modeScreens:'Multi-screen',
+    modeKiosk:'Kiosk · key lock',
+    modeLoad:'Machine load',
     modeHours:'Time of day',
     modeClip:'Clipboard',
     modeInkpick:'Eyedropper',
@@ -1847,6 +1895,10 @@ const S={
   beat2:{prev:null,last:0,flux:0,bpm:0,ints:[]},
   clip:{text:'',ok:false,t:0},
   pick:{hex:null,rgb:null,t:0},
+  presence:{state:'active',idle:0,ok:false,sensor:null},
+  screens:{n:1,bounds:null,ok:false},
+  kiosk:{locked:false},
+  load:{state:'nominal',ok:false,obs:null},
   batt:{level:-1,charging:false,seen:false},
   face:{ready:false,loading:null,lm:null,spot:null},
   tilt:{base:null,ready:false,x:0,y:0,last:0},
@@ -3122,6 +3174,66 @@ async function battStart(){
   }catch(e){ flashHint(t('fxBattNo')); }
 }
 
+/* ── 在场 · 人是否在（IdleDetector）→ 光圈大小（纯函数可单测） ── */
+function presenceRadius(idleSec, state){
+  const idle=state==='idle';
+  if(!idle) return 1;
+  return Math.max(0.25, 0.55 - Math.min(0.3, (idleSec||0)/600));   // 越久越暗，但留 0.25
+}
+async function presenceStart(){
+  try{
+    if(!('IdleDetector' in window)){ flashHint(t('fxPresenceNo')); return; }
+    const d=new IdleDetector();
+    if(d.requestPermission) await d.requestPermission();
+    d.addEventListener('change',()=>{ S.presence={state:d.userState,idle:Math.round(d.userState==='idle'?(performance.now()-(S.presence.t||performance.now()))/1000:0),ok:true,sensor:d,t:S.presence.t}; });
+    S.presence.t=performance.now();
+    await d.start({threshold:60000});
+    S.presence.ok=true; S.presence.sensor=d;
+    flashHint(t('fxPresenceOk'));
+  }catch(e){ flashHint(t('fxPresenceNo')); }
+}
+
+/* ── 多屏 · getScreenDetails → 光落在第几块屏（纯函数可单测） ── */
+function screenSpot(screens, idx){
+  if(!screens||!screens.length) return {x:DW/2,y:DH/2,screen:0};
+  const s2=screens[Math.min(idx||0,screens.length-1)];
+  return {x:DW*(0.5+((s2.left||0)/Math.max(1,window.screen.width))*0.5),
+          y:DH/2, screen:idx||0, count:screens.length};
+}
+async function screensStart(){
+  try{
+    if(!window.getScreenDetails){ flashHint(t('fxScreensNo')); return; }
+    const d=await window.getScreenDetails();
+    S.screens={n:d.screens.length,bounds:[...d.screens].map(x=>({left:x.left,width:x.width})),ok:true,detail:d};
+    flashHint(t('fxScreensOk')+' · '+d.screens.length);
+  }catch(e){ flashHint(t('fxScreensNo')); }
+}
+
+/* ── 展厅 · Keyboard.lock 吞掉 Esc 等系统键（纯函数可单测） ── */
+function kioskLock(){
+  try{
+    if(!navigator.keyboard||!navigator.keyboard.lock) return false;
+    navigator.keyboard.lock(['Escape','KeyQ','Tab','F11']);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ── 负载 · PressureObserver 的 CPU 压力 → 光圈（纯函数可单测） ── */
+function pressureRadius(state){
+  return ({nominal:1, fair:0.9, serious:0.7, critical:0.5})[state] || 1;
+}
+async function loadStart(){
+  try{
+    if(!('PressureObserver' in window)){ flashHint(t('fxLoadNo')); return; }
+    const ob=new PressureObserver(recs=>{
+      const r=recs&&recs[0]; if(!r) return;
+      S.load={state:r.state,ok:true,obs:S.load.obs};
+    });
+    await ob.observe('cpu',{sampleInterval:2000});
+    S.load.obs=ob; S.load.ok=true; flashHint(t('fxLoadOk'));
+  }catch(e){ flashHint(t('fxLoadNo')); }
+}
+
 /* ── 时间 · 小时 → 光的位置与色调（纯函数，可单测） ── */
 function hoursSpot(h, m){
   const day=((h||0)+(m||0)/60);
@@ -3553,6 +3665,37 @@ const M={
       return {x:S.mouseX, y:S.mouseY, radius:S.radius,
               hue:P.hex||undefined, state:{hex:P.hex||null}}; },
     cln(){}, ex(){ return S.pick.hex?('🎨 '+S.pick.hex):('🎨 '+t('fxPickFail')); },
+  },
+  presence:{
+    icon:'dwell',nameKey:'modePresence',group:'free',fallback:'hint',
+    init(){ presenceStart(); },
+    spot(){ const P=S.presence;
+      const k=presenceRadius(P.idle||0, P.state);
+      return {x:S.mouseX, y:S.mouseY, radius:S.radius*k,
+              presence:k, state:{idle:P.state, seconds:P.idle||0}}; },
+    cln(){ try{ S.presence.sensor&&S.presence.sensor.stop&&S.presence.sensor.stop(); }catch(e){} S.presence.sensor=null; },
+    ex(){ return S.presence.ok?('👤 '+S.presence.state):('👤 '+t('fxPresenceNo')); },
+  },
+  screens:{
+    icon:'osc',nameKey:'modeScreens',group:'free',fallback:'hint',
+    init(){ screensStart(); },
+    spot(){ const p=screenSpot(S.screens.bounds||[], 0);
+      return {x:p.x, y:p.y, radius:S.radius, state:{screens:S.screens.n||1}}; },
+    cln(){}, ex(){ return S.screens.ok?('🖥 '+(S.screens.n||1)):('🖥 '+t('fxScreensNo')); },
+  },
+  kiosk:{
+    icon:'keys',nameKey:'modeKiosk',group:'free',fallback:'none',
+    init(){ S.kiosk.locked=kioskLock(); flashHint(S.kiosk.locked?t('fxKioskOn'):t('fxKioskNo'),1500); },
+    spot(){ return {x:S.mouseX, y:S.mouseY, radius:S.radius}; },
+    cln(){}, ex(){ return S.kiosk.locked?('🔒 '+t('fxKioskOn')):('🔒 '+t('fxKioskNo')); },
+  },
+  load:{
+    icon:'breath',nameKey:'modeLoad',group:'free',fallback:'hint',
+    init(){ loadStart(); },
+    spot(){ const k=pressureRadius(S.load.state);
+      return {x:S.mouseX, y:S.mouseY, radius:S.radius*k, state:{pressure:S.load.state}}; },
+    cln(){ try{ S.load.obs&&S.load.obs.disconnect&&S.load.obs.disconnect(); }catch(e){} S.load.obs=null; },
+    ex(){ return S.load.ok?('⚙ '+S.load.state):('⚙ '+t('fxLoadNo')); },
   },
   /* ── 需要本机跑一个小脚本：OSC / TouchDesigner ── */
   osc:{
@@ -4907,7 +5050,7 @@ const mg=document.getElementById('mg');
 /* Grouped by hardware requirement, so nobody has to discover the hard way
    that "gaze" wants a printed marker. Order = easiest first. */
 const MODE_GROUPS=[
-  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','pentilt','noise','beat','hours','clip','inkpick','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
+  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','pentilt','noise','beat','hours','clip','inkpick','presence','screens','kiosk','load','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
   {label:'groupCam',   modes:['motion','hand','face','eyes','flashlight']},
   {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
   {label:'groupLocal', modes:['osc','bridge']},

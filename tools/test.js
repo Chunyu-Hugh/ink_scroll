@@ -799,6 +799,43 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('取色器：拿到颜色 → 切到最近的那幅画', ip.hex === '#c4ccd6' && ip.scene === 2, JSON.stringify(ip));
 
+  /* ═══════════════ 4d6. 环境感知四条（在场/多屏/锁键/负载） ═══════════════ */
+  group('4d6 · 环境感知：在场 / 多屏 / 展厅锁键 / 机器负载');
+  const env = await page.evaluate(() => {
+    const act = presenceRadius(0, 'active');
+    const idle10 = presenceRadius(10, 'idle');
+    const idle600 = presenceRadius(600, 'idle');
+    const one = screenSpot([{ left: 0, width: 1920 }], 0);
+    const two = screenSpot([{ left: 0, width: 1920 }, { left: 1920, width: 1920 }], 1);
+    return {
+      act, idle10: +idle10.toFixed(2), idle600: +idle600.toFixed(2),
+      oneX: Math.round(one.x), twoX: Math.round(two.x), twoCount: two.count,
+      pr: [pressureRadius('nominal'), pressureRadius('serious'), pressureRadius('critical')],
+    };
+  });
+  ok('在场：活跃=全亮，离开越久越暗但有下限', env.act === 1 && env.idle10 < 1 && env.idle600 >= 0.25,
+    JSON.stringify(env));
+  ok('多屏：第二块屏上的光位与第一块不同', env.oneX !== env.twoX && env.twoCount === 2,
+    `x1=${env.oneX} x2=${env.twoX}`);
+  ok('负载：压力越大光圈越小（nominal>serious>critical）',
+    env.pr[0] > env.pr[1] && env.pr[1] > env.pr[2], JSON.stringify(env.pr));
+
+  const kk = await page.evaluate(() => {
+    let called = null;
+    navigator.keyboard = { lock: (keys) => { called = keys; } };
+    const locked = kioskLock();
+    delete navigator.keyboard;
+    const fallback = kioskLock();
+    return { locked, called: called && called.length, fallback };
+  });
+  ok('展厅锁键：支持时真的调用 lock(keys)，不支持时安全返回 false',
+    kk.locked === true && kk.called === 4 && kk.fallback === false, JSON.stringify(kk));
+
+  for (const m of ['presence', 'screens', 'kiosk', 'load']) {
+    const st = await page.evaluate((mm) => { wM(mm); return { mode: S.mode }; }, m);
+    ok(`环境模态 ${m} 可进入`, st.mode === m, st.mode);
+  }
+
   /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
   group('4f · 契约升级：id / presence / state');
   const ctr = await page.evaluate(() => {
