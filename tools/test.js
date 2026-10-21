@@ -279,6 +279,33 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     JSON.stringify(dailyUI));
   await page.evaluate(() => { S.daily = { on: false, seed: 0 }; S.delayMs = 0; S.delayBuf = []; });
 
+  /* ═══════════════ 2f. 形式「共处」：一个人揭不开 ═══════════════ */
+  group('2f · 形式：共处（规则不是输入）');
+  const tog = await page.evaluate(() => {
+    wM('multi'); S.together = true; S.togetherNeed = 2; S.togetherHinted = false; S.togetherLow = 0;
+    const one = M.multi.spots().slice(0, 1);          // 只有一盏灯
+    const two = M.multi.spots().concat([{ x: 100, y: 100, radius: 100 }]);
+    return { one: one.length, two: two.length };
+  });
+  ok('共处：规则要求至少两盏灯（一个人不够）', tog.one < 2 && tog.two >= 2, JSON.stringify(tog));
+
+  const gate = await page.evaluate(async () => {
+    S.together = true; S.togetherHinted = false; S.togetherLow = 0;
+    // 只有一盏灯：揭示应被锁掉
+    const D2 = document.getElementById('display');
+    D2.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 71, pointerType: 'touch', clientX: 300, clientY: 300, bubbles: true }));
+    await new Promise(r => setTimeout(r, 350));
+    const single = S.togetherLow;
+    D2.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 72, pointerType: 'touch', clientX: 600, clientY: 300, bubbles: true }));
+    await new Promise(r => setTimeout(r, 350));
+    const dual = S.togetherLow;
+    D2.dispatchEvent(new PointerEvent('pointerup', { pointerId: 71, pointerType: 'touch', clientX: 300, clientY: 300, bubbles: true }));
+    D2.dispatchEvent(new PointerEvent('pointerup', { pointerId: 72, pointerType: 'touch', clientX: 600, clientY: 300, bubbles: true }));
+    S.together = false;
+    return { single: +single.toFixed(2), dual: +dual.toFixed(2) };
+  });
+  ok('共处：一人时揭示被压住、两人时放开', gate.single > 0 && gate.dual < gate.single, JSON.stringify(gate));
+
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
   await page.click('#btn-start');

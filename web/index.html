@@ -1338,6 +1338,7 @@ const I18N = {
     fxPauseOn:'⏸ 静观',
     fxPauseOff:'▶ 继续',
     fullUnsupported:'此设备不支持网页全屏',
+    fxTogether:'这幅画要两个人一起才揭得开',
     fxSilenceFlip:'静极生动 · 翻过一页',
     fxFreezeOn:'⏸ 视角已定住',
     fxFreezeOff:'▶ 视角恢复漂移',
@@ -1586,6 +1587,7 @@ const I18N = {
     fxPauseOn:'⏸ 靜觀',
     fxPauseOff:'▶ 繼續',
     fullUnsupported:'此裝置不支援網頁全螢幕',
+    fxTogether:'這幅畫要兩個人一起才揭得開',
     fxSilenceFlip:'靜極生動 · 翻過一頁',
     fxFreezeOn:'⏸ 視角已定住',
     fxFreezeOff:'▶ 視角恢復漂移',
@@ -1833,6 +1835,7 @@ const I18N = {
     fxPauseOn:'⏸ Still',
     fxPauseOff:'▶ Resume',
     fullUnsupported:'This browser cannot go fullscreen',
+    fxTogether:'this scroll needs two people to open',
     fxSilenceFlip:'silence turns the page',
     fxFreezeOn:'⏸ viewpoint locked',
     fxFreezeOff:'▶ drift resumed',
@@ -4453,6 +4456,19 @@ function processFrame(){
   if(spots.length===0 && S.running && !(S.mode==='hand' && S.gesture!=='none')){ S.attract=(S.attract||0)+0.0045;
     spots=[{x:DW*(0.82-0.64*((S.attract*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.attract*0.9)), radius:S.radius*0.8}]; }
   spots = spots.map(normSpot).filter(Boolean);
+  if(S.together){                                   // 形式：共处（一个人揭不开）
+    if(spots.length < S.togetherNeed){
+      S.togetherLow = Math.min(1, S.togetherLow + 0.06);
+      spots = [];                                   // 揭示被"人数"锁住
+      if(S.togetherLow > 0.5 && !S.togetherHinted){
+        S.togetherHinted = true;
+        flashHint(t('fxTogether'), 2600);
+      }
+    }else{
+      S.togetherLow = Math.max(0, S.togetherLow - 0.1);
+      S.togetherHinted = false;
+    }
+  }
   if(S.delayMs>0){                                  // 形式：延迟
     const nowD=performance.now();
     const out=delayPush(S.delayBuf, spots, nowD, S.delayMs);
@@ -5373,6 +5389,11 @@ function applyDeepLink(){
     if(q.get('wall')==='1'){ document.body.classList.add('wall'); S.wall=true; S.grid=(q.get('grid')!=='0'); }
     if(q.get('grid')==='1'){ S.grid=true; }
     if(q.get('accrete')==='0'){ S.accrete=false; }
+    const form=q.get('form');
+    if(form==='together'||form==='together2'){ S.together=true; S.togetherNeed=form==='together2'?3:2; }
+    if(form==='delay'){ S.delayMs=8000; }
+    if(form==='daily'){ S.daily={on:true, seed:dailySeed().key}; }
+    if(form==='accrete'){ S.accrete=true; }
     const dl=parseInt(q.get('delay')||'0',10);
     if(dl>0&&dl<=30000){ S.delayMs=dl; S.delayBuf=[]; }
     if(q.get('daily')==='1'){ S.daily={on:true, seed:dailySeed().key}; }
