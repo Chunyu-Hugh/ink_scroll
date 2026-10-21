@@ -10,5 +10,73 @@
         "why": "14 modes without an explicit failure path (phone,ir,keys,multi,pen,dwell,breath,speech,shake,gamepad,light,clap,osc,bridge)"
       }
     ]
+  },
+  {
+    "at": "2026-10-21T03:16:49.632Z",
+    "sha": "4940315",
+    "fitness": 0.964,
+    "weak": [
+      {
+        "dim": "modeCoverage",
+        "v": 0.821,
+        "why": "5/28 modes without an assertion (hand,face,ir,nfc,eyes)"
+      },
+      {
+        "dim": "degradation",
+        "v": 0.893,
+        "why": "3 modes without an explicit failure path (auto,mouse,flashlight)"
+      }
+    ]
+  },
+  {
+    "at": "2026-10-21T03:17:00.314Z",
+    "sha": "4940315",
+    "fitness": 0.942,
+    "weak": [
+      {
+        "dim": "degradation",
+        "v": 0.577,
+        "why": "11 modes without an explicit failure path (audio,flashlight,phone,keys,multi,pen,dwell,breath,gamepad,clap,bridge)"
+      },
+      {
+        "dim": "modeCoverage",
+        "v": 0.962,
+        "why": "1/26 modes without an assertion (ir)"
+      }
+    ]
+  },
+  {
+    "at": "2026-10-21T03:17:09.174Z",
+    "sha": "4940315",
+    "fitness": 0.938,
+    "weak": [
+      {
+        "dim": "degradation",
+        "v": 0.536,
+        "why": "13 modes without an explicit failure path (auto,mouse,audio,flashlight,phone,keys,multi,pen,dwell,breath,gamepad,clap,bridge)"
+      },
+      {
+        "dim": "modeCoverage",
+        "v": 0.964,
+        "why": "1/28 modes without an assertion (ir)"
+      }
+    ]
+  },
+  {
+    "at": "2026-10-21T03:17:35.869Z",
+    "sha": "4940315",
+    "fitness": 0.938,
+    "weak": [
+      {
+        "dim": "degradation",
+        "v": 0.536,
+        "why": "13 modes without an explicit failure path (auto,mouse,audio,flashlight,phone,keys,multi,pen,dwell,breath,gamepad,clap,bridge)"
+      },
+      {
+        "dim": "modeCoverage",
+        "v": 0.964,
+        "why": "1/28 modes without an assertion (ir)"
+      }
+    ]
   }
 ]

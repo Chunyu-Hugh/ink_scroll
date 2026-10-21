@@ -49,11 +49,27 @@ dims.docsCoverage = { v: modes.length ? (modes.length - undocumented.length) / m
   d: `${modes.length} modes, ${undocumented.length} undocumented${undocumented.length ? ' (' + undocumented.join(',') + ')' : ''}` };
 
 // 4. every mode must degrade: a fallback or a hint on the failure path
-const needsFallback = modes.filter((k) => {
+// resolve `init(){ fooStart(); }` → the body of fooStart() as well, so failure
+// handling written in the engine counts (the old heuristic only read the entry)
+function modeSources(k) {
   const at = html.indexOf(`  ${k}:{\n    icon:`);
-  const seg = html.slice(at, at + 1400);
-  return !/wM\('mouse'|flashHint|spot\(\)\{ return null|return null;/.test(seg);
-});
+  const end = html.indexOf('\n  },', at);
+  const seg = html.slice(at, end > at ? end : at + 1600);
+  const called = [...seg.matchAll(/init\(\)\{ *([A-Za-z_$][\w$]*)\(/g)].map((m) => m[1]);
+  const bodies = called.map((fn) => {
+    const f = html.indexOf(`function ${fn}(`);
+    if (f < 0) return '';
+    let depth = 0, i = html.indexOf('{', f);
+    for (let j = i; j < html.length; j++) {
+      if (html[j] === '{') depth++;
+      else if (html[j] === '}' && --depth === 0) return html.slice(i, j);
+    }
+    return '';
+  });
+  return seg + '\n' + bodies.join('\n');
+}
+const needsFallback = modes.filter((k) =>
+  !/wM\('mouse'|flashHint|return null|\|\| null|不可失败/.test(modeSources(k)));
 dims.degradation = { v: modes.length ? (modes.length - needsFallback.length) / modes.length : 0,
   d: `${needsFallback.length} modes without an explicit failure path${needsFallback.length ? ' (' + needsFallback.join(',') + ')' : ''}` };
 
@@ -67,6 +83,12 @@ const have = a11y.filter((k) => html.includes(k) || read('web/index.html').inclu
 dims.a11y = { v: have.length / a11y.length, d: `${have.length}/${a11y.length} (${a11y.join(', ')})` };
 
 // 7. tests that actually assert the core mechanic
+// every registered mode should be exercised by the evaluator, not just be a card
+const testSrc = read('tools/test.js');
+const untested = modes.filter((k) => !testSrc.includes(`'${k}'`));
+dims.modeCoverage = { v: modes.length ? (modes.length - untested.length) / modes.length : 0,
+  d: `${untested.length}/${modes.length} modes without an assertion${untested.length ? ' (' + untested.join(',') + ')' : ''}` };
+
 dims.coreMechanic = { v: /光圈内的颜色与圈外不同/.test(read('tools/test.js')) ? 1 : 0,
   d: 'reveal-in-reveal assertion + real-inference group' };
 

@@ -99,6 +99,14 @@
 合成加速度必须触发泼墨、假手柄摇杆必须推动光圈、假 MIDI CC1 必须改 X 轴、
 以及**真的用 UDP 发一个 OSC 包**过去验证 TouchDesigner 那条路径。
 
+## 五之四、创作软件接入（真机验证）
+
+- **Blender 4.2.3 无头真跑过一次**：`blender -b -P examples/blender_smoke.py` →
+  立方体 (3,0,-2) → `INK_PAYLOAD {"x":0.35,"y":0.4}` → `POST 200` → SSE 端真的收到
+  `data: {"x":0.35,"y":0.4,...}`。不是模拟，是 Blender 真的发了。
+- **TouchDesigner**：OSC `udp/9000` 用 UDP 包真测过（测试组 4b）；
+- **p5.js / 任何网页**：`postMessage` 与 `window.InkScroll.*` 有断言（组 4e）。
+
 ## 六、测试
 
 ```
