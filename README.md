@@ -121,6 +121,39 @@ tailscale serve --bg 8888
 # 访问 https://your-machine.tailXXXXx.ts.net
 ```
 
+## 这是什么
+
+**一幅被墨盖住的画。光落在哪里，哪里才显色。**
+
+- **光**可以是鼠标、手指、呼吸、吹气、人头、眼睛、手机、手柄、MIDI、NFC 卡、串口传感器、
+  另一个软件（TouchDesigner / Blender / Max / 任何能发 OSC 或 HTTP 的东西）
+- **画**有 7 张：5 张水墨（雪/竹/花/山/夜）+ 1 张程序化 3D 视差 + 1 张**点云**（4000 个墨点，可推拉旋转）
+- **墨层**有 4 种质感：纸本 / 墨线 / 素描 / 暗调
+- 一个 `web/index.html`，**无构建步骤、无框架、2 个 CDN 包**
+
+## 能力一览
+
+| 输入（42 种模态） | 形式（7 种） | 输出 | 外部接入 |
+|---|---|---|---|
+| 免外设：指针 / 键盘 / 滚轮 / 电池 / 时间 / 剪贴板 / 取色 | 照亮（默认） | 投影墙 `?wall=1` | OSC（UDP 9000，TouchDesigner） |
+| 摄像头：手势 / 面庞 / 动影 / 眨眼 / 闪光灯 / 证件标记 | 累积（换画留痕） | 校准网格（A/B/C/D） | HTTP `POST /send?room=` |
+| 声学：声音 / 呼吸 / 吹墨 / 拍手 / 底噪 / 节拍 BPM / 口哨音名 | 延迟（晚 8 秒） | 红蓝 / 左右立体 | `postMessage` / `window.InkScroll` |
+| 装置：手柄 / MIDI / HID / 蓝牙 / NFC / 手机众光 / 眼动 / 串口 | 静默（安静 20 秒翻页） | 分享卡 PNG | MQTT 桥 |
+| 环境：在场 / 多屏 / 锁键 / 机器负载 | 日课（日期定题款） | 深链预设 | **Art-Net DMX**（真灯跟随） |
+| | 共处（一人揭不开）· 供奉（痕迹自己长大） | `/health` `/rooms` `/state` | 双向回传 `room=ext-state` |
+
+## 三十秒上手
+
+```bash
+python3 server.py 8888        # 也可以直接打开 web/index.html（无服务器也能跑）
+open http://localhost:8888/
+```
+
+- 想直接玩 → 默认就是
+- 想当展厅装置 → `?preset=kiosk`（投影墙 + 校准网格 + 自动开卷）
+- 想接 TouchDesigner → 发 OSC 到 `udp/9000`：`/spot 0.5 0.5 1.0`
+- 想让真灯跟着光 → `DMX_HOST=<控台IP> python3 server.py 8888`
+
 ## 🎛 一键预设
 
 | 预设 | 用途 |
