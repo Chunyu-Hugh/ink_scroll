@@ -1166,6 +1166,8 @@ const I18N = {
     fxPauseOn:'⏸ 静观',
     fxPauseOff:'▶ 继续',
     fullUnsupported:'此设备不支持网页全屏',
+    fxFreezeOn:'⏸ 视角已定住',
+    fxFreezeOff:'▶ 视角恢复漂移',
     fxSaved:'已保存分享卡',
     fxSaveFail:'保存失败',
     cardCaption:'墨卷 · 一起点亮一幅画',
@@ -1391,6 +1393,8 @@ const I18N = {
     fxPauseOn:'⏸ 靜觀',
     fxPauseOff:'▶ 繼續',
     fullUnsupported:'此裝置不支援網頁全螢幕',
+    fxFreezeOn:'⏸ 視角已定住',
+    fxFreezeOff:'▶ 視角恢復漂移',
     fxSaved:'已儲存分享卡',
     fxSaveFail:'儲存失敗',
     cardCaption:'墨卷 · 一起點亮一幅畫',
@@ -1615,6 +1619,8 @@ const I18N = {
     fxPauseOn:'⏸ Still',
     fxPauseOff:'▶ Resume',
     fullUnsupported:'This browser cannot go fullscreen',
+    fxFreezeOn:'⏸ viewpoint locked',
+    fxFreezeOff:'▶ drift resumed',
     fxSaved:'Share card saved',
     fxSaveFail:'Could not save',
     cardCaption:'Ink Scroll · light up a painting together',
@@ -1712,7 +1718,7 @@ const S={
   transition:{active:false,from:null,start:0,duration:500},
   firstHintShown:false,firstMoveDistance:0,debug:false,
   gazePos:null,gazeSmooth:null,gazeReady:false,
-  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,wall:false,grid:false,stereo:null,
+  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,wall:false,grid:false,stereo:null,view:{yaw:0,pitch:0,zoom:1,frozen:false},
   audio:{ctx:null,ana:null,buf:null,src:null,stream:null,level:0,pitch:0,on:false,onset:0,prevRms:0,hist:[]},
   motion:{prev:null,level:0,x:0,y:0,moving:false},
   keys:{x:0,y:0,vx:0,vy:0,pulse:0},
@@ -1895,10 +1901,12 @@ function drawCloud(g,W,H,t,mono,opt){
     dolly += clampN(-(S.face.z||0)*2.2,-0.6,0.6);
     dolly += ((S.face.nx!=null?S.face.nx:0.5)-0.5)*0.5;
   }
-  const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22 + dolly*0.55 + (O.eyeYaw||0);
-  const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30;
+  const V=S.view||{yaw:0,pitch:0,zoom:1,frozen:false};
+  const drift=V.frozen?0:Math.sin(t*0.24)*0.22;
+  const yaw=(S.mouseX/DW-0.5)*2.2 + drift + dolly*0.55 + (O.eyeYaw||0) + (V.yaw||0);
+  const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30 + (V.pitch||0);
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
-  const f=1.55, sc=Math.min(W,H)*0.62*(1+dolly*0.45);
+  const f=1.55, sc=Math.min(W,H)*0.62*(1+dolly*0.45)*(V.zoom||1);
   for(let i=0;i<n;i++){
     const p=pts[i];
     const X=p.x, Y=p.y, Z=-p.z*1.15;
@@ -4399,6 +4407,12 @@ D.addEventListener('pointermove',e=>{
   }
   S.pressure = e.pressure||0;
   if(e.pointerType==='pen') S.pen=true;
+  if(e.shiftKey && S.scene===6 && S.pointerDown){    // Shift+拖 = 绕轴旋转
+    S.view.yaw=(S.view.yaw||0)+(e.movementX||0)*0.004;
+    S.view.pitch=Math.max(-0.9,Math.min(0.9,(S.view.pitch||0)+(e.movementY||0)*0.004));
+    noteActivity();
+    return;
+  }
   setPtr(e.clientX,e.clientY);
   if(longPressT){ clearTimeout(longPressT); longPressT=0; }
 });
@@ -4417,11 +4431,21 @@ function endPtr(e){
     }
   }
 }
+D.addEventListener('dblclick',e=>{
+  if(!S.running||S.scene!==6) return;
+  S.view.frozen=!S.view.frozen;
+  flashHint(t(S.view.frozen?'fxFreezeOn':'fxFreezeOff'), 1200);
+});
 D.addEventListener('pointerup',endPtr);
 D.addEventListener('pointercancel',e=>{ ptrs.delete(e.pointerId); S.pointerDown=false; clearTimeout(longPressT); });
 D.addEventListener('wheel',e=>{
   if(!S.running) return;
   e.preventDefault();
+  if(S.scene===6){                                   // 点云：滚轮 = 推拉镜头
+    S.view.zoom=Math.max(0.55,Math.min(2.4, (S.view.zoom||1)*(e.deltaY>0?0.92:1.08)));
+    noteActivity();
+    return;
+  }
   const unit=e.deltaMode===1?16:(e.deltaMode===2?window.innerHeight:1);
   S.radius=clampRadius(S.radius+e.deltaY*unit*0.25*S.dpr);
   noteActivity();

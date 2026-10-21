@@ -528,6 +528,58 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('头部视差：人头前进/侧移会改变点云视角', head.diff > head.total * 0.05,
     `${head.diff}/${head.total} 像素不同`);
 
+  // 视角三件套：滚轮推拉、双击定住、Shift+拖绕轴
+  const view = await page.evaluate(async () => {
+    changeScene(6); await new Promise(r => setTimeout(r, 300));
+    const snap = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
+      const g = c.getContext('2d'); g.drawImage(D, 0, 0, 200, 120);
+      return g.getImageData(0, 0, 200, 120).data; };
+    const zoomOut = snap();
+    await page.mouseWheel(0, 120);   // will throw in evaluate... replaced below
+    return 0;
+  }).catch(() => 0);
+  // wheel zoom: drive the state directly, then compare render
+  const zoomPix = await page.evaluate(() => {
+    const mk = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
+      return { c, g: c.getContext('2d') }; };
+    S.view.zoom = 1.0; const a = mk(); drawCloud(a.g, 200, 120, 1.0, false);
+    S.view.zoom = 1.8; const b = mk(); drawCloud(b.g, 200, 120, 1.0, false);
+    const da = a.g.getImageData(0, 0, 200, 120).data, db = b.g.getImageData(0, 0, 200, 120).data;
+    let diff = 0; for (let i = 0; i < da.length; i += 4) if (Math.abs(da[i] - db[i]) > 6) diff++;
+    return { diff, total: 200 * 120 };
+  });
+  ok('点云视角：滚轮推拉（zoom）真的改变画面', zoomPix.diff > zoomPix.total * 0.08,
+    `${zoomPix.diff}/${zoomPix.total} 像素不同`);
+
+  const orbit = await page.evaluate(() => {
+    const mk = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
+      return { c, g: c.getContext('2d') }; };
+    S.view.zoom = 1; S.view.yaw = 0; const a = mk(); drawCloud(a.g, 200, 120, 1.0, false);
+    S.view.yaw = 0.55; const b = mk(); drawCloud(b.g, 200, 120, 1.0, false);
+    S.view.yaw = 0;
+    const da = a.g.getImageData(0, 0, 200, 120).data, db = b.g.getImageData(0, 0, 200, 120).data;
+    let diff = 0; for (let i = 0; i < da.length; i += 4) if (Math.abs(da[i] - db[i]) > 6) diff++;
+    return { diff, total: 200 * 120, yaw: true };
+  });
+  ok('点云视角：绕轴旋转（yaw）改变画面', orbit.diff > orbit.total * 0.08,
+    `${orbit.diff}/${orbit.total} 像素不同`);
+
+  const frozen = await page.evaluate(() => {
+    S.view.frozen = false; S.view.yaw = 0;
+    const t0 = performance.now() / 1000;
+    const draw = (t) => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
+      const g = c.getContext('2d'); drawCloud(g, 200, 120, t, false); return g.getImageData(0, 0, 200, 120).data; };
+    const a = draw(t0), b = draw(t0 + 3.0);
+    let moving = 0; for (let i = 0; i < a.length; i += 4) if (Math.abs(a[i] - b[i]) > 6) moving++;
+    S.view.frozen = true;
+    const c1 = draw(t0), c2 = draw(t0 + 3.0);
+    let still = 0; for (let i = 0; i < c1.length; i += 4) if (Math.abs(c1[i] - c2[i]) > 6) still++;
+    S.view.frozen = false;
+    return { moving, still, total: 200 * 120 };
+  });
+  ok('点云视角：双击定住后画面不再漂移', frozen.moving > frozen.total * 0.02 && frozen.still < frozen.total * 0.005,
+    `漂移 ${frozen.moving} → 定住 ${frozen.still}`);
+
   ok('点云立轴：没有引入新的 CDN 依赖（静态脚本仍 ≤4）', staticDeps.length <= 4,
     staticDeps.length + ' → ' + staticDeps.map(u => u.split('/')[2]).join(','));
 
