@@ -725,6 +725,42 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('Blender 脚本走的是 /send?room=ext 且坐标归一化',
     /send\?room=ext/.test(bl) && /BOUND/.test(bl) && /max\(0\.0, min\(1\.0/.test(bl));
 
+  /* ═══════════════ 4d4. 图谱 §B：笔倾斜 / 底噪 / 节拍 ═══════════════ */
+  group('4d4 · 图谱 §B 三条（笔倾斜 / 房间底噪 / 节拍 BPM）');
+  const pt = await page.evaluate(() => {
+    wM('pentilt');
+    S.pen = true; S.ptilt = { tx: 0, ty: 0 };
+    const flat = M.pentilt.spot();
+    S.ptilt = { tx: 34, ty: 18 };
+    const tilted = M.pentilt.spot();
+    return { brushFlat: flat.brush, brushTilted: tilted.brush, ang: +tilted.ang.toFixed(2), state: tilted.state && tilted.state.tiltX };
+  });
+  ok('笔倾斜：侧锋时笔触变成条状（brush=1）且角度来自 tilt', pt.brushFlat === 0 && pt.brushTilted === 1 && pt.state === 34, JSON.stringify(pt));
+
+  const nz = await page.evaluate(async () => {
+    wM('noise'); S.audio = { on: true, level: 0 }; S.noise = { v: 0 };
+    for (let i = 0; i < 40; i++) { S.audio.level = 0.6; M.noise.spot(); }
+    const loud = S.noise.v;
+    for (let i = 0; i < 200; i++) { S.audio.level = 0; M.noise.spot(); }
+    return { loud: +loud.toFixed(3), after: +S.noise.v.toFixed(3) };
+  });
+  ok('房间底噪：慢速包络上升且会回落（不是硬阈值）', nz.loud > 0.2 && nz.after < nz.loud, JSON.stringify(nz));
+
+  const bt2 = await page.evaluate(() => {
+    wM('beat'); S.beat2 = { prev: null, last: 0, flux: 0, bpm: 0, ints: [] };
+    const mk = (bump) => { const a = new Uint8Array(64); a.fill(10); if (bump) a[8] = 200; return a; };
+    S.audio = { on: true, freq: mk(false), level: 0.3 };
+    beatTick();                                   // seed prev
+    let splats0 = S.phone.splats.length;
+    for (let k = 0; k < 6; k++) {
+      S.audio.freq = mk(true); beatTick();
+      S.beat2.last = performance.now() - 500;      // 模拟 120 BPM 的间隔
+      S.audio.freq = mk(false); beatTick();
+    }
+    return { bpm: S.beat2.bpm, flux: Math.round(S.beat2.flux), grew: S.phone.splats.length >= splats0 };
+  });
+  ok('节拍：频谱通量能估出 BPM 并随拍泼墨', bt2.bpm >= 60 && bt2.bpm <= 240 && bt2.grew, JSON.stringify(bt2));
+
   /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
   group('4f · 契约升级：id / presence / state');
   const ctr = await page.evaluate(() => {

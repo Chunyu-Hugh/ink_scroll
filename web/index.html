@@ -1136,6 +1136,9 @@ const I18N = {
     modeLight:'环境光',
     modeClap:'拍手 · 节拍',
     modeBlow:'吹墨 · 散尘',
+    modePenTilt:'笔锋 · 倾斜',
+    modeNoise:'噪声 · 底噪',
+    modeBeat:'节拍 · BPM',
     modeScroll:'滚轮 · 轨迹',
     modeBattery:'电池 · 余量',
     modeBridge:'外设桥 · 本地',
@@ -1150,6 +1153,15 @@ const I18N = {
     firstHintNfc:'把 NFC 贴纸靠近手机 · 换画',
     firstHintEyes:'正对摄像头 · 眨一下眼泼一次墨（转头也能移光）',
     firstHintLight:'环境越暗光圈越大（需要 AmbientLightSensor）',
+    firstHintPenTilt:'压感笔侧过来 · 笔锋变成条状，倾斜越大越扁',
+    firstHintNoise:'不用出声 · 房间底噪轻轻托着光圈呼吸',
+    firstHintBeat:'放一首有鼓点的歌 · 每一拍泼一次墨，右上角出 BPM',
+    meterTilt:'倾斜',
+    meterNoise:'底噪',
+    meterBeat:'通量',
+    fxPenTilt:'侧锋',
+    fxNoiseHint:'底噪呼吸',
+    fxBeatListening:'在听节拍…',
     firstHintScroll:'滚动滚轮 · 光沿着轨迹游走，滚得越快光圈越大',
     firstHintBattery:'电量决定光圈大小 · 快没电时它会缩成一小点',
     meterScroll:'滚动',
@@ -1157,6 +1169,15 @@ const I18N = {
     fxScrollHint:'滚轮 = 移动光',
     fxBattNo:'此浏览器不支持电池 API',
     fxBattOk:'🔋 电量已接入',
+    firstHintPenTilt:'壓感筆側過來 · 筆鋒變成條狀，傾斜越大越扁',
+    firstHintNoise:'不用出聲 · 房間底噪輕輕托著光圈呼吸',
+    firstHintBeat:'放一首有鼓點的歌 · 每一拍潑一次墨，右上角出 BPM',
+    meterTilt:'傾斜',
+    meterNoise:'底噪',
+    meterBeat:'通量',
+    fxPenTilt:'側鋒',
+    fxNoiseHint:'底噪呼吸',
+    fxBeatListening:'在聽節拍…',
     firstHintScroll:'滾動滾輪 · 光沿著軌跡遊走，滾得越快光圈越大',
     firstHintBattery:'電量決定光圈大小 · 快沒電時它會縮成一小點',
     meterScroll:'滾動',
@@ -1164,6 +1185,15 @@ const I18N = {
     fxScrollHint:'滾輪 = 移動光',
     fxBattNo:'此瀏覽器不支援電池 API',
     fxBattOk:'🔋 電量已接入',
+    firstHintPenTilt:'Tilt a pressure pen — the brush turns into a flat streak',
+    firstHintNoise:'Stay quiet — room noise gently breathes the light',
+    firstHintBeat:'Play something with a beat — each hit splats ink, BPM in the HUD',
+    meterTilt:'tilt',
+    meterNoise:'noise floor',
+    meterBeat:'flux',
+    fxPenTilt:'side stroke',
+    fxNoiseHint:'noise breathing',
+    fxBeatListening:'listening for beats…',
     firstHintScroll:'Scroll the wheel — the light wanders along a track; faster = wider',
     firstHintBattery:'Charge level sets the aperture — nearly empty shrinks it to a dot',
     meterScroll:'scroll',
@@ -1396,6 +1426,9 @@ const I18N = {
     modeLight:'環境光',
     modeClap:'拍手 · 節拍',
     modeBlow:'吹墨 · 散塵',
+    modePenTilt:'筆鋒 · 傾斜',
+    modeNoise:'噪聲 · 底噪',
+    modeBeat:'節拍 · BPM',
     modeScroll:'滾輪 · 軌跡',
     modeBattery:'電池 · 餘量',
     modeBridge:'外設橋 · 本機',
@@ -1625,6 +1658,9 @@ const I18N = {
     modeLight:'Ambient light',
     modeClap:'Clap · Beat',
     modeBlow:'Blow · Dust',
+    modePenTilt:'Pen · Tilt',
+    modeNoise:'Room noise',
+    modeBeat:'Beat · BPM',
     modeScroll:'Wheel · Track',
     modeBattery:'Battery · Charge',
     modeBridge:'Device bridge',
@@ -1776,6 +1812,9 @@ const S={
   clap:{last:0,prev:0},
   dust:{cvs:null,ctx:null,brush:null,level:0},
   scroll:{acc:0,t:0},
+  ptilt:{tx:0,ty:0},
+  noise:{v:0},
+  beat2:{prev:null,last:0,flux:0,bpm:0,ints:[]},
   batt:{level:-1,charging:false,seen:false},
   face:{ready:false,loading:null,lm:null,spot:null},
   tilt:{base:null,ready:false,x:0,y:0,last:0},
@@ -3051,6 +3090,37 @@ async function battStart(){
   }catch(e){ flashHint(t('fxBattNo')); }
 }
 
+/* ── 噪声 · 慢速 RMS：房间的底噪当作"气息"，比拍手更细腻 ── */
+function noiseTick(){
+  const A=S.audio, N=S.noise;
+  const lv=A.on?(A.level||0):0;
+  N.v=N.v*0.985+lv*0.015;                      // ~1.5s 时间常数
+  return N.v;
+}
+
+/* ── 节拍 · 频谱通量：从音乐里估 BPM，每拍泼一次墨 ── */
+function beatTick(){
+  const A=S.audio, B=S.beat2;
+  if(!A.on||!A.freq){ return B; }
+  const f=A.freq;
+  if(!B.prev){ B.prev=Uint8Array.from(f); return B; }
+  let flux=0;
+  for(let i=2;i<f.length;i++){ const d=f[i]-B.prev[i]; if(d>0) flux+=d; }
+  B.prev=Uint8Array.from(f);
+  B.flux=B.flux*0.7+flux*0.3;
+  const now=performance.now();
+  if(flux>260 && now-B.last>260){
+    if(B.last){ B.ints.push(now-B.last); if(B.ints.length>12) B.ints.shift(); }
+    B.last=now;
+    if(B.ints.length>=4){
+      const m=[...B.ints].sort((a,b)=>a-b)[Math.floor(B.ints.length/2)];
+      if(m>250) B.bpm=Math.round(60000/m);
+    }
+    pushSplat(S.mouseX,S.mouseY,52+Math.min(50,flux/8),110);
+  }
+  return B;
+}
+
 /* ── 拍手节拍（onset）：拍一下泼墨，连拍两下换画 ── */
 function clapOnset(){
   const C=S.clap, now=performance.now();
@@ -3354,6 +3424,39 @@ const M={
     },
     cln(){}, ex(){ return S.batt.seen?('🔋 '+Math.round((S.batt.level||0)*100)+'%'):('🔋 '+t('fxBattNo')); },
     meter(){ return {label:t('meterBatt'), value:S.batt.seen?(S.batt.level||0):0}; },
+  },
+  pentilt:{
+    icon:'pen',nameKey:'modePenTilt',group:'free',fallback:'none',
+    init(){},
+    spot(){
+      const pr=S.pen&&S.pressure>0?S.pressure:0.45;
+      const tx=S.ptilt.tx||0, ty=S.ptilt.ty||0;
+      return {x:S.mouseX, y:S.mouseY,
+        radius:S.radius*(0.3+1.5*pr),
+        brush:Math.abs(tx)+Math.abs(ty)>12?1:0,     // 侧锋 → 条状笔触
+        ang:Math.atan2(ty,tx),
+        state:{tiltX:tx, tiltY:ty, pressure:pr}};
+    },
+    cln(){}, ex(){ return S.pen?('✒ '+t('fxPenTilt')):('✒ '+t('fxPenHint')); },
+    meter(){ return {label:t('meterTilt'), value:clampN((Math.abs(S.ptilt.tx)+Math.abs(S.ptilt.ty))/60,0,1)}; },
+  },
+  noise:{
+    icon:'audio',nameKey:'modeNoise',group:'free',needMic:true,fallback:'hint',
+    init(){ audioStart(); },
+    spot(){ const v=noiseTick();
+      return {x:S.mouseX, y:S.mouseY, radius:S.radius*(0.35+2.1*v), presence:clampN(0.4+v*1.2,0,1)}; },
+    cln(){ audioStop(); }, ex(){ return S.audio.on?('〰 '+t('fxNoiseHint')):('🎙 '+t('micWaiting')); },
+    meter(){ return {label:t('meterNoise'), value:S.noise.v||0}; },
+  },
+  beat:{
+    icon:'audio',nameKey:'modeBeat',group:'free',needMic:true,fallback:'hint',
+    init(){ audioStart(); S.beat2={prev:null,last:0,flux:0,bpm:0,ints:[]}; },
+    spot(){ const B=beatTick();
+      return {x:S.mouseX, y:S.mouseY, radius:S.radius*(0.45+clampN(B.flux/900,0,1)*1.4),
+              presence:1, state:{bpm:B.bpm, flux:B.flux}}; },
+    cln(){ audioStop(); },
+    ex(){ return S.audio.on?('🥁 '+(S.beat2.bpm?S.beat2.bpm+' BPM':t('fxBeatListening'))):('🎙 '+t('micWaiting')); },
+    meter(){ return {label:t('meterBeat'), value:clampN((S.beat2.flux||0)/900,0,1)}; },
   },
   /* ── 需要本机跑一个小脚本：OSC / TouchDesigner ── */
   osc:{
@@ -4585,7 +4688,7 @@ D.addEventListener('pointermove',e=>{
     return;
   }
   S.pressure = e.pressure||0;
-  if(e.pointerType==='pen') S.pen=true;
+  if(e.pointerType==='pen'){ S.pen=true; S.ptilt={tx:e.tiltX||0, ty:e.tiltY||0}; }
   if(e.shiftKey && S.scene===6 && S.pointerDown){    // Shift+拖 = 绕轴旋转
     S.view.yaw=(S.view.yaw||0)+(e.movementX||0)*0.004;
     S.view.pitch=Math.max(-0.9,Math.min(0.9,(S.view.pitch||0)+(e.movementY||0)*0.004));
@@ -4708,7 +4811,7 @@ const mg=document.getElementById('mg');
 /* Grouped by hardware requirement, so nobody has to discover the hard way
    that "gaze" wants a printed marker. Order = easiest first. */
 const MODE_GROUPS=[
-  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
+  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','pentilt','noise','beat','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
   {label:'groupCam',   modes:['motion','hand','face','eyes','flashlight']},
   {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
   {label:'groupLocal', modes:['osc','bridge']},
