@@ -1136,6 +1136,8 @@ const I18N = {
     modeLight:'环境光',
     modeClap:'拍手 · 节拍',
     modeBlow:'吹墨 · 散尘',
+    modeScroll:'滚轮 · 轨迹',
+    modeBattery:'电池 · 余量',
     modeBridge:'外设桥 · 本地',
     scene3d:'立轴 · 3D',
     sceneCloud:'立轴 · 点云',
@@ -1148,6 +1150,27 @@ const I18N = {
     firstHintNfc:'把 NFC 贴纸靠近手机 · 换画',
     firstHintEyes:'正对摄像头 · 眨一下眼泼一次墨（转头也能移光）',
     firstHintLight:'环境越暗光圈越大（需要 AmbientLightSensor）',
+    firstHintScroll:'滚动滚轮 · 光沿着轨迹游走，滚得越快光圈越大',
+    firstHintBattery:'电量决定光圈大小 · 快没电时它会缩成一小点',
+    meterScroll:'滚动',
+    meterBatt:'电量',
+    fxScrollHint:'滚轮 = 移动光',
+    fxBattNo:'此浏览器不支持电池 API',
+    fxBattOk:'🔋 电量已接入',
+    firstHintScroll:'滾動滾輪 · 光沿著軌跡遊走，滾得越快光圈越大',
+    firstHintBattery:'電量決定光圈大小 · 快沒電時它會縮成一小點',
+    meterScroll:'滾動',
+    meterBatt:'電量',
+    fxScrollHint:'滾輪 = 移動光',
+    fxBattNo:'此瀏覽器不支援電池 API',
+    fxBattOk:'🔋 電量已接入',
+    firstHintScroll:'Scroll the wheel — the light wanders along a track; faster = wider',
+    firstHintBattery:'Charge level sets the aperture — nearly empty shrinks it to a dot',
+    meterScroll:'scroll',
+    meterBatt:'charge',
+    fxScrollHint:'wheel = move the light',
+    fxBattNo:'This browser has no Battery API',
+    fxBattOk:'🔋 battery connected',
     firstHintBlow:'对着麦克风吹气 · 墨层像灰尘一样散开，露出彩色',
     meterBlow:'气息',
     fxBlowHint:'吹气 = 散墨',
@@ -1373,6 +1396,8 @@ const I18N = {
     modeLight:'環境光',
     modeClap:'拍手 · 節拍',
     modeBlow:'吹墨 · 散塵',
+    modeScroll:'滾輪 · 軌跡',
+    modeBattery:'電池 · 餘量',
     modeBridge:'外設橋 · 本機',
     scene3d:'立軸 · 3D',
     sceneCloud:'立軸 · 點雲',
@@ -1600,6 +1625,8 @@ const I18N = {
     modeLight:'Ambient light',
     modeClap:'Clap · Beat',
     modeBlow:'Blow · Dust',
+    modeScroll:'Wheel · Track',
+    modeBattery:'Battery · Charge',
     modeBridge:'Device bridge',
     scene3d:'Parallax · 3D',
     sceneCloud:'Point cloud',
@@ -1748,6 +1775,8 @@ const S={
   light:{sensor:null,lux:-1,ok:false},
   clap:{last:0,prev:0},
   dust:{cvs:null,ctx:null,brush:null,level:0},
+  scroll:{acc:0,t:0},
+  batt:{level:-1,charging:false,seen:false},
   face:{ready:false,loading:null,lm:null,spot:null},
   tilt:{base:null,ready:false,x:0,y:0,last:0},
   phone:{targets:{},primaryId:null,calib:{},es:null,room:null,alpha:.45,staleMs:900,splats:[],seq:0,overlap:{},ink:false,strokeLast:{},relay:false},
@@ -2995,6 +3024,30 @@ function dustTick(sp,lv){
   D.t=performance.now();
 }
 
+/* ── 滚轮 · 只有触控板/鼠标时也能玩：滚轮累积量当坐标，速度当半径 ── */
+function scrollInit(){ S.scroll={acc:0,t:performance.now(),v:0}; }
+function scrollSpot(){
+  const S2=S.scroll;
+  const speed=Math.min(1, Math.abs(S2.v)/32);
+  S2.v*=0.86;                                   // 速度衰减
+  return {x:DW*(0.5+Math.sin(S2.acc*0.0021)*0.42), y:DH*(0.5+Math.cos(S2.acc*0.0013)*0.34),
+          radius:S.radius*(0.5+speed*1.5)};
+}
+
+/* ── 电池 · 电量就是光圈大小（笔记本 / 手机都行，Chromium） ── */
+async function battStart(){
+  if(!navigator.getBattery){ flashHint(t('fxBattNo')); return; }
+  try{
+    const b=await navigator.getBattery();
+    const sync=()=>{ S.batt={level:b.level,charging:b.charging,seen:true}; };
+    sync();
+    b.addEventListener('levelchange',sync);
+    b.addEventListener('chargingchange',sync);
+    S.batt.seen=true;
+    flashHint(t('fxBattOk'));
+  }catch(e){ flashHint(t('fxBattNo')); }
+}
+
 /* ── 拍手节拍（onset）：拍一下泼墨，连拍两下换画 ── */
 function clapOnset(){
   const C=S.clap, now=performance.now();
@@ -3258,6 +3311,23 @@ const M={
     cln(){ audioStop(); S.dust.level=0; if(S.dust.ctx) S.dust.ctx.clearRect(0,0,DW,DH); },
     ex(){ return S.audio.on?('💨 '+t('fxBlowHint')):('🎙 '+t('micWaiting')); },
     meter(){ return {label:t('meterBlow'), value:S.audio.level||0}; },
+  },
+  scroll:{
+    icon:'pointer',nameKey:'modeScroll',group:'free',fallback:'none',
+    init(){ scrollInit(); },
+    spot(){ return scrollSpot(); },
+    cln(){}, ex(){ return '🖱 '+t('fxScrollHint'); },
+    meter(){ return {label:t('meterScroll'), value:Math.min(1,Math.abs(S.scroll.v)/32)}; },
+  },
+  battery:{
+    icon:'osc',nameKey:'modeBattery',group:'free',fallback:'hint',
+    init(){ battStart(); },
+    spot(){
+      const lv=S.batt.seen?S.batt.level:0.5;
+      return {x:S.mouseX, y:S.mouseY, radius:S.radius*(0.35+lv*1.6)};
+    },
+    cln(){}, ex(){ return S.batt.seen?('🔋 '+Math.round((S.batt.level||0)*100)+'%'):('🔋 '+t('fxBattNo')); },
+    meter(){ return {label:t('meterBatt'), value:S.batt.seen?(S.batt.level||0):0}; },
   },
   /* ── 需要本机跑一个小脚本：OSC / TouchDesigner ── */
   osc:{
@@ -4522,6 +4592,11 @@ D.addEventListener('pointercancel',e=>{ ptrs.delete(e.pointerId); S.pointerDown=
 D.addEventListener('wheel',e=>{
   if(!S.running) return;
   e.preventDefault();
+  if(S.mode==='scroll'){                             // 滚轮模式：累积量当坐标
+    S.scroll.acc+=(e.deltaY>0?1:-1)*(e.deltaMode===1?3:1);
+    S.scroll.v=Math.min(60, S.scroll.v+Math.abs(e.deltaY>0?e.deltaY:e.deltaY)*0.4);
+    noteActivity();
+  }
   if(S.scene===6){                                   // 点云：滚轮 = 推拉镜头
     S.view.zoom=Math.max(0.55,Math.min(2.4, (S.view.zoom||1)*(e.deltaY>0?0.92:1.08)));
     noteActivity();
@@ -4605,7 +4680,7 @@ const mg=document.getElementById('mg');
 /* Grouped by hardware requirement, so nobody has to discover the hard way
    that "gaze" wants a printed marker. Order = easiest first. */
 const MODE_GROUPS=[
-  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
+  {label:'groupFree',  modes:['auto','mouse','multi','keys','pen','scroll','battery','dwell','breath','blow','audio','clap','speech','tilt','shake','light']},
   {label:'groupCam',   modes:['motion','hand','face','eyes','flashlight']},
   {label:'groupGear',  modes:['gamepad','midi','hid','ble','nfc','gaze','phone','ir']},
   {label:'groupLocal', modes:['osc','bridge']},

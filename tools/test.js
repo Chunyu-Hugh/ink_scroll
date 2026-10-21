@@ -667,6 +667,27 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('吹墨：吹气让蒙版累积（灰尘真的被吹开）', blow.level > 20, `level=${blow.level}%`);
   ok('吹墨：停止吹气后会回墨', blow.after < blow.level, `${blow.level}% → ${blow.after}%`);
 
+  /* ═══════════════ 4d3. 冷门输入（滚轮 / 电池） ═══════════════ */
+  group('4d3 · 冷门但真实的输入：滚轮轨迹、电池余量');
+  const scr = await page.evaluate(() => {
+    wM('scroll'); S.scroll = { acc: 0, t: performance.now(), v: 0 };
+    const a = M.scroll.spot();
+    S.scroll.acc = 400; S.scroll.v = 40;
+    const b = M.scroll.spot();
+    return { moved: Math.abs(a.x - b.x) + Math.abs(a.y - b.y) > 1, rBigger: b.radius > a.radius };
+  });
+  ok('滚轮模式：累积量驱动光、速度放大光圈', scr.moved && scr.rBigger, JSON.stringify(scr));
+
+  const bt = await page.evaluate(async () => {
+    wM('battery');
+    S.batt = { level: 0.15, charging: false, seen: true };
+    const low = M.battery.spot().radius;
+    S.batt.level = 1.0;
+    const full = M.battery.spot().radius;
+    return { low: Math.round(low), full: Math.round(full), has: !!navigator.getBattery };
+  });
+  ok('电池模式：电量越低光圈越小', bt.full > bt.low * 1.8, JSON.stringify(bt));
+
   /* ═══════════════ 4e. 创作软件接入 ═══════════════ */
   group('4e · 创作软件接入（Blender / TouchDesigner / p5.js）');
   await page.evaluate(() => wM('mouse'));
