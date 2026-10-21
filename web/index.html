@@ -2735,6 +2735,43 @@ function bridgeStart(){
 }
 function bridgeStop(){ const B=S.bridge; try{ B.es&&B.es.close(); }catch(e){} B.es=null; B.ok=false; }
 
+/* ── 外部创作软件驱动 API ──
+   一条 ingest 路径，三种到达方式：
+     · HTTP/OSC（Blender / TouchDesigner / Max / Resolume / Unreal …）
+     · postMessage（p5.js / Hydra / 任何同源或跨源 iframe 父页面）
+     · window.InkScroll.*（同源页面直接调用，最省事）
+   载荷统一为 {x,y,r,scene,style,cmd,name}，x/y 归一化 0..1。 */
+function extIngest(m){
+  if(!m||typeof m!=='object') return;
+  const B=S.bridge;
+  if(typeof m.x==='number') B.x=clampN(m.x,0,1);
+  if(typeof m.y==='number') B.y=clampN(m.y,0,1);
+  if(typeof m.r==='number') B.r=clampN(m.r,0.02,3);
+  if(m.scene!==undefined) changeScene(((m.scene|0)%SCENE_COUNT+SCENE_COUNT)%SCENE_COUNT);
+  if(m.style!==undefined) setStyle(STYLE_ORDER[(m.style|0)%STYLE_ORDER.length]);
+  if(m.cmd==='splat') pushSplat(B.x*DW,B.y*DH,70,110);
+  if(m.cmd==='paint') togglePaint();
+  if(m.name) B.name=String(m.name).slice(0,18);
+  B.t=performance.now();
+  B.ok=true;
+  if(S.running && S.mode!=='bridge' && S.mode!=='osc') wM('bridge');   // 外部接管
+}
+window.addEventListener('message',e=>{
+  const d=e.data;
+  if(!d||typeof d!=='object') return;
+  if(d.type==='ink'||d.ink===true) extIngest(d);
+});
+window.InkScroll={
+  version:1,
+  spot:(x,y,r)=>extIngest({x,y,r}),
+  scene:(i)=>extIngest({scene:i}),
+  style:(i)=>extIngest({style:i}),
+  splat:()=>extIngest({cmd:'splat'}),
+  paint:()=>extIngest({cmd:'paint'}),
+  ingest:extIngest,
+  get state(){ return {mode:S.mode, scene:S.scene, style:S.style, x:S.bridge.x, y:S.bridge.y, r:S.bridge.r}; },
+};
+
 /* ── NFC 贴纸（Chrome Android）：贴一下换画 ── */
 async function nfcStart(){
   if(!('NDEFReader' in window)){ flashHint(t('fxNfcWait')); return; }
@@ -3048,7 +3085,7 @@ const M={
   },
   bridge:{
     icon:'osc',nameKey:'modeBridge',group:'local',
-    init(){ S.bridge={es:S.bridge.es,x:.5,y:.5,r:.5,t:0,ok:false,name:''}; bridgeStart(); },
+    init(){ S.bridge.t=0; bridgeStart(); },   // 不复位 x/y/r：外部刚推来的坐标不能被清掉
     spot(){ const B=S.bridge; return (B.t&&performance.now()-B.t<2200)?{x:B.x*DW,y:B.y*DH,radius:S.radius*B.r}:null; },
     cln(){ bridgeStop(); },
     ex(){ return S.bridge.ok?('🔗 '+(S.bridge.name||t('fxBridgeOk'))):('🔗 '+t('fxBridgeWait')); },

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>任何网页 → 墨卷（postMessage / window.InkScroll）</title>
+<style>
+  html,body{margin:0;height:100%;background:#141413;color:#f5f4ed;
+    font:14px/1.6 system-ui,sans-serif;display:grid;grid-template-rows:1fr 84px}
+  iframe{width:100%;height:100%;border:0}
+  .bar{display:flex;align-items:center;gap:10px;padding:0 14px;background:#1f1f1d}
+  .pad{width:120px;height:44px;border-radius:10px;background:#c96442;cursor:crosshair;flex:0 0 auto}
+  code{color:#d97757}
+</style>
+<!-- 这个页面演示「任何创作软件/网页」都能驱动画卷：
+     ① iframe 里跑主程序   ② 用 postMessage 送 {x,y,r}
+     同源页面更省事：直接 window.InkScroll.spot(0.5, 0.4) -->
+<iframe id="art" src="../web/index.html?mode=bridge&lang=zh-CN" allow="camera; microphone"></iframe>
+<div class="bar">
+  <div class="pad" id="pad" title="拖动我"></div>
+  <span>拖动左边方块 → <code>{x,y}</code> 经 postMessage 推给画卷；拖动时画卷自动切到「外设桥」。</span>
+</div>
+<script>
+const frame = document.getElementById('art');
+const pad = document.getElementById('pad');
+const send = (m) => frame.contentWindow.postMessage({ type: 'ink', ...m }, '*');
+
+function emit(e) {
+  const r = pad.getBoundingClientRect();
+  const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+  send({ x, y, r: 1.0, name: 'postMessage' });
+}
+pad.addEventListener('pointerdown', (e) => { pad.setPointerCapture(e.pointerId); emit(e); });
+pad.addEventListener('pointermove', (e) => { if (e.buttons || e.pointerType === 'touch') emit(e); });
+pad.addEventListener('pointerup', () => send({ cmd: 'splat' }));
+</script>
