@@ -423,6 +423,11 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('蓝牙：心率读数 → 光圈', bleOk.hr === 120 && bleOk.r > 0.9, JSON.stringify(bleOk));
 
+  // WebSerial IR tracker: no serial API in this browser → must stay in-mode and say so
+  const ir = await page.evaluate(() => { wM('ir'); return { mode: S.mode, has: 'serial' in navigator }; });
+  ok('IR 追踪器：无 WebSerial 时不报错、不踢出模式', ir.has ? ir.mode === 'ir' : ir.mode === 'ir',
+    JSON.stringify(ir));
+
   // NFC: fake NDEF reader
   const nfcOk = await page.evaluate(async () => {
     window.NDEFReader = function () { this.scan = async () => {}; };

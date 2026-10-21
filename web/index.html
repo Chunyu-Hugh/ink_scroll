@@ -2964,7 +2964,7 @@ const M={
     cln(){}, ex:()=>'',
   },
   audio:{
-    icon:'audio',nameKey:'modeAudio',group:'free',needMic:true,
+    icon:'audio',nameKey:'modeAudio',group:'free',needMic:true,fallback:'hint',
     init(){ audioStart(); },
     spot(){ return audioSpot(); },
     cln(){ audioStop(); },
@@ -3058,14 +3058,14 @@ const M={
   },
   /* ── 第二批：键盘 / 多指 / 笔锋 / 凝视 / 吐纳 / 语音 / 摇一摇（无需外设） ── */
   keys:{
-    icon:'keys',nameKey:'modeKeys',group:'free',
+    icon:'keys',nameKey:'modeKeys',group:'free',fallback:'none',
     init(){ keysInit(); },
     spot(){ return keysSpot(); },
     cln(){ KEYS.clear(); },
     ex(){ return '⌨ '+t('fxKeysHint'); },
   },
   multi:{
-    icon:'multi',nameKey:'modeMulti',group:'free',
+    icon:'multi',nameKey:'modeMulti',group:'free',fallback:'none',
     init(){},
     spot(){ return multiSpots()[0]; },
     spots(){ return multiSpots(); },
@@ -3073,7 +3073,7 @@ const M={
     ex(){ return '✋ '+t('fxMultiHint'); },
   },
   pen:{
-    icon:'pen',nameKey:'modePen',group:'free',
+    icon:'pen',nameKey:'modePen',group:'free',fallback:'none',
     init(){},
     spot(){ const p=S.pen&&S.pressure>0?S.pressure:0.42;
       return {x:S.mouseX,y:S.mouseY,radius:S.radius*(0.3+1.6*p)}; },
@@ -3082,14 +3082,14 @@ const M={
     meter(){ return {label:t('meterPress'), value:S.pen?S.pressure:0}; },
   },
   dwell:{
-    icon:'dwell',nameKey:'modeDwell',group:'free',
+    icon:'dwell',nameKey:'modeDwell',group:'free',fallback:'none',
     init(){ S.dwell={x:-1,y:-1,t:performance.now(),cool:0}; },
     spot(){ dwellTick(); return {x:S.mouseX,y:S.mouseY,radius:S.radius*0.75}; },
     cln(){},
     ex(){ return '◉ '+t('fxDwellHint'); },
   },
   breath:{
-    icon:'breath',nameKey:'modeBreath',group:'free',needMic:true,
+    icon:'breath',nameKey:'modeBreath',group:'free',needMic:true,fallback:'hint',
     init(){ audioStart(); },
     spot(){ const lv=breathLevel();
       return {x:S.mouseX,y:S.mouseY,radius:S.radius*(0.35+1.9*lv)}; },
@@ -3114,7 +3114,7 @@ const M={
   },
   /* ── 需要有装置：手柄 / MIDI ── */
   gamepad:{
-    icon:'gamepad',nameKey:'modeGamepad',group:'gear',
+    icon:'gamepad',nameKey:'modeGamepad',group:'gear',fallback:'hint',
     init(){ S.gamepad={x:DW/2,y:DH/2,r:1,seen:false,btn:[]}; },
     spot(){ return gamepadPoll(); },
     cln(){ S.gamepad.seen=false; },
@@ -3173,7 +3173,7 @@ const M={
     meter(){ return {label:t('meterLux'), value:S.light.ok?clampN(S.light.lux/600,0,1):0}; },
   },
   clap:{
-    icon:'audio',nameKey:'modeClap',group:'free',needMic:true,
+    icon:'audio',nameKey:'modeClap',group:'free',needMic:true,fallback:'hint',
     init(){ audioStart(); S.clap={last:0,prev:0}; },
     spot(){ return {x:S.mouseX,y:S.mouseY,radius:S.radius}; },
     cln(){ audioStop(); },
@@ -3189,7 +3189,7 @@ const M={
     ex(){ return S.osc.ok?'':'🔌 '+t('fxOscWait'); },
   },
   bridge:{
-    icon:'osc',nameKey:'modeBridge',group:'local',
+    icon:'osc',nameKey:'modeBridge',group:'local',fallback:'hint',
     init(){ S.bridge.t=0; bridgeStart(); },   // 不复位 x/y/r：外部刚推来的坐标不能被清掉
     spot(){ const B=S.bridge; return (B.t&&performance.now()-B.t<2200)?{x:B.x*DW,y:B.y*DH,radius:S.radius*B.r}:null; },
     cln(){ bridgeStop(); },

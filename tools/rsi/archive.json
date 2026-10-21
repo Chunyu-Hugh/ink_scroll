@@ -144,5 +144,56 @@
         "why": "148/150 assertions"
       }
     ]
+  },
+  {
+    "at": "2026-10-21T14:51:55.205Z",
+    "sha": "62b9d6c",
+    "fitness": 0.954,
+    "weak": [
+      {
+        "dim": "degradation",
+        "v": 0.679,
+        "why": "9 modes without an explicit failure path (audio,keys,multi,pen,dwell,breath,gamepad,clap,bridge)"
+      },
+      {
+        "dim": "modeCoverage",
+        "v": 0.964,
+        "why": "1/28 modes without an assertion (ir)"
+      },
+      {
+        "dim": "e2e",
+        "v": 0.987,
+        "why": "148/150 assertions"
+      }
+    ]
+  },
+  {
+    "at": "2026-10-21T14:52:18.514Z",
+    "sha": "62b9d6c",
+    "fitness": 0.994,
+    "weak": [
+      {
+        "dim": "modeCoverage",
+        "v": 0.964,
+        "why": "1/28 modes without an assertion (ir)"
+      },
+      {
+        "dim": "e2e",
+        "v": 0.987,
+        "why": "148/150 assertions"
+      }
+    ]
+  },
+  {
+    "at": "2026-10-21T14:52:35.347Z",
+    "sha": "62b9d6c",
+    "fitness": 0.998,
+    "weak": [
+      {
+        "dim": "e2e",
+        "v": 0.987,
+        "why": "148/150 assertions"
+      }
+    ]
   }
 ]
