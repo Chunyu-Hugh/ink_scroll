@@ -969,6 +969,10 @@ html[lang^="zh"] .overlay .sheet .sect-h{letter-spacing:.3em;text-transform:none
       <div class="sect-h"><span data-i18n="helpOutput">输出</span></div>
       <div class="help-modes" id="help-output"></div>
     </div>
+    <div class="sect">
+      <div class="sect-h"><span data-i18n="helpForms">形式</span></div>
+      <div class="help-modes" id="help-forms"></div>
+    </div>
     <div class="sect" id="help-keys-sect">
       <div class="sect-h"><span data-i18n="helpKeys">键盘</span></div>
       <div class="keys" id="help-keys"></div>
@@ -1349,6 +1353,13 @@ const I18N = {
     helpTitle:'如何游玩',
     helpSub:'画卷外面是墨，里面是色。让光落在哪里，哪里就活过来。',
     helpModes:'换一种揭示方式',
+    helpForms:'形式',
+    formLight:'照亮',
+    formAccrete:'累积',
+    formDelay:'延迟',
+    formSilence:'静默',
+    formDaily:'日课',
+    formTogether:'共处',
     helpOutput:'输出',
     outWall:'投影墙',
     outGrid:'校准网格',
@@ -1597,6 +1608,13 @@ const I18N = {
     helpTitle:'如何遊玩',
     helpSub:'畫卷外面是墨，裡面是色。讓光落在哪裡，哪裡就活過來。',
     helpModes:'換一種揭示方式',
+    helpForms:'形式',
+    formLight:'照亮',
+    formAccrete:'累積',
+    formDelay:'延遲',
+    formSilence:'靜默',
+    formDaily:'日課',
+    formTogether:'共處',
     helpOutput:'輸出',
     outWall:'投影牆',
     outGrid:'校準網格',
@@ -1845,6 +1863,13 @@ const I18N = {
     helpTitle:'How to play',
     helpSub:'Ink outside, colour inside. Wherever the light falls, the scroll comes alive.',
     helpModes:'Choose another way to reveal',
+    helpForms:'Forms',
+    formLight:'Illuminate',
+    formAccrete:'Accrete',
+    formDelay:'Delay',
+    formSilence:'Silence',
+    formDaily:'Daily',
+    formTogether:'Together',
     helpOutput:'Output',
     outWall:'Projection wall',
     outGrid:'Calibration grid',
@@ -5057,6 +5082,27 @@ function buildHelpModes(){
     mk(t('outGrid')+' · '+(S.grid?'on':'off'), S.grid, ()=>{ S.grid=!S.grid; });
     mk(t('outStereo')+' · '+(S.stereo||'off'), !!S.stereo, ()=>{ S.stereo=S.stereo?null:(S.scene===6?'sbs':'anaglyph'); });
     mk(t('outScene3D')+' · '+(S.scene===6?'on':'off'), S.scene===6, ()=>{ changeScene(S.scene===6?0:6); });
+  }
+  const forms=document.getElementById('help-forms');
+  if(forms){
+    forms.innerHTML='';
+    const mkF=(label,on,fn)=>{ const b=document.createElement('button'); b.type='button';
+      b.className='help-mode'+(on?' on':'');
+      b.innerHTML=`<span class="hm-ico">${barIcon('style')}</span><span class="hm-name">${label}</span>`;
+      b.addEventListener('click',()=>{ fn(); if(typeof buildHelpModes==='function') buildHelpModes(); });
+      forms.appendChild(b); };
+    mkF(t('formLight')+' · '+(S.delayMs===0&&!S.together&&!S.daily.on&&!S.silence.on?'on':'—'), true,
+        ()=>{ S.delayMs=0; S.together=false; S.daily={on:false,seed:0}; S.silence.on=false; });
+    mkF(t('formAccrete')+' · '+(S.accrete?'on':'off'), S.accrete,
+        ()=>{ S.accrete=!S.accrete; });
+    mkF(t('formDelay')+' · '+(S.delayMs?S.delayMs/1000+'s':'off'), S.delayMs>0,
+        ()=>{ S.delayMs=S.delayMs?0:8000; S.delayBuf=[]; });
+    mkF(t('formSilence')+' · '+(S.silence.on?'on':'off'), S.silence.on,
+        ()=>{ S.silence.on=!S.silence.on; S.silence.since=0; S.silence.acted=false; });
+    mkF(t('formDaily')+' · '+(S.daily.on?dailySeed().label:'off'), S.daily.on,
+        ()=>{ S.daily={on:!S.daily.on, seed:dailySeed().key}; });
+    mkF(t('formTogether')+' · '+(S.together?'on':'off'), S.together,
+        ()=>{ S.together=!S.together; S.togetherNeed=2; S.togetherLow=0; S.togetherHinted=false; });
   }
   const note=document.getElementById('help-note');
   if(note) note.innerHTML = `<b>${t(MODE_GROUPS[1].label)}</b> · ${t('helpNote')}<br>${t('helpTouch')}`;

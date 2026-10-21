@@ -203,6 +203,12 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     ui.presets.length === 4 && ui.presets.join(',') === 'gallery,kiosk,stereo,lab', ui.presets.join(','));
   ok('帮助面板有 4 个输出开关（墙/网格/立体/点云）', ui.outs.length === 4, ui.outs.join(' | '));
   ok('帮助面板同时列出 42 个模态', ui.helpModes === 42, String(ui.helpModes));
+  const formsUI = await page.evaluate(() => {
+    buildHelpModes();
+    return [...document.querySelectorAll('#help-forms .help-mode')].map(b => b.textContent.trim());
+  });
+  ok('帮助面板有 6 个形式开关（照亮/累积/延迟/静默/日课/共处）',
+    formsUI.length === 6, formsUI.join(' | '));
 
   const clicked = await page.evaluate(async () => {
     const b = document.querySelector('#presets button[data-preset="kiosk"]');
@@ -262,6 +268,21 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     quiet5: silenceFlip(5000, 20000), quiet25: silenceFlip(25000, 20000),
   }));
   ok('静默：安静不足不翻页，够 20 秒才翻', sq.quiet5 === false && sq.quiet25 === true, JSON.stringify(sq));
+
+  const sil = await page.evaluate(async () => {
+    S.silence = { since: 0, acted: false, needMs: 20000, on: false };
+    S.audio = { on: true, level: 0.0 };
+    const scene0 = S.scene;
+    await new Promise(r => setTimeout(r, 200));
+    const offDidNothing = S.scene === scene0;         // 未开启：不应翻页
+    S.silence.on = true; S.silence.since = performance.now() - 21000;
+    await new Promise(r => setTimeout(r, 300));
+    const onFlipped = S.scene !== scene0 || S.silence.acted;
+    S.silence.on = false; S.silence.acted = false; S.silence.since = 0;
+    return { offDidNothing, onFlipped };
+  });
+  ok('静默：关闭时安静不翻页；开启且够久才翻',
+    sil.offDidNothing === true && sil.onFlipped === true, JSON.stringify(sil));
 
   const day = await page.evaluate(() => {
     const a = dailySeed(new Date(2026, 0, 15)), b = dailySeed(new Date(2026, 0, 16));
