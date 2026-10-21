@@ -44,6 +44,33 @@ Blender（真无头跑一次）
 - Blender 找不到时**明确 skip**（不是假装通过）
 - 两种软件共用同一个载荷契约，所以这条检查同时覆盖 Resolume / Max / PD / Unreal 等所有 OSC 客户端
 
+## 灯光 / 舞台（Art-Net）
+
+页面状态 → **Art-Net DMX**，真灯跟着光圈走：
+
+```bash
+DMX_HOST=192.168.1.50 DMX_PORT=6454 python3 server.py 8888
+```
+
+| 通道 | 含义 |
+|---|---|
+| CH1 | 亮度（= 在场度 presence） |
+| CH2 | 水平（x） |
+| CH3 | 垂直（y） |
+| CH4 | 光圈半径（r） |
+
+默认**关闭**（不设 `DMX_HOST` 就不发包），避免普通演示往网络里撒包。
+控台侧：把 Universe 0 的 CH1–4 指给一台摇头灯 / 一条 LED 灯带即可。
+
+已验证（`python3 tools/check_integrations.py`）：
+
+```
+Art-Net DMX（灯光控台）
+  ✓ 收到 Art-Net 包 — 530 字节
+  ✓ OpCode = OpDmx (0x5000)
+  ✓ 4 个通道映射正确（亮度/x/y/半径） — ch1..4 = 128,191,64,128
+```
+
 ## 逐个软件
 
 ### Blender —— 已附脚本

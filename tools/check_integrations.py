@@ -37,7 +37,7 @@ def osc_packet(addr, args):
 
 
 def main():
-    env = dict(os.environ, OSC_PORT=str(OSC))
+    env = dict(os.environ, OSC_PORT=str(OSC), DMX_HOST="127.0.0.1", DMX_PORT="6455")
     srv = subprocess.Popen([sys.executable, "server.py", str(PORT)], cwd=ROOT,
                            env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(1.5)
@@ -64,6 +64,31 @@ def main():
         say(len(got) >= 4, "OSC 报文被中继接收", f"{len(got)} 条到达 SSE")
         say(any(abs(g.get("x", -1) - 0.9) < 1e-3 for g in got), "OSC /spot/x 单轴生效")
         say(any(g.get("scene") == 3 for g in got), "OSC /scene 生效")
+
+        print("\nArt-Net DMX（灯光控台）")
+        dmx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        dmx.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        dmx.bind(("127.0.0.1", 6455))
+        dmx.settimeout(6)
+        body = json.dumps({"type": "state", "mode": "bridge", "scene": 2, "style": 3,
+                           "x": 0.75, "y": 0.25, "r": 1.5, "presence": 0.5, "z": 0.5}).encode()
+        req = urllib.request.Request(f"{BASE}/send?room=ext-state", data=body,
+                                     headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=3).read()
+        pkt = None
+        try:
+            pkt, _ = dmx.recvfrom(2048)
+        except socket.timeout:
+            pass
+        say(pkt is not None and pkt[:8] == b"Art-Net\0", "收到 Art-Net 包",
+            f"{len(pkt) if pkt else 0} 字节")
+        if pkt:
+            say(pkt[8:10] == bytes([0x00, 0x50]), "OpCode = OpDmx (0x5000)")
+            data = pkt[18:18 + 512]
+            say(data[0] == 128 and data[1] == 191 and data[2] == 64 and data[3] == 128,
+                "4 个通道映射正确（亮度/x/y/半径）",
+                f"ch1..4 = {data[0]},{data[1]},{data[2]},{data[3]}")
+        dmx.close()
 
         print("\nBlender（真无头跑一次）")
         blender = shutil.which("blender") or ("/tmp/bl/blender" if os.path.exists("/tmp/bl/blender") else None)

@@ -86,6 +86,43 @@ def broadcast(room: str, payload: bytes) -> int:
 OSC_PORT = int(os.environ.get("OSC_PORT", "9000"))
 OSC_ROOM = "osc"
 
+# ── Art-Net DMX（展场最实用的一条：真灯跟着光圈走） ─────────────────────
+# 页面把状态 POST 到 room=ext-state → 这里顺手转成 Art-Net 包发给灯光控台。
+# 默认关闭（DMX_HOST 为空），避免在普通演示里往网络里撒包。
+DMX_HOST = os.environ.get("DMX_HOST", "")
+DMX_PORT = int(os.environ.get("DMX_PORT", "6454"))
+DMX_UNIVERSE = int(os.environ.get("DMX_UNIVERSE", "0"))
+_dmx_seq = 0
+
+
+def dmx_send(state):
+    """4 个通道：亮度 / X / Y / 在场度（0–255）。够驱动一台摇头灯或一条灯带。"""
+    global _dmx_seq
+    if not DMX_HOST:
+        return
+    try:
+        def b(v, lo=0.0, hi=1.0):
+            if not isinstance(v, (int, float)):
+                return 0
+            return max(0, min(255, int(round((v - lo) / (hi - lo) * 255))))
+        data = bytearray(512)
+        data[0] = b(state.get("presence", 1))          # ch1 亮度 = 在场度
+        data[1] = b(state.get("x", 0.5))               # ch2 水平
+        data[2] = b(state.get("y", 0.5))               # ch3 垂直
+        data[3] = b(state.get("r", 1), 0, 3)           # ch4 半径
+        pkt = (b"Art-Net\0" + bytes([0x00, 0x50])       # OpDmx (little endian)
+               + bytes([0, 14])                        # ProtVer 14
+               + bytes([_dmx_seq & 0xFF, 0])           # Sequence, Physical
+               + bytes([DMX_UNIVERSE & 0x0F, 0])       # SubUni, Net
+               + bytes([(512 >> 8) & 0xFF, 512 & 0xFF])
+               + bytes(data))
+        _dmx_seq += 1
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(pkt, (DMX_HOST, DMX_PORT))
+        sock.close()
+    except Exception:
+        pass
+
 
 def _osc_str(data, i):
     j = data.index(b"\x00", i)
@@ -192,6 +229,11 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_error(HTTPStatus.BAD_REQUEST, "invalid json")
             return
         count = broadcast(room, b"data: " + body.replace(b"\n", b" ") + b"\n\n")
+        if room == "ext-state":
+            try:
+                dmx_send(json.loads(body))
+            except Exception:
+                pass
         out = json.dumps({"ok": True, "delivered": count}).encode()
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "application/json")
@@ -240,6 +282,8 @@ def main():
     print("  display   http://localhost:%d" % port)
     print("  phone     http://<your-lan-ip>:%d/phone.html  (scan the QR on screen)" % port)
     print("  relay     /events  /send  /osc   (SSE, rooms)")
+    if DMX_HOST:
+        print("  artnet    %s:%d  universe %d  (ch1 亮度 / ch2 x / ch3 y / ch4 半径)" % (DMX_HOST, DMX_PORT, DMX_UNIVERSE))
     threading.Thread(target=_osc_loop, daemon=True).start()
     print("  Ctrl-C to stop\n")
     try:
