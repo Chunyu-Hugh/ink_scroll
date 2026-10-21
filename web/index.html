@@ -1712,7 +1712,7 @@ const S={
   transition:{active:false,from:null,start:0,duration:500},
   firstHintShown:false,firstMoveDistance:0,debug:false,
   gazePos:null,gazeSmooth:null,gazeReady:false,
-  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,wall:false,grid:false,
+  dpr:1,coarse:false,pointerDown:false,pressure:0,barT:0,lastInput:0,pen:false,paused:false,wall:false,grid:false,stereo:null,
   audio:{ctx:null,ana:null,buf:null,src:null,stream:null,level:0,pitch:0,on:false,onset:0,prevRms:0,hist:[]},
   motion:{prev:null,level:0,x:0,y:0,moving:false},
   keys:{x:0,y:0,vx:0,vy:0,pulse:0},
@@ -1878,11 +1878,13 @@ function buildCloud(){
   _cloud={pts:pts, sw:sw, sh:sh};
   return _cloud;
 }
-function drawCloud(g,W,H,t,mono){
+function drawCloud(g,W,H,t,mono,opt){
   const C=buildCloud();
-  if(mono){ g.fillStyle='#f5f4ed'; }
-  else { g.fillStyle='#11120e'; }
-  g.fillRect(0,0,W,H);
+  const O=opt||{};
+  if(O.bg!==false){
+    g.fillStyle=mono?'#f5f4ed':'#11120e';
+    g.fillRect(0,0,W,H);
+  }
   if(!C) return;
   const pts=C.pts, n=pts.length;
   const zl=(S.bridge&&typeof S.bridge.z==='number')?S.bridge.z:0.5;
@@ -1893,7 +1895,7 @@ function drawCloud(g,W,H,t,mono){
     dolly += clampN(-(S.face.z||0)*2.2,-0.6,0.6);
     dolly += ((S.face.nx!=null?S.face.nx:0.5)-0.5)*0.5;
   }
-  const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22 + dolly*0.55;
+  const yaw=(S.mouseX/DW-0.5)*2.2 + Math.sin(t*0.24)*0.22 + dolly*0.55 + (O.eyeYaw||0);
   const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30;
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
   const f=1.55, sc=Math.min(W,H)*0.62*(1+dolly*0.45);
@@ -1907,11 +1909,11 @@ function drawCloud(g,W,H,t,mono){
     if(px<-20||px>W+20||py<-20||py>H+20) continue;
     const fog=Math.max(0.12, Math.min(1, 0.95 - (z2+0.6)*0.55));
     const size=Math.max(1.1, 3.1*persp);
-    if(mono){
-      g.fillStyle='rgba(26,26,24,'+(0.30+0.55*fog).toFixed(3)+')';
-    }else{
-      g.fillStyle='rgba('+p.r+','+p.g+','+p.b+','+(0.35+0.6*fog).toFixed(3)+')';
-    }
+    const al=(0.35+0.6*fog).toFixed(3);
+    if(O.tint==='r')      g.fillStyle='rgba(255,'+Math.round(p.g*0.25)+','+Math.round(p.b*0.25)+','+al+')';
+    else if(O.tint==='c') g.fillStyle='rgba('+Math.round(p.r*0.25)+','+Math.round(p.g*0.85)+','+Math.round(p.b*0.95)+','+al+')';
+    else if(mono)         g.fillStyle='rgba(26,26,24,'+(0.30+0.55*fog).toFixed(3)+')';
+    else                  g.fillStyle='rgba('+p.r+','+p.g+','+p.b+','+al+')';
     g.fillRect(px, py, size, size);
   }
 }
@@ -1945,7 +1947,24 @@ function drawScene(t){
   }
   if(S.scene===6){
     if(!S.mouseX) { S.mouseX=W/2; S.mouseY=H/2; }
-    drawCloud(g,W,H,t,false);
+    if(S.stereo==='anaglyph'){
+      drawCloud(g,W,H,t,false,{eyeYaw:-0.035});                 // 左眼（红）
+      g.globalCompositeOperation='lighter';
+      drawCloud(g,W,H,t,false,{eyeYaw:0.035,tint:'c',bg:false}); // 右眼（青）
+      g.globalCompositeOperation='source-over';
+    }else if(S.stereo==='sbs'){
+      const half=W/2;
+      g.save(); g.beginPath(); g.rect(0,0,half,H); g.clip();
+      drawCloud(g,W,H,t,false,{eyeYaw:-0.035});
+      g.restore();
+      g.save(); g.beginPath(); g.rect(half,0,half,H); g.clip();
+      g.translate(-half,0);
+      drawCloud(g,W,H,t,false,{eyeYaw:0.035});
+      g.restore();
+      g.fillStyle='rgba(0,0,0,.85)'; g.fillRect(half-1,0,2,H);
+    }else{
+      drawCloud(g,W,H,t,false);
+    }
     S.imgBounds={x:0,y:0,w:W,h:H};
     return;
   }
@@ -4587,6 +4606,8 @@ function applyDeepLink(){
     const q=new URLSearchParams(location.search||'');
     if(q.get('wall')==='1'){ document.body.classList.add('wall'); S.wall=true; S.grid=(q.get('grid')!=='0'); }
     if(q.get('grid')==='1'){ S.grid=true; }
+    const st2=q.get('stereo');
+    if(st2==='anaglyph'||st2==='sbs'){ S.stereo=st2; }
     DEEP_PLAY = q.has('mode') || q.has('play') || S.wall;
     const md=q.get('mode');
     if(md && M[md] && modeAvailable(md)) S.mode=md;
