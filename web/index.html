@@ -1359,6 +1359,8 @@ const I18N = {
     formDelay:'延迟',
     formSilence:'静默',
     formDaily:'日课',
+    formOffering:'供奉',
+    fxOffering:'已供奉 · 它会自己长大',
     formTogether:'共处',
     helpOutput:'输出',
     outWall:'投影墙',
@@ -1614,6 +1616,8 @@ const I18N = {
     formDelay:'延遲',
     formSilence:'靜默',
     formDaily:'日課',
+    formOffering:'供奉',
+    fxOffering:'已供奉 · 它會自己長大',
     formTogether:'共處',
     helpOutput:'輸出',
     outWall:'投影牆',
@@ -1869,6 +1873,8 @@ const I18N = {
     formDelay:'Delay',
     formSilence:'Silence',
     formDaily:'Daily',
+    formOffering:'Offering',
+    fxOffering:'offered — it grows on its own',
     formTogether:'Together',
     helpOutput:'Output',
     outWall:'Projection wall',
@@ -3288,6 +3294,23 @@ async function battStart(){
   }catch(e){ flashHint(t('fxBattNo')); }
 }
 
+/* ── 形式：供奉（放下一处供奉，它自己长大，像香火） ── */
+function offeringAdd(x,y,now){
+  S.offerings.push({x,y,t:now,r:8});
+  if(S.offerings.length>12) S.offerings.shift();       // 最多 12 处，避免糊满
+  return S.offerings[S.offerings.length-1];
+}
+function offeringGrow(list,now,maxMs){
+  const out=[];
+  for(const o of list){
+    const age=now-o.t;
+    if(age> (maxMs||90000)) continue;                  // 90 秒后熄灭
+    const k=Math.min(1, age/9000);                     // 9 秒长到最大
+    out.push({...o, r: 8 + k*(Math.min(DW,DH)*0.22), a: 1-k*0.55});
+  }
+  return out;
+}
+
 /* ── 形式：延迟（把光晚 N 秒出现，和过去的自己错位） ── */
 function delayPush(buf, spots, now, ms){
   buf.push({t:now, s:spots});
@@ -4520,6 +4543,23 @@ function processFrame(){
     ctx.restore();
   }
   ctx.drawImage(hiCvs,0,0,DW,DH);
+  if(S.offering && S.offerings.length){
+    const nowO=performance.now();
+    ensurePaint();
+    paintSctx.clearRect(0,0,DW,DH);
+    paintSctx.globalCompositeOperation='source-over';
+    paintSctx.drawImage(scCvs,0,0,DW,DH);
+    paintSctx.globalCompositeOperation='destination-in';
+    for(const o of offeringGrow(S.offerings,nowO)){
+      const g=paintSctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0,`rgba(255,255,255,${(0.95*o.a).toFixed(3)})`);
+      g.addColorStop(0.55,`rgba(255,255,255,${(0.5*o.a).toFixed(3)})`);
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      paintSctx.fillStyle=g; paintSctx.beginPath(); paintSctx.arc(o.x,o.y,o.r,0,7); paintSctx.fill();
+    }
+    paintSctx.globalCompositeOperation='source-over';
+    withBounds(()=>ctx.drawImage(paintScratch,0,0,DW,DH));
+  }
   if(S.dust.cvs && S.dust.level>0.01){                 // 吹散的灰尘 → 露出彩色
     ensurePaint();
     paintSctx.clearRect(0,0,DW,DH);
@@ -5094,6 +5134,8 @@ function buildHelpModes(){
         ()=>{ S.daily={on:!S.daily.on, seed:dailySeed().key}; });
     mkF(t('formTogether')+' · '+(S.together?'on':'off'), S.together,
         ()=>{ S.together=!S.together; S.togetherNeed=2; S.togetherLow=0; S.togetherHinted=false; });
+    mkF(t('formOffering')+' · '+(S.offering?S.offerings.length+' 处':'off'), S.offering,
+        ()=>{ S.offering=!S.offering; if(!S.offering) S.offerings=[]; });
   }
   const note=document.getElementById('help-note');
   if(note) note.innerHTML = `<b>${t(MODE_GROUPS[1].label)}</b> · ${t('helpNote')}<br>${t('helpTouch')}`;
@@ -5190,6 +5232,10 @@ D.addEventListener('pointermove',e=>{
   }
   S.pressure = e.pressure||0;
   if(e.pointerType==='pen'){ S.pen=true; S.ptilt={tx:e.tiltX||0, ty:e.tiltY||0}; }
+  if(S.offering && e.type==='pointerdown'){
+    offeringAdd(e.clientX*(DW/D.clientWidth), e.clientY*(DH/D.clientHeight), performance.now());
+    flashHint(t('fxOffering'), 1200);
+  }
   if(e.shiftKey && S.scene===6 && S.pointerDown){    // Shift+拖 = 绕轴旋转
     S.view.yaw=(S.view.yaw||0)+(e.movementX||0)*0.004;
     S.view.pitch=Math.max(-0.9,Math.min(0.9,(S.view.pitch||0)+(e.movementY||0)*0.004));
@@ -5433,6 +5479,7 @@ function applyDeepLink(){
     if(form==='delay'){ S.delayMs=8000; }
     if(form==='daily'){ S.daily={on:true, seed:dailySeed().key}; }
     if(form==='silence'){ S.silence.on=true; }
+    if(form==='offering'){ S.offering=true; }
     const dl=parseInt(q.get('delay')||'0',10);
     if(dl>0&&dl<=30000){ S.delayMs=dl; S.delayBuf=[]; }
     if(q.get('daily')==='1'){ S.daily={on:true, seed:dailySeed().key}; }

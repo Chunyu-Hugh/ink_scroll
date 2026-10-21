@@ -207,8 +207,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     buildHelpModes();
     return [...document.querySelectorAll('#help-forms .help-mode')].map(b => b.textContent.trim());
   });
-  ok('帮助面板有 6 个形式开关（照亮/累积/延迟/静默/日课/共处）',
-    formsUI.length === 6, formsUI.join(' | '));
+  ok('帮助面板有 7 个形式开关（照亮/累积/延迟/静默/日课/共处/供奉）',
+    formsUI.length === 7, formsUI.join(' | '));
 
   const clicked = await page.evaluate(async () => {
     const b = document.querySelector('#presets button[data-preset="kiosk"]');
@@ -326,6 +326,27 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     return { single: +single.toFixed(2), dual: +dual.toFixed(2) };
   });
   ok('共处：一人时揭示被压住、两人时放开', gate.single > 0 && gate.dual < gate.single, JSON.stringify(gate));
+
+  /* ═══════════════ 2g. 形式「供奉」：放下一处，它自己长大 ═══════════════ */
+  group('2g · 形式：供奉（痕迹自己长大，不跟随）');
+  const ofr = await page.evaluate(() => {
+    S.offerings = [];
+    const o = offeringAdd(300, 200, 1000);
+    const t0 = offeringGrow(S.offerings, 1000)[0].r;
+    const t9 = offeringGrow(S.offerings, 10000)[0].r;
+    const t95 = offeringGrow(S.offerings, 95000).length;   // 90s 后熄灭
+    return { r0: Math.round(t0), r9: Math.round(t9), grew: t9 > t0 * 2, expired: t95 === 0, n: S.offerings.length };
+  });
+  ok('供奉：放下的痕随时间长大（9 秒到最大）', ofr.grew === true, JSON.stringify(ofr));
+  ok('供奉：90 秒后熄灭（不会永久糊住画面）', ofr.expired === true, JSON.stringify(ofr));
+
+  const offCap = await page.evaluate(() => {
+    S.offerings = [];
+    for (let i = 0; i < 20; i++) offeringAdd(i * 10, i * 10, 1000);
+    return S.offerings.length;
+  });
+  ok('供奉：上限 12 处（超出丢最早的）', offCap === 12, String(offCap));
+  await page.evaluate(() => { S.offering = false; S.offerings = []; });
 
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
