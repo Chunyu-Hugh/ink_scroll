@@ -761,6 +761,44 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('节拍：频谱通量能估出 BPM 并随拍泼墨', bt2.bpm >= 60 && bt2.bpm <= 240 && bt2.grew, JSON.stringify(bt2));
 
+  /* ═══════════════ 4d5. 纯逻辑三条（时间 / 剪贴板 / 取色） ═══════════════ */
+  group('4d5 · 纯逻辑三条：时间天时 / 剪贴板题字 / 取色入画');
+  const hr = await page.evaluate(() => {
+    const dawn = hoursSpot(6, 0), noon = hoursSpot(12, 0), night = hoursSpot(0, 0);
+    return { dx: Math.round(dawn.x), dElev: dawn.state.elevation, nElev: noon.state.elevation,
+             nightY: Math.round(night.y), noonY: Math.round(noon.y), nr: Math.round(noon.radius), dnr: Math.round(dawn.radius) };
+  });
+  ok('天时：正午比清晨高、且光圈更大', hr.nElev > hr.dElev && hr.noonY < hr.nightY && hr.nr > hr.dnr,
+    JSON.stringify(hr));
+
+  const pick = await page.evaluate(() => {
+    const map = { '#1a1c36': 4, '#c4ccd6': 2, '#567054': 1, '#767869': 0, '#ce9e96': 3 };
+    const got = {}; for (const [hex, want] of Object.entries(map)) got[hex] = nearestScene(hex);
+    return { got, bad: hexToRgb('zzz'), ok: hexToRgb('#ff8800') };
+  });
+  ok('取色：最接近的场景判断正确', Object.entries(pick.got).every(([h, v]) => v === { '#1a1c36': 4, '#c4ccd6': 2, '#567054': 1, '#767869': 0, '#ce9e96': 3 }[h]),
+    JSON.stringify(pick.got));
+  ok('取色：非法色值安全返回（不崩）', pick.bad === null && pick.ok.join(',') === '255,136,0', JSON.stringify(pick));
+
+  const clip = await page.evaluate(async () => {
+    const before = S.scene;
+    navigator.clipboard = { readText: async () => '今天下了雪，很冷' };
+    await clipRead();
+    const after = S.scene;
+    navigator.clipboard = { readText: async () => { throw new Error('denied'); } };
+    await clipRead();
+    return { before, after, okFlag: S.clip.ok };
+  });
+  ok('剪贴板：文字里的「雪」→ 切到雪景', clip.after === 2 && clip.after !== clip.before, JSON.stringify(clip));
+  ok('剪贴板：拒绝授权时优雅失败（不抛到页面）', clip.okFlag === false, JSON.stringify(clip));
+
+  const ip = await page.evaluate(async () => {
+    window.EyeDropper = function(){ this.open = async () => ({ sRGBHex: '#c4ccd6' }); };
+    await inkpickOpen();
+    return { hex: S.pick.hex, scene: S.scene };
+  });
+  ok('取色器：拿到颜色 → 切到最近的那幅画', ip.hex === '#c4ccd6' && ip.scene === 2, JSON.stringify(ip));
+
   /* ═══════════════ 4f. 契约升级 Spot{id,presence,state} ═══════════════ */
   group('4f · 契约升级：id / presence / state');
   const ctr = await page.evaluate(() => {
