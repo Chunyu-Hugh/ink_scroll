@@ -253,6 +253,7 @@ node tools/test.js
 | [docs/INTERACTIONS.md](docs/INTERACTIONS.md) | 交互契约（加模态看这里） |
 | [docs/CREATIVE-TOOLS.md](docs/CREATIVE-TOOLS.md) | Blender / TouchDesigner / MQTT / Art-Net 接入 |
 | [docs/PRESETS.md](docs/PRESETS.md) | 一键预设与 URL 参数 |
+| [docs/REVIEW.md](docs/REVIEW.md) | **代码审核清单**（每次改完必过） |
 | [docs/ETHICS.md](docs/ETHICS.md) | 身体数据与伦理底线 |
 | [docs/VISION-3D.md](docs/VISION-3D.md) | 3D 路线 |
 | [docs/TEST-REPORT.md](docs/TEST-REPORT.md) | 审核与测试报告 |

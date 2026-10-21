@@ -4422,6 +4422,7 @@ function changeScene(n){
   const oldImg=document.createElement('canvas');oldImg.width=DW;oldImg.height=DH;
   oldImg.getContext('2d').drawImage(scCvs,0,0);
   S.scene=n;
+  S.delayBuf=[]; S.delayOut=null;                   // 换场景同样清空延迟缓冲
   // 累积：换画不擦留痕 —— 你写过的地方，换一幅画依然透出来（Ondák 式"被写过的纸"）
   // 想回到旧行为：?accrete=0
   if(S.accrete===false && paintCtx) paintCtx.clearRect(0,0,paintCvs.width,paintCvs.height);
@@ -4475,7 +4476,7 @@ function processFrame(){
     S.delayOut=out; if(out) spots=out;
     else spots=[];                                  // 还没到 8 秒：什么都不显示（这才是延迟）
   }
-  if(S.audio && S.audio.on){                        // 形式：静默
+  if(S.silence.on && S.audio && S.audio.on){         // 形式：静默（显式开启，避免在安静型模态里误翻页）
     const quiet=(S.audio.level||0)<0.02;
     if(quiet){ if(!S.silence.since) S.silence.since=performance.now();
       if(!S.silence.acted && silenceFlip(performance.now()-S.silence.since, S.silence.needMs)){
@@ -4852,6 +4853,7 @@ async function wM(name,opts){
   const prev=S.mode;
   if(S.running){
     M[prev].cln();
+    S.delayBuf=[]; S.delayOut=null;               // 换模态清空延迟缓冲，避免回放上一种模式的光
     // leaving camera modes must release the camera: a pointer user should not keep
     // the camera light on (privacy), and the 15% ghost overlay should stop too.
     if(!M[name].needCam && str){
@@ -5393,7 +5395,7 @@ function applyDeepLink(){
     if(form==='together'||form==='together2'){ S.together=true; S.togetherNeed=form==='together2'?3:2; }
     if(form==='delay'){ S.delayMs=8000; }
     if(form==='daily'){ S.daily={on:true, seed:dailySeed().key}; }
-    if(form==='accrete'){ S.accrete=true; }
+    if(form==='silence'){ S.silence.on=true; }
     const dl=parseInt(q.get('delay')||'0',10);
     if(dl>0&&dl<=30000){ S.delayMs=dl; S.delayBuf=[]; }
     if(q.get('daily')==='1'){ S.daily={on:true, seed:dailySeed().key}; }
