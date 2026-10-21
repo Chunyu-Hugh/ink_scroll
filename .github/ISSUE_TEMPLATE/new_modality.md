@@ -3,7 +3,7 @@ name: 🔮 New Interaction Modality · 新交互方式
 about: 提议一种新的方式来控制光圈 · Propose a new way to control the spotlight
 title: "[Modality] "
 labels: modality, enhancement
-assignees: Chunyu-Hugh
+assignees: hunao1995
 ---
 
 <!--

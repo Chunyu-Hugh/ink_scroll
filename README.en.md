@@ -3,8 +3,8 @@
 [简体中文](README.md) · [繁體中文](README.zh-TW.md) · **English**
 
 [![Status](https://img.shields.io/badge/status-alpha--playable-c96442?labelColor=141413)](#-roadmap)
-[![Live](https://img.shields.io/badge/▶_play_now-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
-[![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
+[![Live](https://img.shields.io/badge/▶_play_now-hunao1995.github.io%2Fink__scroll-c96442?labelColor=141413)](https://hunao1995.github.io/ink_scroll/)
+[![e2e](https://github.com/hunao1995/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/hunao1995/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.en.md)
 [![Discussions](https://img.shields.io/badge/💬-Discussions-7b8fa8?labelColor=141413)](../../discussions)
@@ -94,7 +94,7 @@ The original Python + OpenCV prototype is in `archive/`.
 
 ## 🌐 Play it now
 
-**<https://chunyuhu.com/ink_scroll/>** — open and play; scan with a phone to become a light too.
+**<https://hunao1995.github.io/ink_scroll/>** — open and play; scan with a phone to become a light too.
 The *Many lights* mode needs the relay: run `python3 server.py` locally.
 
 ## 🚀 Quick Start
@@ -413,6 +413,6 @@ Don't hold back your insights.
 
 MIT — do whatever you want, commercial use OK.
 
-Questions: [Hugh](https://github.com/Chunyu-Hugh)
+Questions: [Hugh](https://github.com/hunao1995)
 
 See [LICENSE](LICENSE) for details.

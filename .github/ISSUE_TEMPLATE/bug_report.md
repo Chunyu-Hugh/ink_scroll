@@ -3,7 +3,7 @@ name: 🐛 Bug report · 报告 Bug
 about: 哪里不对劲，告诉我 · Something's broken, let me know
 title: "[Bug] "
 labels: bug
-assignees: Chunyu-Hugh
+assignees: hunao1995
 ---
 
 ## 哪里出问题 · What broke

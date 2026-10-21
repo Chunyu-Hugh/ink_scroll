@@ -28,7 +28,7 @@
 零依賴，零建構。
 
 ```bash
-git clone git@github.com:Chunyu-Hugh/ink_scroll.git
+git clone git@github.com:hunao1995/ink_scroll.git
 cd ink_scroll/web
 python3 -m http.server 8888
 # 打開 http://localhost:8888
@@ -71,7 +71,7 @@ python3 -m http.server 8888
 2. 改動盡量小、可解釋。一個 PR 一件事。
 3. 在瀏覽器裡實測——單元測試在這個專案裡不存在
 4. PR 描述裡**貼一張 GIF/截圖**展示效果
-5. 我（@Chunyu-Hugh）會盡快 review
+5. 我（@hunao1995）會盡快 review
 
 ---
 

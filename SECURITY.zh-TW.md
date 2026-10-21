@@ -31,7 +31,7 @@
 
 如果你發現安全問題（XSS、CDN 投毒、未授權資料外洩等），請**不要**直接開 public issue。請透過以下方式聯絡：
 
-- GitHub: 給 [@Chunyu-Hugh](https://github.com/Chunyu-Hugh) 發私訊
+- GitHub: 給 [@hunao1995](https://github.com/hunao1995) 發私訊
 - 或在 GitHub repo 的 Security 分頁下建立 [private advisory](../../security/advisories/new)
 
 我會在 7 天內回應。

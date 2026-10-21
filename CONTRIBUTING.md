@@ -28,7 +28,7 @@
 零依赖，零构建。
 
 ```bash
-git clone git@github.com:Chunyu-Hugh/ink_scroll.git
+git clone git@github.com:hunao1995/ink_scroll.git
 cd ink_scroll/web
 python3 -m http.server 8888
 # 打开 http://localhost:8888
@@ -76,7 +76,7 @@ python3 -m http.server 8888
 3. 在浏览器里实测——单元测试在这个项目里不存在
 4. 跑 `node tools/test.js`（146 条端到端断言，需要 Playwright 的 Chromium），全绿再提
 5. PR 描述里**贴一张 GIF/截图**展示效果
-6. 我（@Chunyu-Hugh）会尽快 review
+6. 我（@hunao1995）会尽快 review
 
 ---
 

@@ -31,7 +31,7 @@ All permission prompts are native to the browser and may be denied. If the camer
 
 If you find a security issue (XSS, CDN poisoning, unauthorized data exfiltration, etc.), please **do not** open a public issue. Reach out via:
 
-- GitHub: DM [@Chunyu-Hugh](https://github.com/Chunyu-Hugh)
+- GitHub: DM [@hunao1995](https://github.com/hunao1995)
 - Or file a [private security advisory](../../security/advisories/new) on the GitHub repo
 
 I aim to respond within 7 days.

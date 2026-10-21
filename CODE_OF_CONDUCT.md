@@ -38,9 +38,9 @@ This Code of Conduct applies within all project spaces, and also applies when an
 
 ## 执行 · Enforcement
 
-可以通过 [GitHub issue](../../issues) 或邮件联系维护者 [@Chunyu-Hugh](https://github.com/Chunyu-Hugh) 来报告滥用、骚扰或其他不可接受的行为。所有投诉都将受到审查与调查，并将做出根据情况认为有必要且合适的回应。维护者有义务对事件报告者维持保密。
+可以通过 [GitHub issue](../../issues) 或邮件联系维护者 [@hunao1995](https://github.com/hunao1995) 来报告滥用、骚扰或其他不可接受的行为。所有投诉都将受到审查与调查，并将做出根据情况认为有必要且合适的回应。维护者有义务对事件报告者维持保密。
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the maintainer [@Chunyu-Hugh](https://github.com/Chunyu-Hugh) via a GitHub issue or direct message. All complaints will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances. The maintainer is obligated to maintain confidentiality with regard to the reporter of an incident.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the maintainer [@hunao1995](https://github.com/hunao1995) via a GitHub issue or direct message. All complaints will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances. The maintainer is obligated to maintain confidentiality with regard to the reporter of an incident.
 
 ## 来源 · Attribution
 

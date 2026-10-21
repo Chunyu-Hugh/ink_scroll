@@ -28,7 +28,7 @@ You don't need to write code to contribute.
 Zero deps, zero build.
 
 ```bash
-git clone git@github.com:Chunyu-Hugh/ink_scroll.git
+git clone git@github.com:hunao1995/ink_scroll.git
 cd ink_scroll/web
 python3 -m http.server 8888
 # Open http://localhost:8888
@@ -71,7 +71,7 @@ New scene images are very welcome. Requirements:
 2. Keep the change small and explainable. One PR per concern.
 3. Test it in a browser — there are no unit tests in this project.
 4. **Attach a GIF / screenshot** showing the effect in your PR description.
-5. I (@Chunyu-Hugh) will review as soon as I can.
+5. I (@hunao1995) will review as soon as I can.
 
 ---
 

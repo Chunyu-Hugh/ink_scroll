@@ -3,8 +3,8 @@
 **简体中文** · [繁體中文](README.zh-TW.md) · [English](README.en.md)
 
 [![Status](https://img.shields.io/badge/status-alpha--playable-c96442?labelColor=141413)](#-路线图)
-[![Live](https://img.shields.io/badge/▶_在线玩-chunyuhu.com%2Fink__scroll-c96442?labelColor=141413)](https://chunyuhu.com/ink_scroll/)
-[![e2e](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/Chunyu-Hugh/ink_scroll/actions/workflows/e2e.yml)
+[![Live](https://img.shields.io/badge/▶_在线玩-hunao1995.github.io%2Fink__scroll-c96442?labelColor=141413)](https://hunao1995.github.io/ink_scroll/)
+[![e2e](https://github.com/hunao1995/ink_scroll/actions/workflows/e2e.yml/badge.svg)](https://github.com/hunao1995/ink_scroll/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-5e5d59?labelColor=141413)](LICENSE)
 [![Tests](https://img.shields.io/badge/e2e-146%20passing-6b8e6e?labelColor=141413)](docs/TEST-REPORT.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-6b8e6e?labelColor=141413)](CONTRIBUTING.md)
@@ -92,7 +92,7 @@
 
 ## 🌐 在线玩
 
-**<https://chunyuhu.com/ink_scroll/>** —— 打开就能玩，手机扫码把自己变成一盏灯也行。
+**<https://hunao1995.github.io/ink_scroll/>** —— 打开就能玩，手机扫码把自己变成一盏灯也行。
 "手机 · 众光" 需要中继，本地跑 `python3 server.py`。
 
 ## 🚀 快速开始
@@ -292,4 +292,4 @@ node tools/test.js
 
 MIT — 随便改、随便商用。场景图由 AI 生成。
 
-联系：[Hugh](https://github.com/Chunyu-Hugh)
+联系：[Hugh](https://github.com/hunao1995)

@@ -1,6 +1,6 @@
 # 审核与测试报告 · Audit & Test Report
 
-> 对象：`Chunyu-Hugh/ink_scroll`（提交 `ea31ac7`）
+> 对象：`hunao1995/ink_scroll`（提交 `ea31ac7`）
 > 方式：静态审查 + 真实无头 Chromium 驱动 + 假摄像头/假麦克风 + 真 SSE 中继双端联调
 > 结论：**146 / 146 项端到端断言通过**（`node tools/test.js`）
 
