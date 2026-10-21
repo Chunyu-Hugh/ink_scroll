@@ -1915,11 +1915,17 @@ function drawCloud(g,W,H,t,mono,opt){
     dolly += ((S.face.nx!=null?S.face.nx:0.5)-0.5)*0.5;
   }
   const V=S.view||{yaw:0,pitch:0,zoom:1,frozen:false};
+  // 声音 → 仰角与张开；呼吸 → 雾浓度；捏合 → 抓住推拉（只在对应模态里生效）
+  const A=S.audio||{};
+  const soundOn=!!A.on && (S.mode==='audio'||S.mode==='blow'||S.mode==='breath'||S.mode==='clap');
+  const sPitch=soundOn?clampN((A.pitch?Math.log2(A.pitch/220)/2:-1e9),0,1):0;
+  const sLevel=soundOn?(A.level||0):0;
+  const grab=(S.mode==='hand' && S.hlm)?(S.grab!=null?S.grab:0.5):0;
   const drift=V.frozen?0:Math.sin(t*0.24)*0.22;
   const yaw=(S.mouseX/DW-0.5)*2.2 + drift + dolly*0.55 + (O.eyeYaw||0) + (V.yaw||0);
-  const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30 + (V.pitch||0);
+  const pitch=-(S.mouseY/DH-0.5)*1.1 + 0.30 + (V.pitch||0) + sLevel*0.35;
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
-  const f=1.55, sc=Math.min(W,H)*0.62*(1+dolly*0.45)*(V.zoom||1);
+  const f=1.55, sc=Math.min(W,H)*0.62*(1+dolly*0.45)*(V.zoom||1)*(1+grab*0.55)*(1+sLevel*0.30);
   for(let i=0;i<n;i++){
     const p=pts[i];
     const X=p.x, Y=p.y, Z=-p.z*1.15;
@@ -1928,7 +1934,7 @@ function drawCloud(g,W,H,t,mono,opt){
     const persp=f/(f+z2+0.9);
     const px=W*0.5 + x1*sc*persp, py=H*0.5 + y1*sc*persp;
     if(px<-20||px>W+20||py<-20||py>H+20) continue;
-    const fog=Math.max(0.12, Math.min(1, 0.95 - (z2+0.6)*0.55));
+    const fog=Math.max(0.08, Math.min(1, 0.95 - (z2+0.6)*0.55 - sLevel*0.35 + sPitch*0.10));
     const size=Math.max(1.1, 3.1*persp);
     const al=(0.35+0.6*fog).toFixed(3);
     if(O.tint==='r')      g.fillStyle='rgba(255,'+Math.round(p.g*0.25)+','+Math.round(p.b*0.25)+','+al+')';
@@ -2260,6 +2266,12 @@ function iH(){
     if(r.multiHandLandmarks?.length){
       S.hlm=r.multiHandLandmarks[0];S.gesture=rg(S.hlm);
       if(S.gesture==='victory'&&S._lastHG!=='victory'&&performance.now()-(S._hGT||0)>900){S._hGT=performance.now();changeScene((S.scene+1)%SCENE_COUNT);flashHint('✌ '+t('gestureVictory'));}
+      try{                                            // 捏合 = 抓住画卷
+        const th=S.hlm[4], ix=S.hlm[8], wr=S.hlm[0], md=S.hlm[9];
+        const span=Math.hypot(wr.x-md.x, wr.y-md.y)||1e-3;
+        const d=Math.hypot(th.x-ix.x, th.y-ix.y)/span;
+        S.grab=clampN(1-d*1.6,0,1);                   // 1=张开 0=捏紧
+      }catch(e){}
       const cx=(S.hlm[0].x+S.hlm[9].x)/2,cy=(S.hlm[0].y+S.hlm[9].y)/2;
       const c=camCover(),ib=c.ib,sn=S.camSens||1;
       let vx=(cx*VW-c.sx)/c.sw, vy=(cy*VH-c.sy)/c.sh;   // position within the aspect-correct, cover-cropped camera view (matches the overlay exactly)

@@ -571,6 +571,31 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('点云视角：双击定住后画面不再漂移', frozen.moving > frozen.total * 0.02 && frozen.still < frozen.total * 0.005,
     `漂移 ${frozen.moving} → 定住 ${frozen.still}`);
 
+  // 三种输入接进 3D：声音、呼吸、捏合
+  const couple = await page.evaluate(() => {
+    const mk = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 120;
+      return { c, g: c.getContext('2d') }; };
+    const diffOf = (mut) => {
+      S.view = { yaw: 0, pitch: 0, zoom: 1, frozen: false };
+      S.audio = { on: false, level: 0, pitch: 0 };
+      S.mode = 'mouse'; S.grab = 0.5;
+      const a = mk(); drawCloud(a.g, 200, 120, 1.0, false);
+      mut();
+      const b = mk(); drawCloud(b.g, 200, 120, 1.0, false);
+      const da = a.g.getImageData(0, 0, 200, 120).data, db = b.g.getImageData(0, 0, 200, 120).data;
+      let n = 0; for (let i = 0; i < da.length; i += 4) if (Math.abs(da[i] - db[i]) > 6) n++;
+      return n;
+    };
+    const sound = diffOf(() => { S.mode = 'audio'; S.audio = { on: true, level: 0.8, pitch: 660 }; });
+    const breath = diffOf(() => { S.mode = 'breath'; S.audio = { on: true, level: 0.9, pitch: 0 }; });
+    const grab = diffOf(() => { S.mode = 'hand'; S.hlm = [{}]; S.grab = 1.0; });
+    S.mode = 'mouse'; S.audio = { on: false, level: 0, pitch: 0 }; S.hlm = null; S.grab = 0.5;
+    return { sound, breath, grab, total: 200 * 120 };
+  });
+  ok('3D 耦合 · 声音：响度/音高改变点云', couple.sound > couple.total * 0.03, `${couple.sound} 像素`);
+  ok('3D 耦合 · 呼吸：气息改变雾浓度', couple.breath > couple.total * 0.03, `${couple.breath} 像素`);
+  ok('3D 耦合 · 捏合：抓住画卷推拉（1=张开 0=捏紧）', couple.grab > couple.total * 0.03, `${couple.grab} 像素`);
+
   ok('点云立轴：没有引入新的 CDN 依赖（静态脚本仍 ≤4）', staticDeps.length <= 4,
     staticDeps.length + ' → ' + staticDeps.map(u => u.split('/')[2]).join(','));
 
