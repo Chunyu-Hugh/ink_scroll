@@ -246,6 +246,39 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('累积：?accrete=0 时退回旧行为（会擦）', accOff === 0, `alpha=${accOff}`);
 
+  /* ═══════════════ 2e. 三种形式：延迟 / 静默 / 日课 ═══════════════ */
+  group('2e · 形式：延迟 8 秒 / 静默翻页 / 日课种子');
+  const dlay = await page.evaluate(() => {
+    const buf = [];
+    const a = delayPush(buf, [{ id: 'a' }], 1000, 8000);   // 第一次：不返回
+    const b = delayPush(buf, [{ id: 'b' }], 4000, 8000);   // 4s：还不返回
+    const c = delayPush(buf, [{ id: 'c' }], 9200, 8000);   // 8.2s 后：应返回最早的 a
+    return { a, b, c, size: buf.length };
+  });
+  ok('延迟：8 秒内不显示，够 8 秒才吐出旧的自己',
+    dlay.a === null && dlay.b === null && dlay.c && dlay.c[0].id === 'a', JSON.stringify(dlay));
+
+  const sq = await page.evaluate(() => ({
+    quiet5: silenceFlip(5000, 20000), quiet25: silenceFlip(25000, 20000),
+  }));
+  ok('静默：安静不足不翻页，够 20 秒才翻', sq.quiet5 === false && sq.quiet25 === true, JSON.stringify(sq));
+
+  const day = await page.evaluate(() => {
+    const a = dailySeed(new Date(2026, 0, 15)), b = dailySeed(new Date(2026, 0, 16));
+    return { a: a.label, b: b.label, diff: a.key !== b.key, hueA: a.hue, hueInRange: a.hue >= 0 && a.hue < 360 };
+  });
+  ok('日课：日期决定种子（每天不同）且 label 可读',
+    day.a === '2026.01.15' && day.diff && day.hueInRange, JSON.stringify(day));
+
+  const dailyUI = await page.evaluate(async () => {
+    S.daily = { on: true, seed: dailySeed().key };
+    const cap = S.daily.on ? dailySeed().label : '';
+    return { cap, seeded: S.daily.seed === dailySeed().key };
+  });
+  ok('日课：开启后分享卡题款带日期', /^\d{4}\.\d{2}\.\d{2}$/.test(dailyUI.cap) && dailyUI.seeded,
+    JSON.stringify(dailyUI));
+  await page.evaluate(() => { S.daily = { on: false, seed: 0 }; S.delayMs = 0; S.delayBuf = []; });
+
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
   await page.click('#btn-start');

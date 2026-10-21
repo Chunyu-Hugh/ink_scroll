@@ -1338,6 +1338,7 @@ const I18N = {
     fxPauseOn:'⏸ 静观',
     fxPauseOff:'▶ 继续',
     fullUnsupported:'此设备不支持网页全屏',
+    fxSilenceFlip:'静极生动 · 翻过一页',
     fxFreezeOn:'⏸ 视角已定住',
     fxFreezeOff:'▶ 视角恢复漂移',
     fxSaved:'已保存分享卡',
@@ -1585,6 +1586,7 @@ const I18N = {
     fxPauseOn:'⏸ 靜觀',
     fxPauseOff:'▶ 繼續',
     fullUnsupported:'此裝置不支援網頁全螢幕',
+    fxSilenceFlip:'靜極生動 · 翻過一頁',
     fxFreezeOn:'⏸ 視角已定住',
     fxFreezeOff:'▶ 視角恢復漂移',
     fxSaved:'已儲存分享卡',
@@ -1831,6 +1833,7 @@ const I18N = {
     fxPauseOn:'⏸ Still',
     fxPauseOff:'▶ Resume',
     fullUnsupported:'This browser cannot go fullscreen',
+    fxSilenceFlip:'silence turns the page',
     fxFreezeOn:'⏸ viewpoint locked',
     fxFreezeOff:'▶ drift resumed',
     fxSaved:'Share card saved',
@@ -3257,6 +3260,23 @@ async function battStart(){
   }catch(e){ flashHint(t('fxBattNo')); }
 }
 
+/* ── 形式：延迟（把光晚 N 秒出现，和过去的自己错位） ── */
+function delayPush(buf, spots, now, ms){
+  buf.push({t:now, s:spots});
+  const cut=now-ms-50;
+  while(buf.length>2 && buf[0].t<cut) buf.shift();
+  return buf[0] && buf[0].t<=now-ms ? buf[0].s : null;
+}
+/* ── 形式：静默（安静够久 → 自己翻页） ── */
+function silenceFlip(quietMs, needMs){ return quietMs >= (needMs||20000); }
+/* ── 形式：日课（日期做种子：题款 / 印章 / 墨色） ── */
+function dailySeed(d){
+  const t=d||new Date();
+  const y=t.getFullYear(), m=String(t.getMonth()+1).padStart(2,'0'), day=String(t.getDate()).padStart(2,'0');
+  const key=Number(`${y}${m}${day}`);
+  return { key, label:`${y}.${m}.${day}`, hue:(key*2654435761)%360 };
+}
+
 /* ── 展厅预设：?preset=kiosk|gallery|stereo|lab 一键配好 ── */
 const PRESETS={
   gallery:{ mode:'auto',  scene:0, style:'paper', wall:false, grid:false, stereo:null },
@@ -4023,7 +4043,8 @@ function savePNG(){ try{
   const x=sc.getContext('2d'); x.fillStyle='#141413'; x.fillRect(0,0,sc.width,sc.height); x.drawImage(D,0,0);
   x.fillStyle='#f5f4ed'; x.textBaseline='middle'; x.textAlign='left';
   x.font=`600 ${Math.round(strip*0.34)}px "Noto Serif SC","Songti SC",serif`;
-  x.fillText(t('cardCaption'), Math.round(DW*0.045), DH+strip*0.5);
+  const cap = S.daily.on ? (t('cardCaption')+' · '+dailySeed().label) : t('cardCaption');
+  x.fillText(cap, Math.round(DW*0.045), DH+strip*0.5);
   const ss=Math.round(strip*0.62), sx=DW-ss-Math.round(DW*0.045), sy=DH+(strip-ss)/2;
   x.fillStyle='#c96442'; x.fillRect(sx,sy,ss,ss);
   x.fillStyle='#fff'; x.textAlign='center'; x.font=`${Math.round(ss*0.62)}px "Songti SC",serif`; x.fillText('印', sx+ss/2, sy+ss*0.54);
@@ -4432,6 +4453,22 @@ function processFrame(){
   if(spots.length===0 && S.running && !(S.mode==='hand' && S.gesture!=='none')){ S.attract=(S.attract||0)+0.0045;
     spots=[{x:DW*(0.82-0.64*((S.attract*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.attract*0.9)), radius:S.radius*0.8}]; }
   spots = spots.map(normSpot).filter(Boolean);
+  if(S.delayMs>0){                                  // 形式：延迟
+    const nowD=performance.now();
+    const out=delayPush(S.delayBuf, spots, nowD, S.delayMs);
+    S.delayOut=out; if(out) spots=out;
+    else spots=[];                                  // 还没到 8 秒：什么都不显示（这才是延迟）
+  }
+  if(S.audio && S.audio.on){                        // 形式：静默
+    const quiet=(S.audio.level||0)<0.02;
+    if(quiet){ if(!S.silence.since) S.silence.since=performance.now();
+      if(!S.silence.acted && silenceFlip(performance.now()-S.silence.since, S.silence.needMs)){
+        S.silence.acted=true;
+        changeScene((S.scene+1)%SCENE_COUNT);
+        flashHint(t('fxSilenceFlip'), 2200);
+      }
+    } else { S.silence.since=0; S.silence.acted=false; }
+  }
   if(S.mode==='bridge'||S.mode==='osc') pushState(false);   // 闭环回传（节流 500ms）      // 契约归一化（id/presence/state 在这里补全）
   // 留白守卫 — don't let a crowd floodlight the whole scroll; shrink radii once total revealed area passes ~38% of the painting
   if(S.imgBounds && spots.length>2){ const ib=S.imgBounds, maxA=ib.w*ib.h*0.38; let area=0; for(const s of spots){const r=s.radius||S.radius;area+=Math.PI*r*r;}
@@ -5336,6 +5373,9 @@ function applyDeepLink(){
     if(q.get('wall')==='1'){ document.body.classList.add('wall'); S.wall=true; S.grid=(q.get('grid')!=='0'); }
     if(q.get('grid')==='1'){ S.grid=true; }
     if(q.get('accrete')==='0'){ S.accrete=false; }
+    const dl=parseInt(q.get('delay')||'0',10);
+    if(dl>0&&dl<=30000){ S.delayMs=dl; S.delayBuf=[]; }
+    if(q.get('daily')==='1'){ S.daily={on:true, seed:dailySeed().key}; }
     const pre=q.get('preset'); if(pre) applyPreset(pre);
     const st2=q.get('stereo');
     if(st2==='anaglyph'||st2==='sbs'){ S.stereo=st2; }
