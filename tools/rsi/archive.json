@@ -288,5 +288,27 @@
         "why": "148/150 assertions"
       }
     ]
+  },
+  {
+    "at": "2026-10-21T21:21:03.726Z",
+    "sha": "2c23b48",
+    "fitness": 0.924,
+    "weak": [
+      {
+        "dim": "singleFile",
+        "v": 0.5,
+        "why": "6 个 CDN 库（静态 2，含懒加载） — 超出 ≤4 规则，欠债, 235 KB, no build step"
+      },
+      {
+        "dim": "modeCoverage",
+        "v": 0.905,
+        "why": "4/42 modes without an assertion (hours,clip,inkpick,whistle)"
+      },
+      {
+        "dim": "e2e",
+        "v": 0.987,
+        "why": "148/150 assertions"
+      }
+    ]
   }
 ]

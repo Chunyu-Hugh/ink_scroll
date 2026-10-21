@@ -158,3 +158,25 @@ const M = {
 - [ ] 需要新图标 → `ICONS` 里加一条 24×24 stroke SVG（不要用 emoji：跨平台会变成方块）
 - [ ] 在 `tools/test.js` 的「每一种交互模态」段加一行断言
 - [ ] 更新本文件的矩阵表
+
+## 2.6 后续补齐的模态（第 30–42 个）
+
+| 模态 | 输入 | 映射 | 失败/回落 |
+|---|---|---|---|
+| `whistle` | 麦克风基频 | 音高 → x（A2–C6），响度 → 半径；HUD 显示音名与音分 | hint |
+| `scroll` | 滚轮累积量 | 累积量 → Lissajous 轨迹，滚动速度 → 半径 | none（任何鼠标都有） |
+| `battery` | `navigator.getBattery` | 电量 → 半径 | hint（Safari/Firefox 无） |
+| `pentilt` | 压感笔 `tiltX/tiltY` | 压感 → 半径，倾斜 → 条状笔触（brush+ang） | none（鼠标可用） |
+| `noise` | 麦克风慢速 RMS | 底噪包络 → 半径与 presence（1.5s 时间常数） | hint |
+| `beat` | 频谱通量 | 通量 → 半径，每拍泼墨，中位数间隔 → BPM | hint |
+| `hours` | 本机时间 | 太阳位置 → 光位/高度/半径（纯函数 `hoursSpot`） | none |
+| `clip` | `navigator.clipboard.readText` | 文字关键词 → 换画（复用语音词表） | hint（需授权/手势） |
+| `inkpick` | `EyeDropper` | 取到的颜色 → `nearestScene()` 最近的画 | hint（无 API） |
+| `presence` | `IdleDetector` | 离开越久半径越小（0.25 下限），presence 连续量 | hint |
+| `screens` | `getScreenDetails` | 屏数与偏移 → 光落位（纯函数 `screenSpot`） | hint |
+| `kiosk` | `Keyboard.lock` | 吞掉 Esc/Tab/F11 | none（不支持则只提示） |
+| `load` | `PressureObserver` | CPU 压力 → 半径（nominal>fair>serious>critical） | hint |
+
+> 这一批的共同原则：**判断逻辑抽成纯函数**（`hoursSpot` / `screenSpot` / `noteOf` / `presenceRadius` /
+> `pressureRadius` / `nearestScene` / `delayPush` / `silenceFlip` / `dailySeed`），副作用全部可降级 ——
+> 所以即使没有真传感器，也能在 CI 里断言对错。
