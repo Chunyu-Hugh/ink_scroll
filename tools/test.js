@@ -798,8 +798,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('3D 耦合 · 呼吸：气息改变雾浓度', couple.breath > couple.total * 0.03, `${couple.breath} 像素`);
   ok('3D 耦合 · 捏合：抓住画卷推拉（1=张开 0=捏紧）', couple.grab > couple.total * 0.03, `${couple.grab} 像素`);
 
+  const pageSrc = await page.evaluate(async () => (await fetch('index.html')).text());
   ok('分享卡/配对流：不再依赖二维码库（少一个 CDN 包）',
-    !/qrcode-generator|qrcode\(/.test(src), 'qrcode gone');
+    !/qrcode-generator|qrcode\(/.test(pageSrc), 'qrcode gone');
 
   ok('点云立轴：没有引入新的 CDN 依赖（静态脚本仍 ≤4）', staticDeps.length <= 4,
     staticDeps.length + ' → ' + staticDeps.map(u => u.split('/')[2]).join(','));
