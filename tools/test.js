@@ -363,7 +363,9 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
-  await page.click('#btn-start');
+  await page.evaluate(() => {              // 前面几组可能已经开卷，#btn-start 会不可见
+    if (!S.running) { const b = document.getElementById('btn-start'); if (b) b.click(); }
+  });
   await sleep(900);
   const started = await page.evaluate(() => ({ running: S.running, mode: S.mode, dpr: S.dpr, radius: S.radius }));
   await page.goto(`${BASE}/index.html`);
