@@ -333,11 +333,8 @@ html[lang^="zh"] .mode-card .name{letter-spacing:.12em;}
     letter-spacing .35s var(--easing-out);
   opacity:0;animation:fade-up-fixed .7s .95s var(--easing-out) forwards;
 }
-@keyframes fade-up-fixed{
-  from{opacity:0;transform:translate(-50%,8px)}
-  to  {opacity:1;transform:translate(-50%,0)}
-}
-#btn-start:hover{transform:translate(-50%,-1px)}
+@keyframes fade-up-fixed{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+#btn-start:hover{transform:translateY(-1px)}
 html[lang^="en"] #btn-start{font-size:.85rem;letter-spacing:.24em;text-transform:uppercase;font-weight:500}
 html[lang^="zh"] #btn-start{font-size:1rem;letter-spacing:.32em;text-indent:.32em;font-weight:500}
 #btn-start::after{
@@ -676,6 +673,24 @@ body.wall .credit,body.wall #roster,body.wall #gh,body.wall #glegend,
 body.wall .lang-switch{display:none !important}
 body.wall{cursor:none}
 
+/* 首页一句话说明：陌生人不看文档也要知道这是什么 */
+.tagline{
+  font-family:var(--serif);font-size:clamp(.82rem,1.6vw,1rem);
+  color:var(--stone);letter-spacing:.04em;line-height:1.7;
+  margin:6px auto 18px;max-width:640px;text-align:center;
+}
+.tagline b{color:var(--ink);font-weight:600}
+/* CTA 行：主按钮吸底，次按钮与它同行 */
+.cta-row{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:7;
+  display:flex;align-items:center;gap:10px}
+#btn-start{position:static;transform:none;left:auto;bottom:auto}
+#btn-gallery{
+  font-family:var(--serif);font-size:.74rem;letter-spacing:.14em;
+  padding:13px 20px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--cream-border);background:transparent;color:var(--stone);
+}
+#btn-gallery:hover{border-color:var(--clay);color:var(--clay)}
+
 /* 预设一排：4 个一键配置（此前只有 ?preset= 能触发） */
 .preset-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:2px 0 18px}
 .preset-row button{
@@ -874,10 +889,14 @@ html[lang^="zh"] .overlay .sheet .sect-h{letter-spacing:.3em;text-transform:none
   </div>
   <div class="tagline" data-i18n="tagline">光照之处，墨色生辉</div>
 
+  <p class="tagline" id="tagline" data-i18n="tagline">一幅被墨盖住的画 · 光落在哪里，哪里才显色</p>
   <div class="mode-groups" id="mg"></div>
   <div class="preset-row" id="presets" role="group" aria-label="Presets"></div>
 
-  <button id="btn-start" data-i18n="btnStart">展开画卷</button>
+  <div class="cta-row">
+    <button id="btn-start" data-i18n="btnStart">展开画卷</button>
+    <button id="btn-gallery" type="button" data-i18n="ctaGallery">展厅模式</button>
+  </div>
 
   <p class="hint" id="hint"></p>
 
@@ -1017,6 +1036,8 @@ const I18N = {
   'zh-CN': {
     brand:'墨卷',
     tagline:'光照之处，墨色生辉',
+    tagline:'一幅被墨盖住的画 · 光落在哪里，哪里才显色',
+    ctaGallery:'展厅模式',
     btnStart:'展开画卷',
     loading:'正在展开画卷',
     credit:'墨卷 · 开放的水墨实验',
@@ -1401,6 +1422,8 @@ const I18N = {
   'zh-TW': {
     brand:'墨卷',
     tagline:'光照之處，墨色生輝',
+    tagline:'一幅被墨蓋住的畫 · 光落在哪裡，哪裡才顯色',
+    ctaGallery:'展廳模式',
     btnStart:'展開畫卷',
     loading:'正在展開畫卷',
     credit:'墨卷 · 開放的水墨實驗',

@@ -199,6 +199,17 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     return { presets, outs, helpModes: document.querySelectorAll('#help-modes .help-mode').length,
              cards: document.querySelectorAll('.mode-card').length };
   });
+  const intro = await page.evaluate(() => {
+    const tl = document.getElementById('tagline');
+    const g = document.getElementById('btn-gallery');
+    const cta = document.getElementById('btn-start').getBoundingClientRect();
+    return { text: tl ? tl.textContent.trim() : '', gallery: !!g,
+      ctaVisible: cta.top >= 0 && cta.bottom <= innerHeight };
+  });
+  ok('首页有一句话说明这是什么（陌生人不用读文档）', intro.text.length > 8, intro.text);
+  ok('首页有「展厅模式」第二入口', intro.gallery === true);
+  ok('首页主按钮仍然吸底可见', intro.ctaVisible === true, JSON.stringify(intro));
+
   ok('首页有 4 个预设按钮（不再只能靠 URL 参数）',
     ui.presets.length === 4 && ui.presets.join(',') === 'gallery,kiosk,stereo,lab', ui.presets.join(','));
   ok('帮助面板有 4 个输出开关（墙/网格/立体/点云）', ui.outs.length === 4, ui.outs.join(' | '));
