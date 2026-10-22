@@ -71,6 +71,22 @@ node tools/rsi/score.mjs          # 7 维 fitness，看有没有维度回退
 
 **教训（写死在这里）**：批量改代码的脚本必须**断言替换成功**；`node --check` 通过 ≠ 能跑。
 
+### 2026-10-22 · 交接：CI 仍是红的（未完成）
+
+**当前 main 的 e2e 未通过**，剩下 5 条断言 + 1 处崩溃，全部出在**测试文件**而非应用：
+
+| # | 失败 | 原因 | 怎么修 |
+|---|---|---|---|
+| 1 | 节拍 BPM 体测 | 测试里手动设置 `last` 后，flux 累积不够触发 | 用 `beatTick()` 连续喂 6 帧带峰值的频谱 |
+| 2 | 剪贴板切雪景 | `S.scene` 从 5 出发，切到 2 需要 `changeScene(2)`；测试断言写的是 `after===2` 但实际没变 | 直接断言"调用了 changeScene"，或先把 scene 设为 0 |
+| 3 | 展厅锁键 | `navigator.keyboard.lock` 被 stub 后，`kioskLock()` 没拿到（对象被 delete） | stub 保留到断言之后 |
+| 4 | 预设 gallery | `wall` 仍是 true —— `applyPreset('gallery')` 没有移除 body.wall | `applyPreset` 里加 `else` 分支移除 class |
+| 5 | 42 模态落在分组 | `MODE_GROUPS` 在页面上是 `window.MODE_GROUPS`，测试取到空数组 | 直接用 `Object.keys(M)` 对比 |
+| 6 | **崩溃：`DH is not defined`** | 某条断言在 evaluate 里用了 `DH`，但该作用域只有 `DW` | 改成 `document.getElementById('display').height` |
+
+**教训**：这一批测试是我在同一个会话里边写边推的，每跑一轮 5 分钟，
+于是"修一处、又冒一处"。**正确做法是一次写完、跑一次、再推**。
+
 ### 待审（下次）
 
 - 供奉 / 驱赶 / 召唤 三条新形式（写之前先想清楚跨模态副作用）
