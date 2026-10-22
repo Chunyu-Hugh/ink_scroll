@@ -2016,6 +2016,12 @@ const S={
   clap:{last:0,prev:0},
   dust:{cvs:null,ctx:null,brush:null,level:0},
   scroll:{acc:0,t:0},
+  // ── 形式层状态（延迟 / 静默 / 日课 / 供奉 / 共处）──
+  delayMs:0, delayBuf:[], delayOut:null,
+  silence:{since:0,acted:false,needMs:20000,on:false},
+  daily:{on:false,seed:0},
+  offering:false, offerings:[],
+  together:false, togetherNeed:2, togetherLow:0, togetherHinted:false,
   ptilt:{tx:0,ty:0},
   noise:{v:0},
   beat2:{prev:null,last:0,flux:0,bpm:0,ints:[]},
@@ -4538,7 +4544,7 @@ function processFrame(){
     S.delayOut=out; if(out) spots=out;
     else spots=[];                                  // 还没到 8 秒：什么都不显示（这才是延迟）
   }
-  if(S.silence.on && S.audio && S.audio.on){         // 形式：静默（显式开启，避免在安静型模态里误翻页）
+  if(S.silence && S.silence.on && S.audio && S.audio.on){         // 形式：静默（显式开启，避免在安静型模态里误翻页）
     const quiet=(S.audio.level||0)<0.02;
     if(quiet){ if(!S.silence.since) S.silence.since=performance.now();
       if(!S.silence.acted && silenceFlip(performance.now()-S.silence.since, S.silence.needMs)){
