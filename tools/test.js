@@ -281,6 +281,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('静默：安静不足不翻页，够 20 秒才翻', sq.quiet5 === false && sq.quiet25 === true, JSON.stringify(sq));
 
   const sil = await page.evaluate(async () => {
+    if (!S.running) { start(); await new Promise(r => setTimeout(r, 900)); }
     S.silence = { since: 0, acted: false, needMs: 20000, on: false };
     S.audio = { on: true, level: 0.0 };
     const scene0 = S.scene;
@@ -322,6 +323,7 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   ok('共处：规则要求至少两盏灯（一个人不够）', tog.one < 2 && tog.two >= 2, JSON.stringify(tog));
 
   const gate = await page.evaluate(async () => {
+    if (!S.running) { start(); await new Promise(r => setTimeout(r, 900)); }
     S.together = true; S.togetherHinted = false; S.togetherLow = 0;
     // 只有一盏灯：揭示应被锁掉
     const D2 = document.getElementById('display');
@@ -364,6 +366,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   await page.click('#btn-start');
   await sleep(900);
   const started = await page.evaluate(() => ({ running: S.running, mode: S.mode, dpr: S.dpr, radius: S.radius }));
+  await page.goto(`${BASE}/index.html`);
+  await sleep(1200);
   ok('默认模式是指针（不是死路）', started.mode === 'mouse', started.mode);
   ok('渲染循环已启动', started.running === true);
   ok('控制栏出现', await page.evaluate(() => document.getElementById('bar').classList.contains('show')));
@@ -570,9 +574,11 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     const o2 = await page.evaluate(() => ({ x: +S.osc.x.toFixed(2), y: +S.osc.y.toFixed(2) }));
     ok('OSC：UDP /spot 包改变光圈（TouchDesigner 路径）', Math.abs(o2.x - 0.15) < 0.05 && Math.abs(o2.y - 0.72) < 0.05, JSON.stringify(o2));
     const scOsc = await page.evaluate(() => S.scene);
-    await oscSend(osc('/scene', [4]));
-    await sleep(500);
-    ok('OSC：UDP /scene 包换场景', (await page.evaluate(() => S.scene)) === 4 && scOsc !== 4);
+    const target = (scOsc + 2) % 7;                      // 必须与当前不同，否则测不出"换"
+    await oscSend(osc('/scene', [target]));
+    await sleep(600);
+    const afterOsc = await page.evaluate(() => S.scene);
+    ok('OSC：UDP /scene 包换场景', afterOsc === target && scOsc !== target, `${scOsc} → ${afterOsc}`);
   } catch (e) { ok('OSC：UDP 测试', false, e.message); }
   usock.close();
 
