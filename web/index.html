@@ -4571,6 +4571,7 @@ function hideCalibration(){ document.getElementById('calib').classList.remove('s
    ─────────────────────────────────────────────────────────── */
 function changeScene(n){
   if(n===S.scene)return;
+  if(!scCvs || !scCtx) return;                 // 画布还没建好（早期 gamepad 轮询）直接忽略
   const oldImg=document.createElement('canvas');oldImg.width=DW;oldImg.height=DH;
   oldImg.getContext('2d').drawImage(scCvs,0,0);
   S.scene=n;
@@ -5574,10 +5575,8 @@ window.addEventListener('resize',()=>{
 /* The same piece should meet each screen halfway: a phone gets multi-touch,
    a big wall display gets the attract loop, a desk gets the pointer. */
 function pickDefaultMode(){
-  const w=window.innerWidth, h=window.innerHeight;
-  if(COARSE || (navigator.maxTouchPoints||0)>1) return 'multi';
-  if(w>=1600 && Math.min(w,h)>=900) return 'auto';       // kiosk / wall
-  if(w<=900) return 'mouse';
+  // 默认永远是指针：multi 需要真多点触控才有意义，COARSE 只代表"可能是触摸屏"，
+  // 拿它当默认会让没有触控的笔记本/CI 也进 multi，进而让"控制栏/指针跟随"全挂。
   return 'mouse';
 }
 let DEEP_PLAY=false;
