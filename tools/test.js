@@ -363,13 +363,13 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');
-  await page.evaluate(() => {              // 前面几组可能已经开卷，#btn-start 会不可见
+  await page.goto(`${BASE}/index.html`);   // 前面几组会改模态/开卷，这里要一张干净的页
+  await sleep(1200);
+  await page.evaluate(() => {
     if (!S.running) { const b = document.getElementById('btn-start'); if (b) b.click(); }
   });
   await sleep(900);
   const started = await page.evaluate(() => ({ running: S.running, mode: S.mode, dpr: S.dpr, radius: S.radius }));
-  await page.goto(`${BASE}/index.html`);
-  await sleep(1200);
   ok('默认模式是指针（不是死路）', started.mode === 'mouse', started.mode);
   ok('渲染循环已启动', started.running === true);
   ok('控制栏出现', await page.evaluate(() => document.getElementById('bar').classList.contains('show')));
