@@ -218,8 +218,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     buildHelpModes();
     return [...document.querySelectorAll('#help-forms .help-mode')].map(b => b.textContent.trim());
   });
-  ok('帮助面板有 7 个形式开关（照亮/累积/延迟/静默/日课/共处/供奉）',
-    formsUI.length === 7, formsUI.join(' | '));
+  ok('帮助面板有 11 个形式开关（照亮/累积/延迟/静默/日课/共处/供奉/驱赶/召唤/书写/仪式）',
+    formsUI.length === 11, formsUI.join(' | '));
 
   const clicked = await page.evaluate(async () => {
     const b = document.querySelector('#presets button[data-preset="kiosk"]');
@@ -360,6 +360,40 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   });
   ok('供奉：上限 12 处（超出丢最早的）', offCap === 12, String(offCap));
   await page.evaluate(() => { S.offering = false; S.offerings = []; });
+
+  /* ═══════════════ 2h. 后四种形式：驱赶 / 召唤 / 书写 / 仪式 ═══════════════ */
+  group('2h · 形式：驱赶 / 召唤 / 书写 / 仪式');
+  const f4 = await page.evaluate(() => {
+    // 驱赶：蒙版等级上升
+    ensureDust(); S.dust.level = 0;
+    const sp = { x: 300, y: 200, radius: 120 };
+    const a = repelTick(sp, S.dust.ctx), b = repelTick(sp, S.dust.ctx);
+    // 召唤：点被吸向光
+    const dots = [{ x: 0, y: 0 }];
+    summonStep(dots, 100, 100, 0.5);
+    const moved = dots[0].x > 30 && dots[0].y > 30;
+    // 书写：速度越快越细
+    const slow = writeWidth(20), fast = writeWidth(1200);
+    // 仪式：三处不同位置、5 秒内
+    const taps = [];
+    const r1 = ritualTap(taps, 100, 100, 1000);
+    const r2 = ritualTap(taps, 400, 100, 2000);
+    const r3 = ritualTap(taps, 700, 100, 3000);
+    const same = ritualTap([], 500, 500, 1000) || (ritualTap([{x:500,y:500,t:900}],500,505,1000));
+    S.dust.level = 0;
+    return { repel: a > 0 && b > a, moved, slow, fast, r1, r2, r3, same };
+  });
+  ok('驱赶：光把墨推开，等级持续上升', f4.repel === true, JSON.stringify(f4));
+  ok('召唤：墨点被吸向光', f4.moved === true);
+  ok('书写：笔速越快笔画越细', f4.fast < f4.slow * 0.6, `${f4.slow} vs ${f4.fast}`);
+  ok('仪式：两处不够，三处不同位置才达成', f4.r1 === false && f4.r2 === false && f4.r3 === true, JSON.stringify(f4));
+
+  const f4ui = await page.evaluate(() => {
+    buildHelpModes();
+    return [...document.querySelectorAll('#help-forms .help-mode')].map(b => b.textContent.trim());
+  });
+  ok('形式面板共 11 个开关（7 + 驱赶/召唤/书写/仪式）', f4ui.length === 11, String(f4ui.length));
+  await page.evaluate(() => { S.repel = false; S.summon = false; S.write = false; S.ritual = false; S.summonDots = []; });
 
   /* ═══════════════ 3. start / default mode ═══════════════ */
   group('3 · 进入画卷 / start');

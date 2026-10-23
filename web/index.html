@@ -1381,6 +1381,11 @@ const I18N = {
     formSilence:'静默',
     formDaily:'日课',
     formOffering:'供奉',
+    formRepel:'驱赶',
+    formSummon:'召唤',
+    formWrite:'书写',
+    formRitual:'仪式',
+    fxRitual:'三处 · 五秒 · 仪式达成',
     fxOffering:'已供奉 · 它会自己长大',
     formTogether:'共处',
     helpOutput:'输出',
@@ -1680,6 +1685,11 @@ const I18N = {
     formSilence:'靜默',
     formDaily:'日課',
     formOffering:'供奉',
+    formRepel:'驅趕',
+    formSummon:'召喚',
+    formWrite:'書寫',
+    formRitual:'儀式',
+    fxRitual:'三處 · 五秒 · 儀式達成',
     fxOffering:'已供奉 · 它會自己長大',
     formTogether:'共處',
     helpOutput:'輸出',
@@ -1978,6 +1988,11 @@ const I18N = {
     formSilence:'Silence',
     formDaily:'Daily',
     formOffering:'Offering',
+    formRepel:'Repel',
+    formSummon:'Summon',
+    formWrite:'Writing',
+    formRitual:'Ritual',
+    fxRitual:'three places, five seconds — ritual held',
     fxOffering:'offered — it grows on its own',
     formTogether:'Together',
     helpOutput:'Output',
@@ -2102,6 +2117,8 @@ const S={
   silence:{since:0,acted:false,needMs:20000,on:false},
   daily:{on:false,seed:0},
   offering:false, offerings:[],
+  repel:false, summon:false, summonDots:[], write:false, writeW:1,
+  ritual:false, ritualTaps:[], ritualUntil:0,
   together:false, togetherNeed:2, togetherLow:0, togetherHinted:false,
   ptilt:{tx:0,ty:0},
   noise:{v:0},
@@ -3421,6 +3438,46 @@ function offeringGrow(list,now,maxMs){
   return out;
 }
 
+/* ── 形式：驱赶（光把墨推开，推过的地方面积永久扩大） ── */
+function repelTick(sp, dust){
+  const r=(sp.radius||S.radius)*0.9;
+  dust.globalAlpha=0.30;
+  dust.drawImage(S.dust.brush, sp.x-r, sp.y-r, r*2, r*2);
+  dust.globalAlpha=1;
+  S.dust.level = Math.min(1,(S.dust.level||0)+0.03);   // 自己维护等级，调用方不必写回
+  return S.dust.level;
+}
+/* ── 形式：召唤（墨点被吸向光，松手炸开） ── */
+function summonStep(dots, sx, sy, k){
+  for(const d of dots){
+    d.x += (sx-d.x)*(k||0.18);
+    d.y += (sy-d.y)*(k||0.18);
+  }
+  return dots;
+}
+function summonAdd(dots, sx, sy, n){
+  for(let i=0;i<(n||10);i++){
+    const a=Math.random()*Math.PI*2, r=180+Math.random()*220;
+    dots.push({x:sx+Math.cos(a)*r, y:sy+Math.sin(a)*r});
+  }
+  return dots;
+}
+/* ── 形式：书写（笔速越快，笔画越细） ── */
+function writeWidth(speed){ return clampN(1-(speed||0)/1400, 0.18, 1); }
+/* ── 形式：仪式（三个不同位置、5 秒内点完，才开 10 秒） ── */
+function ritualTap(taps, x, y, now){
+  taps.push({x,y,t:now});
+  const recent=taps.filter(t=>now-t.t<=5000);
+  taps.length=0; taps.push(...recent);
+  if(taps.length>=3){
+    let ok=true;
+    for(let i=0;i<taps.length;i++) for(let j=i+1;j<taps.length;j++)
+      if(Math.hypot(taps[i].x-taps[j].x, taps[i].y-taps[j].y)<60) ok=false;
+    if(ok) return true;
+  }
+  return false;
+}
+
 /* ── 形式：延迟（把光晚 N 秒出现，和过去的自己错位） ── */
 function delayPush(buf, spots, now, ms){
   buf.push({t:now, s:spots});
@@ -4611,6 +4668,7 @@ function processFrame(){
   if(spots.length===0 && S.running && !(S.mode==='hand' && S.gesture!=='none')){ S.attract=(S.attract||0)+0.0045;
     spots=[{x:DW*(0.82-0.64*((S.attract*0.22)%1)), y:DH*(0.5+0.16*Math.sin(S.attract*0.9)), radius:S.radius*0.8}]; }
   spots = spots.map(normSpot).filter(Boolean);
+  if(S.ritual && performance.now() > (S.ritualUntil||0)) spots = [];   // 仪式未完成：不揭示
   if(S.together){                                   // 形式：共处（一个人揭不开）
     if(spots.length < S.togetherNeed){
       S.togetherLow = Math.min(1, S.togetherLow + 0.06);
@@ -4658,6 +4716,26 @@ function processFrame(){
     ctx.restore();
   }
   ctx.drawImage(hiCvs,0,0,DW,DH);
+  if(S.repel && spots[0]){
+    ensureDust();
+    S.dust.level = repelTick(spots[0], S.dust.ctx);
+  }
+  if(S.summon && spots[0]){
+    if(!S.summonDots.length) summonAdd(S.summonDots, spots[0].x, spots[0].y, 12);
+    summonStep(S.summonDots, spots[0].x, spots[0].y, 0.18);
+    ensurePaint();
+    paintSctx.clearRect(0,0,DW,DH);
+    paintSctx.globalCompositeOperation='source-over';
+    paintSctx.drawImage(scCvs,0,0,DW,DH);
+    paintSctx.globalCompositeOperation='destination-in';
+    for(const d of S.summonDots){
+      const g=paintSctx.createRadialGradient(d.x,d.y,0,d.x,d.y,26);
+      g.addColorStop(0,'rgba(255,255,255,.85)'); g.addColorStop(1,'rgba(255,255,255,0)');
+      paintSctx.fillStyle=g; paintSctx.beginPath(); paintSctx.arc(d.x,d.y,26,0,7); paintSctx.fill();
+    }
+    paintSctx.globalCompositeOperation='source-over';
+    withBounds(()=>ctx.drawImage(paintScratch,0,0,DW,DH));
+  }
   if(S.offering && S.offerings.length){
     const nowO=performance.now();
     ensurePaint();
@@ -5251,6 +5329,10 @@ function buildHelpModes(){
         ()=>{ S.together=!S.together; S.togetherNeed=2; S.togetherLow=0; S.togetherHinted=false; });
     mkF(t('formOffering')+' · '+(S.offering?S.offerings.length+' 处':'off'), S.offering,
         ()=>{ S.offering=!S.offering; if(!S.offering) S.offerings=[]; });
+    mkF(t('formRepel')+' · '+(S.repel?'on':'off'), S.repel, ()=>{ S.repel=!S.repel; });
+    mkF(t('formSummon')+' · '+(S.summon?'on':'off'), S.summon, ()=>{ S.summon=!S.summon; S.summonDots=[]; });
+    mkF(t('formWrite')+' · '+(S.write?'on':'off'), S.write, ()=>{ S.write=!S.write; });
+    mkF(t('formRitual')+' · '+(S.ritual?'on':'off'), S.ritual, ()=>{ S.ritual=!S.ritual; S.ritualTaps=[]; S.ritualUntil=0; });
   }
   const note=document.getElementById('help-note');
   if(note) note.innerHTML = `<b>${t(MODE_GROUPS[1].label)}</b> · ${t('helpNote')}<br>${t('helpTouch')}`;
@@ -5326,6 +5408,11 @@ D.addEventListener('pointerdown',e=>{
   S.pointerDown=true;
   S.pen = e.pointerType==='pen';
   S.pressure = e.pressure||0;
+  if(S.write){
+    const dx=e.clientX-(S.writePx||e.clientX), dy=e.clientY-(S.writePy||e.clientY);
+    const spd=Math.hypot(dx,dy)/Math.max(0.008,(e.timeStamp-(S.writeT||e.timeStamp))/1000);
+    S.writeW=writeWidth(spd); S.writePx=e.clientX; S.writePy=e.clientY; S.writeT=e.timeStamp;
+  }
   setPtr(e.clientX,e.clientY);
   showBar(true);
   if(ptrs.size===2){ clearTimeout(longPressT); pinchStart=ptrDist(); pinchR=S.radius; }
@@ -5347,6 +5434,14 @@ D.addEventListener('pointermove',e=>{
   }
   S.pressure = e.pressure||0;
   if(e.pointerType==='pen'){ S.pen=true; S.ptilt={tx:e.tiltX||0, ty:e.tiltY||0}; }
+  if(e.type==='pointerdown' && (S.ritual || S.summon)){
+    const px=e.clientX*(DW/D.clientWidth), py=e.clientY*(DH/D.clientHeight);
+    if(S.ritual && ritualTap(S.ritualTaps, px, py, performance.now())){
+      S.ritualUntil=performance.now()+10000; S.ritualTaps.length=0;
+      flashHint(t('fxRitual'), 1800);
+    }
+    if(S.summon){ S.summonDots.length=0; summonAdd(S.summonDots, px, py, 12); pushSplat(px,py,60,110); }
+  }
   if(S.offering && e.type==='pointerdown'){
     offeringAdd(e.clientX*(DW/D.clientWidth), e.clientY*(DH/D.clientHeight), performance.now());
     flashHint(t('fxOffering'), 1200);
@@ -5593,6 +5688,10 @@ function applyDeepLink(){
     if(form==='daily'){ S.daily={on:true, seed:dailySeed().key}; }
     if(form==='silence'){ S.silence.on=true; }
     if(form==='offering'){ S.offering=true; }
+    if(form==='repel'){ S.repel=true; }
+    if(form==='summon'){ S.summon=true; }
+    if(form==='write'){ S.write=true; }
+    if(form==='ritual'){ S.ritual=true; }
     const dl=parseInt(q.get('delay')||'0',10);
     if(dl>0&&dl<=30000){ S.delayMs=dl; S.delayBuf=[]; }
     if(q.get('daily')==='1'){ S.daily={on:true, seed:dailySeed().key}; }
