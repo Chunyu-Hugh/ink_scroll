@@ -3454,6 +3454,7 @@ function applyPreset(name){
   if(typeof p.scene==='number') S.scene=p.scene;
   if(p.style) S.style=p.style;
   if(p.wall){ document.body.classList.add('wall'); S.wall=true; }
+  else { document.body.classList.remove('wall'); S.wall=false; }
   S.grid=!!p.grid;
   S.stereo=p.stereo||null;
   DEEP_PLAY=true;
